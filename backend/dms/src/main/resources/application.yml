@@ -1,0 +1,25 @@
+spring:
+    application:
+        name: dms
+    datasource:
+        url: jdbc:mysql://127.0.0.1/datn
+        username: root
+        password: 123456
+        driver-class-name: com.mysql.cj.jdbc.Driver
+    jpa:
+        hibernate:
+            ddl-auto: update
+        show-sql: true
+        properties:
+            hibernate:
+                dialect: org.hibernate.dialect.MySQL8Dialect
+    data:
+        redis:
+            host: 127.0.0.1
+            port: 6379
+app:
+  prefix: /api/v1
+  security:
+    expiresIn: 300 
+    expiresRefresh: 36000
+    secret: fEJ6qu3MQ1pwdpRYxhiXNpor7jNV6tCdhw73m9rR5TfH5rS6Zq1tVDsUooXljGi3
