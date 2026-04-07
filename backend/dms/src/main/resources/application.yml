@@ -19,6 +19,8 @@ spring:
             port: 6379
 app:
   prefix: /api/v1
+  google:
+    client-id: 408723178594-hi6n2hdorucbce2rh0houv07kq7p77b6.apps.googleusercontent.com
   security:
     expiresIn: 300 
     expiresRefresh: 36000

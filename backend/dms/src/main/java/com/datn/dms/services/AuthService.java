@@ -4,6 +4,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import java.util.Collections;
+
+import com.datn.dms.dtos.auth.request.GoogleLoginRequest;
 import com.datn.dms.dtos.auth.request.LoginRequest;
 import com.datn.dms.dtos.auth.request.LogoutRequest;
 import com.datn.dms.dtos.auth.request.RegisterRequest;
@@ -58,6 +65,9 @@ public class AuthService {
     @Value("${app.security.secret}")
     String SECRET;
 
+    @Value("${app.google.client-id}")
+    String googleClientId;
+
     private static final String TOKEN_PREFIX = "BLACKLIST:TOKEN:";
 
     public LoginResponse login(LoginRequest request) {
@@ -78,6 +88,55 @@ public class AuthService {
                 .expiresIn(expiresIn)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    public LoginResponse googleLogin(GoogleLoginRequest request) {
+        try {
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), GsonFactory.getDefaultInstance())
+                    .setAudience(Collections.singletonList(googleClientId))
+                    .build();
+
+            GoogleIdToken idToken = verifier.verify(request.getIdToken());
+            if (idToken != null) {
+                GoogleIdToken.Payload payload = idToken.getPayload();
+                String email = payload.getEmail();
+                String pictureUrl = (String) payload.get("picture");
+                String fullName = (String) payload.get("name");
+
+                UserEntity user = userRepository.findByEmail(email).orElse(null);
+
+                if (user == null) {
+                    Set<RoleEntity> roles = new HashSet<>();
+                    roleRepository.findByName(RoleEnums.USER.name()).ifPresent(roles::add);
+
+                    user = UserEntity.builder()
+                            .username(email) 
+                            .email(email)
+                            .password(passwordEncoder.encode(UUID.randomUUID().toString())) 
+                            .thumbnailUrl(pictureUrl != null ? pictureUrl : "/uploads/thumbnail/default.png")
+                            .isActive(true)
+                            .fullName(fullName)
+                            .roles(roles)
+                            .build();
+
+                    user = userRepository.save(user);
+                }
+
+                String accessToken = generateToken(user, false);
+                String refreshToken = generateToken(user, true);
+
+                return LoginResponse.builder()
+                        .tokenType("Bearer")
+                        .accessToken(accessToken)
+                        .expiresIn(expiresIn)
+                        .refreshToken(refreshToken)
+                        .build();
+            } else {
+                throw new AppException(ErrorCode.AUTHENTICATION_EXCEPTION);
+            }
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.AUTHENTICATION_EXCEPTION);
+        }
     }
 
     private String jwtID (String token) {

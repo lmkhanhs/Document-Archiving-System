@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import com.datn.dms.dtos.auth.request.LoginRequest;
 import com.datn.dms.dtos.auth.request.LogoutRequest;
 import com.datn.dms.dtos.auth.request.RegisterRequest;
+import com.datn.dms.dtos.auth.request.GoogleLoginRequest;
 import com.datn.dms.dtos.auth.response.LoginResponse;
 import com.datn.dms.dtos.auth.response.LogoutResponse;
 import com.datn.dms.dtos.auth.response.RegisterResponse;
@@ -50,6 +51,15 @@ public class AuthController {
                 .code(201)         // Status mã HTTP CREATED
                 .message("Register successfully")
                 .data(authService.register(request))
+                .build();
+    }
+
+    @PostMapping("/google-login")
+    public ApiResponse<LoginResponse> googleLogin(@RequestBody GoogleLoginRequest request) {
+        return ApiResponse.<LoginResponse>builder()
+                .code(200)
+                .message("Google Login successfully")
+                .data(authService.googleLogin(request))
                 .build();
     }
 }
