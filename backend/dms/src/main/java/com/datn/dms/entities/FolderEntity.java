@@ -39,7 +39,6 @@ public class FolderEntity extends BaseEntity {
     @Column(nullable = false)
     String name;
 
-    // Đường dẫn nội bộ để phục vụ cho tính năng breadcrumb hoặc search nhanh (ví dụ: /root/docs)
     @Column(length = 1000)
     String path;
 
@@ -59,9 +58,6 @@ public class FolderEntity extends BaseEntity {
 
     @Column(columnDefinition = "boolean default false")
     boolean isDeleted = false;
-
-    // Màu sắc, hoặc label tùy chỉnh cho giao diện front-end
-    String color;
 
     @Builder.Default
     @OneToMany(mappedBy = "folder", cascade = CascadeType.ALL, orphanRemoval = true)

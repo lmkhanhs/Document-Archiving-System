@@ -3,17 +3,44 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "../pages/Home";
 import Login from "../pages/auth/Login";
 
+const isAuthenticated = () => Boolean(localStorage.getItem("accessToken"));
+
+const ProtectedRoute = ({ children }) => {
+  return isAuthenticated() ? children : <Navigate to="/login" replace />;
+};
+
+const PublicOnlyRoute = ({ children }) => {
+  return isAuthenticated() ? <Navigate to="/" replace /> : children;
+};
+
 const AppRouter = () => {
   return (
     <Routes>
       {/* Trang chính */}
-      <Route path="/" element={<Home />} />
+      <Route
+        path="/"
+        element={(
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        )}
+      />
 
       {/* Trang login */}
-      <Route path="/login" element={<Login />} />
+      <Route
+        path="/login"
+        element={(
+          <PublicOnlyRoute>
+            <Login />
+          </PublicOnlyRoute>
+        )}
+      />
 
       {/* fallback */}
-      <Route path="*" element={<Navigate to="/" />} />
+      <Route
+        path="*"
+        element={<Navigate to={isAuthenticated() ? "/" : "/login"} replace />}
+      />
     </Routes>
   );
 };

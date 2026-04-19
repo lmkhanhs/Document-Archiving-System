@@ -22,6 +22,6 @@ app:
   google:
     client-id: 408723178594-hi6n2hdorucbce2rh0houv07kq7p77b6.apps.googleusercontent.com
   security:
-    expiresIn: 300 
+    expiresIn: 30000 
     expiresRefresh: 36000
     secret: fEJ6qu3MQ1pwdpRYxhiXNpor7jNV6tCdhw73m9rR5TfH5rS6Zq1tVDsUooXljGi3

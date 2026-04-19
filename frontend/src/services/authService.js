@@ -41,3 +41,37 @@ export const googleLogin = async (idToken) => {
     );
   }
 };
+
+export const getInfoUser = async () => {
+  try {
+    const response = await api.get("/users/info");
+    const result = response.data;
+
+    if (result.code !== 200) {
+      throw new Error(result.message);
+    }
+
+    return result.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể lấy thông tin người dùng");
+  }
+};
+
+export const logout = async ({ accessToken, refreshToken }) => {
+  try {
+    const response = await api.post("/auth/logout", {
+      accessToken,
+      refreshToken,
+    });
+
+    const result = response.data;
+
+    if (result.code !== 200) {
+      throw new Error(result.message);
+    }
+
+    return result.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Đăng xuất thất bại");
+  }
+};

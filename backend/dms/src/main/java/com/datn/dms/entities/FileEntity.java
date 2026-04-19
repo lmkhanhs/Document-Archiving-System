@@ -29,7 +29,7 @@ public class FileEntity extends BaseEntity {
     String name;
 
     @Column(nullable = false)
-    String type; // mime type (image/jpeg, application/pdf)
+    String type; 
 
     @Column(nullable = false)
     Long size; // bytes

@@ -45,10 +45,9 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    
     public ApiResponse<RegisterResponse> register(@RequestBody RegisterRequest request) {
         return ApiResponse.<RegisterResponse>builder()
-                .code(201)         // Status mã HTTP CREATED
+                .code(201)        
                 .message("Register successfully")
                 .data(authService.register(request))
                 .build();

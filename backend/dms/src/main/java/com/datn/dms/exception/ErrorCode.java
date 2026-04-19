@@ -17,7 +17,12 @@ public enum ErrorCode {
     AUTHENTICATION_EXCEPTION(1005, "Authentication exception", HttpStatus.UNAUTHORIZED),
     INVALID_PASSWORD(1006, "Invalid password", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED_EXCEPTION(1007, "Unauthorized exception", HttpStatus.FORBIDDEN),
-    JWT_EXCEPTION(1006, "jwt exception", HttpStatus.UNAUTHORIZED);
+    JWT_EXCEPTION(1006, "jwt exception", HttpStatus.UNAUTHORIZED),
+
+    // Folder
+    FOLDER_NOT_FOUND(1008, "Folder not found", HttpStatus.NOT_FOUND),
+    FOLDER_EXISTED(1009, "Folder existed", HttpStatus.BAD_REQUEST),
+    FOLDER_NAME_INVALID(1010, "Folder name is invalid", HttpStatus.BAD_REQUEST);
    
     private final int code;
     private final String message;
