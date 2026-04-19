@@ -22,7 +22,14 @@ public enum ErrorCode {
     // Folder
     FOLDER_NOT_FOUND(1008, "Folder not found", HttpStatus.NOT_FOUND),
     FOLDER_EXISTED(1009, "Folder existed", HttpStatus.BAD_REQUEST),
-    FOLDER_NAME_INVALID(1010, "Folder name is invalid", HttpStatus.BAD_REQUEST);
+    FOLDER_NAME_INVALID(1010, "Folder name is invalid", HttpStatus.BAD_REQUEST),
+
+    // File
+    FILE_EMPTY(1011, "File is empty", HttpStatus.BAD_REQUEST),
+    FILE_STORE_FAILED(1012, "Cannot store file", HttpStatus.INTERNAL_SERVER_ERROR),
+    FILE_NAME_INVALID(1013, "File name is invalid", HttpStatus.BAD_REQUEST),
+    FILE_NOT_FOUND(1014, "File not found", HttpStatus.NOT_FOUND),
+    FILE_PATH_INVALID(1015, "File path is invalid", HttpStatus.BAD_REQUEST);
    
     private final int code;
     private final String message;

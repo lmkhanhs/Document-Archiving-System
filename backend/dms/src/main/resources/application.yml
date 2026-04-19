@@ -17,11 +17,18 @@ spring:
         redis:
             host: 127.0.0.1
             port: 6379
+    servlet:
+        multipart:
+            max-file-size: 20MB
+            max-request-size: 20MB
+
 app:
-  prefix: /api/v1
-  google:
-    client-id: 408723178594-hi6n2hdorucbce2rh0houv07kq7p77b6.apps.googleusercontent.com
-  security:
-    expiresIn: 30000 
-    expiresRefresh: 36000
-    secret: fEJ6qu3MQ1pwdpRYxhiXNpor7jNV6tCdhw73m9rR5TfH5rS6Zq1tVDsUooXljGi3
+    prefix: /api/v1
+    storage:
+        upload-dir: uploads
+    google:
+        client-id: 408723178594-hi6n2hdorucbce2rh0houv07kq7p77b6.apps.googleusercontent.com
+    security:
+        expiresIn: 30000
+        expiresRefresh: 36000
+        secret: fEJ6qu3MQ1pwdpRYxhiXNpor7jNV6tCdhw73m9rR5TfH5rS6Zq1tVDsUooXljGi3

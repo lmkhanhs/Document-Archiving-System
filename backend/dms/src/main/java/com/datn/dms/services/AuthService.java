@@ -262,9 +262,9 @@ public class AuthService {
         UserEntity user = UserEntity.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .isActive(true) // Tài khoản kích hoạt mặc định
+                .isActive(true) 
                 .roles(roles)
-                .thumbnailUrl("/uploads/thumbnail/default.png")
+                .thumbnailUrl("/uploads/public/defaulthumbnail.png")
                 .build();
 
         userRepository.save(user);

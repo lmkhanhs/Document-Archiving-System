@@ -28,15 +28,15 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)    
 public class UserController {
     UserService userService; 
-    @PostMapping("")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<CreateUserResponse> createUser(@RequestBody CreateUserRequest user) {
-        return ApiResponse.<CreateUserResponse>builder()
-                .code(201)
-                .message("User created successfully")
-                .data(userService.createUser(user))
-                .build(); 
-    }
+    // @PostMapping("")
+    // @ResponseStatus(HttpStatus.CREATED)
+    // public ApiResponse<CreateUserResponse> createUser(@RequestBody CreateUserRequest user) {
+    //     return ApiResponse.<CreateUserResponse>builder()
+    //             .code(201)
+    //             .message("User created successfully")
+    //             .data(userService.createUser(user))
+    //             .build(); 
+    // }
     @GetMapping("/info")
     public ApiResponse<InfoUserResponse> getInfoUser() {
         return ApiResponse.<InfoUserResponse>builder()

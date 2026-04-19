@@ -24,14 +24,14 @@ public class UserService {
     UserRepository userRepository;
     AuthenticationUtills authenticationUtills;
 
-    public CreateUserResponse createUser(CreateUserRequest request) {
-        UserEntity userEntity = this.userMapper.toUserEntity(request);
-        userEntity.setEmail("123@gmail.com");
-        userEntity.setPhone("123456789");
-        userEntity.setAddress("123 Main St");
-        userEntity = this.userRepository.save(userEntity);
-        return this.userMapper.toCreateUserResponse(userEntity);
-    }
+    // public CreateUserResponse createUser(CreateUserRequest request) {
+    //     UserEntity userEntity = this.userMapper.toUserEntity(request);
+    //     userEntity.setEmail("123@gmail.com");
+    //     userEntity.setPhone("123456789");
+    //     userEntity.setAddress("123 Main St");
+    //     userEntity = this.userRepository.save(userEntity);
+    //     return this.userMapper.toCreateUserResponse(userEntity);
+    // }
 
     public InfoUserResponse getInfoUser() { 
         String username = this.authenticationUtills.getUserName();
