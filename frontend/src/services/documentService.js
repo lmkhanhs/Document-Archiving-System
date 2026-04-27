@@ -23,6 +23,51 @@ export const getMyFolders = async () => {
   }
 };
 
+export const getRootFolders = async () => {
+  try {
+    const response = await api.get("/folders/root");
+    return parseApiResponse(response, "Không thể tải thư mục gốc");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể tải thư mục gốc");
+  }
+};
+
+export const getRootFiles = async () => {
+  try {
+    const response = await api.get("/files/root");
+    return parseApiResponse(response, "Không thể tải tệp gốc");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể tải tệp gốc");
+  }
+};
+
+export const getFolderContents = async (folderId) => {
+  const candidates = [
+    `/folders/${folderId}/contents`,
+    `/folders/${folderId}/children`,
+    `/folders/${folderId}/documents`,
+    `/folders/${folderId}`,
+  ];
+
+  let lastError = null;
+
+  for (const endpoint of candidates) {
+    try {
+      const response = await api.get(endpoint);
+      return parseApiResponse(response, "Không thể tải nội dung thư mục");
+    } catch (error) {
+      lastError = error;
+      const status = error?.response?.status;
+
+      if (status && status !== 404) {
+        throw new Error(error.response?.data?.message || "Không thể tải nội dung thư mục");
+      }
+    }
+  }
+
+  throw new Error(lastError?.response?.data?.message || "Không thể tải nội dung thư mục");
+};
+
 export const createMyFolder = async ({ name, parentId = null }) => {
   try {
     const response = await api.post("/folders", {

@@ -505,6 +505,12 @@ const Home = () => {
                   type="button"
                   onClick={() => {
                     setActiveMenu(item.key);
+                    if (item.key === "home") {
+                      navigate("/");
+                    }
+                    if (item.key === "documents") {
+                      navigate("/documents");
+                    }
                     if (item.key === "upload") {
                       openUploadDialog();
                     }
