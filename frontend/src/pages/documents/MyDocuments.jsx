@@ -11,6 +11,12 @@ import ViewListOutlinedIcon from "@mui/icons-material/ViewListOutlined";
 import GridViewOutlinedIcon from "@mui/icons-material/GridViewOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import TableChartOutlinedIcon from "@mui/icons-material/TableChartOutlined";
+import SlideshowOutlinedIcon from "@mui/icons-material/SlideshowOutlined";
+import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
 import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
@@ -55,6 +61,10 @@ const TEXT_EXTENSIONS = new Set([
 ]);
 
 const OFFICE_EXTENSIONS = new Set(["doc", "docx", "xls", "xlsx", "ppt", "pptx"]);
+const WORD_EXTENSIONS = new Set(["doc", "docx"]);
+const EXCEL_EXTENSIONS = new Set(["xls", "xlsx", "csv"]);
+const POWERPOINT_EXTENSIONS = new Set(["ppt", "pptx"]);
+const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"]);
 
 const extractCollection = (payload) => {
   if (Array.isArray(payload)) {
@@ -180,6 +190,58 @@ const detectPreviewKind = ({ name = "", mimeType = "" }) => {
   }
 
   return PREVIEW_KIND.UNSUPPORTED;
+};
+
+const getFileIconMeta = ({ name = "", mimeType = "" }) => {
+  const extension = getFileExtension(name);
+  const mime = String(mimeType).toLowerCase();
+
+  if (mime.includes("pdf") || extension === "pdf") {
+    return {
+      Icon: PictureAsPdfOutlinedIcon,
+      className: "text-red-600",
+    };
+  }
+
+  if (WORD_EXTENSIONS.has(extension) || mime.includes("word")) {
+    return {
+      Icon: ArticleOutlinedIcon,
+      className: "text-blue-600",
+    };
+  }
+
+  if (EXCEL_EXTENSIONS.has(extension) || mime.includes("excel") || mime.includes("spreadsheet")) {
+    return {
+      Icon: TableChartOutlinedIcon,
+      className: "text-emerald-600",
+    };
+  }
+
+  if (POWERPOINT_EXTENSIONS.has(extension) || mime.includes("powerpoint") || mime.includes("presentation")) {
+    return {
+      Icon: SlideshowOutlinedIcon,
+      className: "text-orange-600",
+    };
+  }
+
+  if (IMAGE_EXTENSIONS.has(extension) || mime.startsWith("image/")) {
+    return {
+      Icon: ImageOutlinedIcon,
+      className: "text-violet-600",
+    };
+  }
+
+  if (TEXT_EXTENSIONS.has(extension) || mime.startsWith("text/") || mime.includes("json")) {
+    return {
+      Icon: CodeOutlinedIcon,
+      className: "text-slate-600",
+    };
+  }
+
+  return {
+    Icon: DescriptionOutlinedIcon,
+    className: "text-blue-600",
+  };
 };
 
 const normalizePathNode = (node, index) => {
@@ -669,54 +731,58 @@ const MyDocuments = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {allDocuments.map((item) => (
-                    <tr
-                      key={`${item.type}-${item.id}`}
-                      className="cursor-pointer border-t border-slate-100 hover:bg-blue-50/50"
-                      onClick={item.type === "folder" ? () => openFolder(item) : () => openFilePreview(item)}
-                    >
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800">
-                          {item.type === "folder" ? (
-                            <FolderOutlinedIcon className="text-amber-600" fontSize="small" />
-                          ) : (
-                            <DescriptionOutlinedIcon className="text-blue-600" fontSize="small" />
-                          )}
-                          <span className="truncate">{item.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">{formatDate(item.dateModified)}</td>
-                      <td className="px-4 py-3 text-right text-sm text-slate-600">{formatFileSize(item.fileSize)}</td>
-                    </tr>
-                  ))}
+                  {allDocuments.map((item) => {
+                    const iconMeta = item.type === "folder"
+                      ? { Icon: FolderOutlinedIcon, className: "text-amber-600" }
+                      : getFileIconMeta(item);
+
+                    return (
+                      <tr
+                        key={`${item.type}-${item.id}`}
+                        className="cursor-pointer border-t border-slate-100 hover:bg-blue-50/50"
+                        onClick={item.type === "folder" ? () => openFolder(item) : () => openFilePreview(item)}
+                      >
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800">
+                            <iconMeta.Icon className={iconMeta.className} fontSize="small" />
+                            <span className="truncate">{item.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600">{formatDate(item.dateModified)}</td>
+                        <td className="px-4 py-3 text-right text-sm text-slate-600">{formatFileSize(item.fileSize)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           ) : (
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {allDocuments.map((item) => (
-                <button
-                  key={`${item.type}-${item.id}`}
-                  type="button"
-                  onClick={item.type === "folder" ? () => openFolder(item) : () => openFilePreview(item)}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
-                >
-                  <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800">
-                    {item.type === "folder" ? (
-                      <FolderOutlinedIcon className="text-amber-600" fontSize="small" />
-                    ) : (
-                      <DescriptionOutlinedIcon className="text-blue-600" fontSize="small" />
-                    )}
-                    <span className="truncate">{item.name}</span>
-                  </div>
+              {allDocuments.map((item) => {
+                const iconMeta = item.type === "folder"
+                  ? { Icon: FolderOutlinedIcon, className: "text-amber-600" }
+                  : getFileIconMeta(item);
 
-                  <div className="mt-3 text-xs text-slate-500">Date modified</div>
-                  <div className="text-sm text-slate-700">{formatDate(item.dateModified)}</div>
+                return (
+                  <button
+                    key={`${item.type}-${item.id}`}
+                    type="button"
+                    onClick={item.type === "folder" ? () => openFolder(item) : () => openFilePreview(item)}
+                    className="rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+                  >
+                    <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800">
+                      <iconMeta.Icon className={iconMeta.className} fontSize="small" />
+                      <span className="truncate">{item.name}</span>
+                    </div>
 
-                  <div className="mt-2 text-xs text-slate-500">File size</div>
-                  <div className="text-sm text-slate-700">{formatFileSize(item.fileSize)}</div>
-                </button>
-              ))}
+                    <div className="mt-3 text-xs text-slate-500">Date modified</div>
+                    <div className="text-sm text-slate-700">{formatDate(item.dateModified)}</div>
+
+                    <div className="mt-2 text-xs text-slate-500">File size</div>
+                    <div className="text-sm text-slate-700">{formatFileSize(item.fileSize)}</div>
+                  </button>
+                );
+              })}
             </div>
           )}
 
