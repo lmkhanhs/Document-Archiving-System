@@ -60,49 +60,6 @@ const extractCollection = (payload) => {
   return [];
 };
 
-const extractFolders = (payload) => {
-  const direct = [
-    payload?.folders,
-    payload?.folderList,
-    payload?.subFolders,
-    payload?.childrenFolders,
-    payload?.directories,
-  ];
-
-  for (const candidate of direct) {
-    const result = extractCollection(candidate);
-    if (result.length > 0) {
-      return result;
-    }
-  }
-
-  return extractCollection(payload?.items || payload?.content).filter((item) => {
-    const type = String(item?.type || item?.itemType || "").toLowerCase();
-    return type === "folder";
-  });
-};
-
-const extractFiles = (payload) => {
-  const direct = [
-    payload?.files,
-    payload?.fileList,
-    payload?.documents,
-    payload?.childrenFiles,
-  ];
-
-  for (const candidate of direct) {
-    const result = extractCollection(candidate);
-    if (result.length > 0) {
-      return result;
-    }
-  }
-
-  return extractCollection(payload?.items || payload?.content).filter((item) => {
-    const type = String(item?.type || item?.itemType || "").toLowerCase();
-    return type === "file";
-  });
-};
-
 const getDateValue = (item = {}) => (
   item.updatedAt
   || item.lastModifiedAt
@@ -242,8 +199,9 @@ const MyDocuments = () => {
           getFilesByFolderId(folderId),
         ]);
 
-        nextFolders = extractFolders(folderPayload).map(normalizeFolder);
-        nextFiles = extractFiles(filePayload).map(normalizeFile);
+        // Backend returns child folders/files as direct array in data.
+        nextFolders = extractCollection(folderPayload).map(normalizeFolder);
+        nextFiles = extractCollection(filePayload).map(normalizeFile);
         nextPath = buildBreadcrumbs(folderPayload, fallbackPath);
       }
 
