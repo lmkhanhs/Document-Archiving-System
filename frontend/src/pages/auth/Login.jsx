@@ -18,18 +18,22 @@ import {
   Divider,
   FormControlLabel,
   Link,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Visibility,
   VisibilityOff,
   LockOutlined,
   PersonOutline,
-  FacebookOutlined,
 } from "@mui/icons-material";
 import { GoogleLogin } from "@react-oauth/google";
 
 const Login = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const googleButtonWidth = isMobile ? "280" : "420";
 
   const [formData, setFormData] = useState({
     username: "",
@@ -158,7 +162,7 @@ const Login = () => {
         background:
           "radial-gradient(circle at 10% 10%, #dbeafe 0%, #eff6ff 35%, #f8fafc 70%, #ffffff 100%)",
         p: { xs: 2, md: 3 },
-        fontFamily: "Poppins, Nunito Sans, sans-serif",
+        fontFamily: '"Inter", "Poppins", sans-serif',
       }}
     >
       <Container
@@ -321,8 +325,46 @@ const Login = () => {
                   Or continue with
                 </Divider>
 
-                <Box sx={{ display: "grid", gap: 1.2, width: "100%" }}>
-                  <Box sx={{ display: "flex", justifyContent: "center" }}>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gap: 1.2,
+                    width: "100%",
+                    mt: 0.2,
+                    borderRadius: 2.5,
+                    p: 1.2,
+                    border: "1px solid #d6e4f8",
+                    background:
+                      "linear-gradient(180deg, #f9fbff 0%, #edf4ff 100%)",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      textAlign: "center",
+                      fontSize: 13,
+                      color: "#62758f",
+                      px: 1,
+                    }}
+                  >
+                    Use your Google account for quick and secure access
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      mt: 0.2,
+                      "& > div": {
+                        width: "100% !important",
+                        display: "flex",
+                        justifyContent: "center",
+                      },
+                      "& [role='button']": {
+                        borderRadius: "999px !important",
+                        boxShadow: "0 8px 20px rgba(55, 109, 214, 0.16)",
+                      },
+                    }}
+                  >
                     <GoogleLogin
                       onSuccess={handleGoogleSuccess}
                       onError={() => {
@@ -332,12 +374,16 @@ const Login = () => {
                           severity: "error",
                         });
                       }}
+                      useOneTap={false}
+                      theme="outline"
                       text="continue_with"
                       shape="pill"
-                      width="320"
+                      size="large"
+                      width={googleButtonWidth}
+                      logo_alignment="left"
+                      locale="en"
                     />
                   </Box>
-
                 </Box>
 
                 <Typography
