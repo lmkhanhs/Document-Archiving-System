@@ -14,6 +14,9 @@ import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import RemoveOutlinedIcon from "@mui/icons-material/RemoveOutlined";
+import CropSquareOutlinedIcon from "@mui/icons-material/CropSquareOutlined";
+import FilterNoneOutlinedIcon from "@mui/icons-material/FilterNoneOutlined";
 import {
   getFilesByFolderId,
   getFoldersByParentId,
@@ -242,6 +245,11 @@ const MyDocuments = () => {
     objectUrl: "",
     textContent: "",
   });
+  const [previewWindowState, setPreviewWindowState] = useState({
+    hovered: false,
+    minimized: false,
+    maximized: false,
+  });
 
   const loadDocuments = useCallback(async ({ folderId = null, fallbackPath = [ROOT_CRUMB] } = {}) => {
     setIsLoading(true);
@@ -359,6 +367,12 @@ const MyDocuments = () => {
   };
 
   const closePreview = () => {
+    setPreviewWindowState({
+      hovered: false,
+      minimized: false,
+      maximized: false,
+    });
+
     setPreviewState((prev) => {
       if (prev.objectUrl) {
         URL.revokeObjectURL(prev.objectUrl);
@@ -390,6 +404,11 @@ const MyDocuments = () => {
       kind: PREVIEW_KIND.UNSUPPORTED,
       objectUrl: "",
       textContent: "",
+    });
+    setPreviewWindowState({
+      hovered: false,
+      minimized: false,
+      maximized: false,
     });
 
     try {
@@ -653,7 +672,7 @@ const MyDocuments = () => {
                   {allDocuments.map((item) => (
                     <tr
                       key={`${item.type}-${item.id}`}
-                      className={`border-t border-slate-100 ${item.type === "folder" ? "cursor-pointer hover:bg-blue-50/50" : ""}`}
+                      className="cursor-pointer border-t border-slate-100 hover:bg-blue-50/50"
                       onClick={item.type === "folder" ? () => openFolder(item) : () => openFilePreview(item)}
                     >
                       <td className="px-4 py-3">
@@ -680,9 +699,7 @@ const MyDocuments = () => {
                   key={`${item.type}-${item.id}`}
                   type="button"
                   onClick={item.type === "folder" ? () => openFolder(item) : () => openFilePreview(item)}
-                  className={`rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition ${
-                    item.type === "folder" ? "hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md" : ""
-                  }`}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
                 >
                   <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800">
                     {item.type === "folder" ? (
@@ -737,22 +754,74 @@ const MyDocuments = () => {
 
       {previewState.open && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-3">
-          <div className="relative flex h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+          <div
+            onMouseEnter={() => setPreviewWindowState((prev) => ({ ...prev, hovered: true }))}
+            onMouseLeave={() => setPreviewWindowState((prev) => ({ ...prev, hovered: false }))}
+            className={`relative flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl transition-all ${
+              previewWindowState.minimized
+                ? "h-16 max-w-xl self-end"
+                : previewWindowState.maximized
+                  ? "h-[95vh] max-w-none"
+                  : "h-[90vh] max-w-6xl"
+            } ${previewWindowState.hovered ? "ring-2 ring-slate-300/80" : ""}`}
+          >
             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
               <div>
                 <div className="text-sm font-semibold text-slate-800">Xem trước file</div>
                 <div className="text-xs text-slate-500">{previewState.name}</div>
               </div>
-              <button
-                type="button"
-                onClick={closePreview}
-                className="rounded-lg border border-slate-200 p-1.5 text-slate-600 transition hover:bg-slate-50"
+              <div
+                className={`flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 transition-all duration-200 ${
+                  previewWindowState.hovered
+                    ? "translate-y-0 opacity-100"
+                    : "pointer-events-none -translate-y-1 opacity-0"
+                }`}
               >
-                <CloseOutlinedIcon fontSize="small" />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewWindowState((prev) => ({ ...prev, minimized: true, hovered: false }))}
+                  className="rounded-md p-1 text-slate-600 transition hover:bg-slate-100"
+                  aria-label="Minimize preview"
+                  title="Thu nhỏ"
+                >
+                  <RemoveOutlinedIcon fontSize="small" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewWindowState((prev) => ({
+                    ...prev,
+                    maximized: !prev.maximized,
+                  }))}
+                  className="rounded-md p-1 text-slate-600 transition hover:bg-slate-100"
+                  aria-label="Toggle maximize preview"
+                  title={previewWindowState.maximized ? "Khôi phục" : "Phóng to"}
+                >
+                  {previewWindowState.maximized ? (
+                    <FilterNoneOutlinedIcon fontSize="small" />
+                  ) : (
+                    <CropSquareOutlinedIcon fontSize="small" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={closePreview}
+                  className="rounded-md p-1 text-slate-600 transition hover:bg-red-100 hover:text-red-700"
+                  aria-label="Close preview"
+                  title="Đóng"
+                >
+                  <CloseOutlinedIcon fontSize="small" />
+                </button>
+              </div>
             </div>
 
-            <div className="min-h-0 flex-1 bg-slate-50 p-3">
+            {!previewWindowState.minimized && (
+              <div className="relative min-h-0 flex-1 bg-slate-50 p-3">
+                <div
+                  className={`pointer-events-none absolute inset-0 bg-slate-500/10 transition-opacity duration-200 ${
+                    previewWindowState.hovered ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+
               {previewState.loading && (
                 <div className="grid h-full place-items-center rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-600">
                   Đang tải nội dung file...
@@ -798,7 +867,32 @@ const MyDocuments = () => {
                   />
                 </div>
               )}
-            </div>
+              </div>
+            )}
+
+            {previewWindowState.minimized && (
+              <div className="flex items-center justify-between px-4 py-2.5">
+                <div className="truncate text-sm font-semibold text-slate-700">{previewState.name}</div>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewWindowState((prev) => ({ ...prev, minimized: false }))}
+                    className="rounded-md p-1 text-slate-600 transition hover:bg-slate-100"
+                    title="Mở lại"
+                  >
+                    <CropSquareOutlinedIcon fontSize="small" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closePreview}
+                    className="rounded-md p-1 text-slate-600 transition hover:bg-red-100 hover:text-red-700"
+                    title="Đóng"
+                  >
+                    <CloseOutlinedIcon fontSize="small" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
