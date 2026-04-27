@@ -1,14 +1,33 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
+import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import CreateNewFolderOutlinedIcon from "@mui/icons-material/CreateNewFolderOutlined";
 import ViewListOutlinedIcon from "@mui/icons-material/ViewListOutlined";
 import GridViewOutlinedIcon from "@mui/icons-material/GridViewOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
-import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
-import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
-import { getFolderContents, getRootFiles, getRootFolders } from "../../services/documentService";
+import {
+  getFilesByFolderId,
+  getFoldersByParentId,
+  getRootFiles,
+  getRootFolders,
+  uploadDocument,
+} from "../../services/documentService";
+
+const sidebarItems = [
+  { key: "home", label: "Trang chủ", icon: HomeOutlinedIcon },
+  { key: "documents", label: "Tài liệu của tôi", icon: FolderOpenOutlinedIcon },
+  { key: "upload", label: "Tải lên tài liệu", icon: UploadFileOutlinedIcon },
+  { key: "trash", label: "Thùng rác", icon: DeleteOutlineOutlinedIcon },
+  { key: "settings", label: "Cài đặt", icon: SettingsOutlinedIcon },
+];
 
 const VIEW_MODE = {
   LIST: "list",
@@ -28,6 +47,14 @@ const extractCollection = (payload) => {
 
   if (Array.isArray(payload?.content)) {
     return payload.content;
+  }
+
+  if (Array.isArray(payload?.folders)) {
+    return payload.folders;
+  }
+
+  if (Array.isArray(payload?.files)) {
+    return payload.files;
   }
 
   return [];
@@ -177,9 +204,15 @@ const buildBreadcrumbs = (payload, fallback = [ROOT_CRUMB]) => {
 };
 
 const MyDocuments = () => {
+  const navigate = useNavigate();
+  const uploadInputRef = useRef(null);
+
+  const [activeMenu, setActiveMenu] = useState("documents");
   const [viewMode, setViewMode] = useState(VIEW_MODE.LIST);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
+  const [toast, setToast] = useState("");
   const [folders, setFolders] = useState([]);
   const [files, setFiles] = useState([]);
   const [currentFolderId, setCurrentFolderId] = useState(null);
@@ -204,10 +237,14 @@ const MyDocuments = () => {
         nextFiles = extractCollection(filePayload).map(normalizeFile);
         nextPath = buildBreadcrumbs(folderPayload || filePayload, [ROOT_CRUMB]);
       } else {
-        const payload = await getFolderContents(folderId);
-        nextFolders = extractFolders(payload).map(normalizeFolder);
-        nextFiles = extractFiles(payload).map(normalizeFile);
-        nextPath = buildBreadcrumbs(payload, fallbackPath);
+        const [folderPayload, filePayload] = await Promise.all([
+          getFoldersByParentId(folderId),
+          getFilesByFolderId(folderId),
+        ]);
+
+        nextFolders = extractFolders(folderPayload).map(normalizeFolder);
+        nextFiles = extractFiles(filePayload).map(normalizeFile);
+        nextPath = buildBreadcrumbs(folderPayload, fallbackPath);
       }
 
       setFolders(nextFolders);
@@ -225,6 +262,15 @@ const MyDocuments = () => {
     loadDocuments();
   }, [loadDocuments]);
 
+  useEffect(() => {
+    if (!toast) {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => setToast(""), 2500);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
   const allDocuments = useMemo(() => {
     const merged = [...folders, ...files];
 
@@ -240,6 +286,34 @@ const MyDocuments = () => {
   }, [folders, files]);
 
   const isListMode = viewMode === VIEW_MODE.LIST;
+
+  const openUploadDialog = () => {
+    uploadInputRef.current?.click();
+  };
+
+  const handleUpload = async (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      await uploadDocument({ file, folderId: currentFolderId });
+      setToast("Tải file thành công");
+      await loadDocuments({ folderId: currentFolderId, fallbackPath: breadcrumbs });
+    } catch (uploadError) {
+      setToast(uploadError.message || "Tải file thất bại");
+    } finally {
+      event.target.value = "";
+      setIsUploading(false);
+    }
+  };
+
+  const handleCreateFolder = async () => {
+    setToast("Tạo thư mục sẽ được nối API ở bước tiếp theo");
+  };
 
   const openFolder = (folder) => {
     if (!folder?.id) {
@@ -268,30 +342,96 @@ const MyDocuments = () => {
     loadDocuments({ folderId: currentFolderId, fallbackPath: breadcrumbs });
   };
 
+  const handleSidebarClick = (menuKey) => {
+    setActiveMenu(menuKey);
+
+    if (menuKey === "home") {
+      navigate("/");
+      return;
+    }
+
+    if (menuKey === "documents") {
+      navigate("/documents");
+      return;
+    }
+
+    if (menuKey === "upload") {
+      openUploadDialog();
+      return;
+    }
+
+    if (menuKey === "trash") {
+      setToast("Mục Thùng rác sẽ được triển khai ở bước tiếp theo");
+      return;
+    }
+
+    if (menuKey === "settings") {
+      setToast("Mục Cài đặt sẽ được triển khai ở bước tiếp theo");
+    }
+  };
+
   const folderCount = folders.length;
   const fileCount = files.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white p-3 md:p-5">
       <div className="mx-auto flex min-h-[calc(100vh-24px)] max-w-[1500px] overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_20px_65px_rgba(27,78,163,0.12)]">
-        <aside className="hidden w-64 border-r border-slate-200 bg-slate-50/70 p-4 lg:block">
+        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 bg-slate-50/70 p-4 md:w-20 md:border-b-0 md:border-r lg:w-64">
           <div className="flex items-center gap-3 px-1">
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-tr from-blue-700 to-sky-500 text-lg font-extrabold text-white">
               D
             </div>
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">Workspace</div>
+            <div className="hidden lg:block">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+                Workspace
+              </div>
               <div className="text-sm font-bold text-slate-700">Document Management System</div>
             </div>
           </div>
 
-          <div className="mt-6 rounded-2xl bg-blue-100/70 p-3 text-sm font-semibold text-blue-800">
-            <div className="flex items-center gap-2">
-              <FolderOpenOutlinedIcon fontSize="small" />
-              Tài liệu của tôi
-            </div>
-            <div className="mt-2 text-xs font-medium text-blue-700/90">
-              Đang mở: {breadcrumbs[breadcrumbs.length - 1]?.name || "Root"}
+          <nav className="grid grid-cols-2 gap-2 md:grid-cols-1">
+            {sidebarItems.map((item) => {
+              const isActive = activeMenu === item.key;
+              const MenuIcon = item.icon;
+
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => handleSidebarClick(item.key)}
+                  className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition ${
+                    isActive
+                      ? "bg-blue-100 text-blue-700 ring-1 ring-blue-200"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
+                >
+                  <MenuIcon fontSize="small" />
+                  <span className="truncate text-sm font-semibold md:hidden lg:inline">{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="mt-auto rounded-2xl border border-blue-100 bg-white p-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-blue-700">Quick Actions</div>
+            <div className="mt-2 space-y-2">
+              <button
+                type="button"
+                onClick={openUploadDialog}
+                disabled={isUploading}
+                className="flex w-full items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+              >
+                <CloudUploadOutlinedIcon fontSize="small" />
+                <span className="md:hidden lg:inline">{isUploading ? "Đang tải..." : "Tải lên file"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateFolder}
+                className="flex w-full items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                <CreateNewFolderOutlinedIcon fontSize="small" />
+                <span className="md:hidden lg:inline">Tạo thư mục</span>
+              </button>
             </div>
           </div>
         </aside>
@@ -474,13 +614,21 @@ const MyDocuments = () => {
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
               <div className="text-xs uppercase tracking-wide text-slate-500">Current folder</div>
               <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
-                <InsertDriveFileOutlinedIcon fontSize="small" />
+                <FolderOpenOutlinedIcon fontSize="small" />
                 <span className="truncate">{breadcrumbs[breadcrumbs.length - 1]?.name || "Root"}</span>
               </div>
             </div>
           </section>
         </main>
       </div>
+
+      <input ref={uploadInputRef} type="file" hidden onChange={handleUpload} />
+
+      {toast && (
+        <div className="fixed bottom-4 right-4 z-50 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-lg">
+          {toast}
+        </div>
+      )}
     </div>
   );
 };

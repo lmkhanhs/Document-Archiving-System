@@ -41,6 +41,24 @@ export const getRootFiles = async () => {
   }
 };
 
+export const getFoldersByParentId = async (folderParentId) => {
+  try {
+    const response = await api.get(`/folders/${folderParentId}`);
+    return parseApiResponse(response, "Không thể tải thư mục con");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể tải thư mục con");
+  }
+};
+
+export const getFilesByFolderId = async (folderParentId) => {
+  try {
+    const response = await api.get(`/files/folder/${folderParentId}`);
+    return parseApiResponse(response, "Không thể tải tệp trong thư mục");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể tải tệp trong thư mục");
+  }
+};
+
 export const getFolderContents = async (folderId) => {
   const candidates = [
     `/folders/${folderId}/contents`,

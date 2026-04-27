@@ -99,5 +99,14 @@ public class FileController {
                 .data(fileService.getRootFiles())
                 .build();
     }
+
+    @GetMapping("/folder/{folderId}")
+    public ApiResponse<List<FileResponse>> getFilesByFolderId(@PathVariable Long folderId) {
+        return ApiResponse.<List<FileResponse>>builder()
+                .code(HttpStatus.OK.value())
+                .message("Get files by folder id successfully")
+                .data(fileService.getFilesByFolderId(folderId))
+                .build();
+    }
     
 }

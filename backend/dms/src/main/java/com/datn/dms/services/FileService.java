@@ -295,6 +295,18 @@ public class FileService {
                 .toList();
     }
 
+    public List<FileResponse> getFilesByFolderId(Long folderId) {
+        UserEntity currentUser = getCurrentUser();
+        
+        folderRepository.findByIdAndOwner_IdAndIsDeletedFalse(folderId, currentUser.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.FOLDER_NOT_FOUND));
+
+        return fileRepository.findAllByOwner_IdAndFolder_IdAndIsDeletedFalseOrderByCreatedAtDesc(currentUser.getId(), folderId)
+                .stream()
+                .map(fileMapper::toFileResponse)
+                .toList();
+    }
+
     private UserEntity getCurrentUser() {
         String username = authenticationUtills.getUserName();
         return userRepository.findByUsername(username)
