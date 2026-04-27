@@ -42,6 +42,28 @@ export const googleLogin = async (idToken) => {
   }
 };
 
+export const register = async ({ username, password, confirmPassword }) => {
+  try {
+    const response = await api.post("/auth/register", {
+      username,
+      password,
+      confirmPassword,
+    });
+
+    const result = response.data;
+
+    if (typeof result.code !== "number" || result.code < 200 || result.code >= 300) {
+      throw new Error(result.message);
+    }
+
+    return result.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Đăng ký thất bại"
+    );
+  }
+};
+
 export const getInfoUser = async () => {
   try {
     const response = await api.get("/users/info");

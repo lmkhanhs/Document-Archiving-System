@@ -1,6 +1,6 @@
 // src/pages/auth/Login.jsx
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { login, googleLogin } from "../../services/authService";
 import {
   Box,
@@ -31,6 +31,7 @@ import { GoogleLogin } from "@react-oauth/google";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const googleButtonWidth = isMobile ? "280" : "420";
@@ -50,12 +51,19 @@ const Login = () => {
   });
 
   useEffect(() => {
+    const registeredUsername = location.state?.registeredUsername;
+
+    if (registeredUsername) {
+      setFormData((prev) => ({ ...prev, username: registeredUsername }));
+      return;
+    }
+
     const rememberedUsername = localStorage.getItem("rememberedUsername");
     if (rememberedUsername) {
       setFormData((prev) => ({ ...prev, username: rememberedUsername }));
       setRememberMe(true);
     }
-  }, []);
+  }, [location.state]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -325,65 +333,25 @@ const Login = () => {
                   Or continue with
                 </Divider>
 
-                <Box
-                  sx={{
-                    display: "grid",
-                    gap: 1.2,
-                    width: "100%",
-                    mt: 0.2,
-                    borderRadius: 2.5,
-                    p: 1.2,
-                    border: "1px solid #d6e4f8",
-                    background:
-                      "linear-gradient(180deg, #f9fbff 0%, #edf4ff 100%)",
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      textAlign: "center",
-                      fontSize: 13,
-                      color: "#62758f",
-                      px: 1,
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 1 }}>
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => {
+                      setSnackbar({
+                        open: true,
+                        message: "Tính năng đăng nhập Google tạm thời bị lỗi",
+                        severity: "error",
+                      });
                     }}
-                  >
-                    Use your Google account for quick and secure access
-                  </Typography>
-
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "center",
-                      mt: 0.2,
-                      "& > div": {
-                        width: "100% !important",
-                        display: "flex",
-                        justifyContent: "center",
-                      },
-                      "& [role='button']": {
-                        borderRadius: "999px !important",
-                        boxShadow: "0 8px 20px rgba(55, 109, 214, 0.16)",
-                      },
-                    }}
-                  >
-                    <GoogleLogin
-                      onSuccess={handleGoogleSuccess}
-                      onError={() => {
-                        setSnackbar({
-                          open: true,
-                          message: "Tính năng đăng nhập Google tạm thời bị lỗi",
-                          severity: "error",
-                        });
-                      }}
-                      useOneTap={false}
-                      theme="outline"
-                      text="continue_with"
-                      shape="pill"
-                      size="large"
-                      width={googleButtonWidth}
-                      logo_alignment="left"
-                      locale="en"
-                    />
-                  </Box>
+                    useOneTap={false}
+                    theme="outline"
+                    text="continue_with"
+                    shape="pill"
+                    size="large"
+                    width={googleButtonWidth}
+                    logo_alignment="left"
+                    locale="vi"
+                  />
                 </Box>
 
                 <Typography
@@ -400,13 +368,7 @@ const Login = () => {
                     type="button"
                     underline="hover"
                     sx={{ color: "#1f6feb", fontWeight: 700, fontSize: 14 }}
-                    onClick={() => {
-                      setSnackbar({
-                        open: true,
-                        message: "Trang đăng ký sẽ được cập nhật sớm",
-                        severity: "success",
-                      });
-                    }}
+                    onClick={() => navigate("/register")}
                   >
                     Sign up
                   </Link>

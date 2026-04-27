@@ -2,6 +2,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "../pages/Home";
 import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
 
 const isAuthenticated = () => Boolean(localStorage.getItem("accessToken"));
 
@@ -32,6 +33,16 @@ const AppRouter = () => {
         element={(
           <PublicOnlyRoute>
             <Login />
+          </PublicOnlyRoute>
+        )}
+      />
+
+      {/* Trang register */}
+      <Route
+        path="/register"
+        element={(
+          <PublicOnlyRoute>
+            <Register />
           </PublicOnlyRoute>
         )}
       />
