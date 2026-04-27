@@ -130,6 +130,21 @@ export const downloadDocument = async (fileId) => {
   }
 };
 
+export const previewDocument = async (fileId) => {
+  try {
+    const response = await api.get(`/files/${fileId}/download`, {
+      responseType: "blob",
+    });
+
+    return {
+      blob: response.data,
+      contentType: response.headers?.["content-type"] || "",
+    };
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể xem trước file");
+  }
+};
+
 export const getHomeDashboard = async ({
   search = "",
   fileType = "all",

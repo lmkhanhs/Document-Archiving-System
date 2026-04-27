@@ -13,9 +13,11 @@ import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import {
   getFilesByFolderId,
   getFoldersByParentId,
+  previewDocument,
   getRootFiles,
   getRootFolders,
   uploadDocument,
@@ -35,6 +37,21 @@ const VIEW_MODE = {
 };
 
 const ROOT_CRUMB = { id: null, name: "Root" };
+
+const PREVIEW_KIND = {
+  PDF: "pdf",
+  IMAGE: "image",
+  TEXT: "text",
+  OFFICE: "office",
+  UNSUPPORTED: "unsupported",
+};
+
+const TEXT_EXTENSIONS = new Set([
+  "txt", "md", "json", "js", "jsx", "ts", "tsx", "html", "css", "scss", "less",
+  "xml", "yml", "yaml", "java", "py", "go", "c", "cpp", "h", "hpp", "sql", "log", "csv",
+]);
+
+const OFFICE_EXTENSIONS = new Set(["doc", "docx", "xls", "xlsx", "ppt", "pptx"]);
 
 const extractCollection = (payload) => {
   if (Array.isArray(payload)) {
@@ -118,7 +135,49 @@ const normalizeFile = (file) => ({
   name: file.name || file.fileName || "Tệp chưa đặt tên",
   dateModified: getDateValue(file),
   fileSize: getFileSizeValue(file),
+  mimeType: file.type || file.fileType || "",
+  fileUrl: file.url || "",
 });
+
+const getFileExtension = (fileName = "") => {
+  const normalized = String(fileName).trim();
+  const index = normalized.lastIndexOf(".");
+  if (index < 0 || index === normalized.length - 1) {
+    return "";
+  }
+
+  return normalized.slice(index + 1).toLowerCase();
+};
+
+const detectPreviewKind = ({ name = "", mimeType = "" }) => {
+  const extension = getFileExtension(name);
+  const mime = String(mimeType).toLowerCase();
+
+  if (mime.includes("pdf") || extension === "pdf") {
+    return PREVIEW_KIND.PDF;
+  }
+
+  if (mime.startsWith("image/") || ["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"].includes(extension)) {
+    return PREVIEW_KIND.IMAGE;
+  }
+
+  if (mime.startsWith("text/") || mime.includes("json") || TEXT_EXTENSIONS.has(extension)) {
+    return PREVIEW_KIND.TEXT;
+  }
+
+  if (
+    mime.includes("word")
+    || mime.includes("excel")
+    || mime.includes("spreadsheet")
+    || mime.includes("powerpoint")
+    || mime.includes("presentation")
+    || OFFICE_EXTENSIONS.has(extension)
+  ) {
+    return PREVIEW_KIND.OFFICE;
+  }
+
+  return PREVIEW_KIND.UNSUPPORTED;
+};
 
 const normalizePathNode = (node, index) => {
   if (typeof node === "string") {
@@ -174,6 +233,15 @@ const MyDocuments = () => {
   const [files, setFiles] = useState([]);
   const [currentFolderId, setCurrentFolderId] = useState(null);
   const [breadcrumbs, setBreadcrumbs] = useState([ROOT_CRUMB]);
+  const [previewState, setPreviewState] = useState({
+    open: false,
+    loading: false,
+    error: "",
+    name: "",
+    kind: PREVIEW_KIND.UNSUPPORTED,
+    objectUrl: "",
+    textContent: "",
+  });
 
   const loadDocuments = useCallback(async ({ folderId = null, fallbackPath = [ROOT_CRUMB] } = {}) => {
     setIsLoading(true);
@@ -229,6 +297,12 @@ const MyDocuments = () => {
     return () => clearTimeout(timer);
   }, [toast]);
 
+  useEffect(() => () => {
+    if (previewState.objectUrl) {
+      URL.revokeObjectURL(previewState.objectUrl);
+    }
+  }, [previewState.objectUrl]);
+
   const allDocuments = useMemo(() => {
     const merged = [...folders, ...files];
 
@@ -282,6 +356,85 @@ const MyDocuments = () => {
       folderId: folder.id,
       fallbackPath: [...breadcrumbs, { id: folder.id, name: folder.name }],
     });
+  };
+
+  const closePreview = () => {
+    setPreviewState((prev) => {
+      if (prev.objectUrl) {
+        URL.revokeObjectURL(prev.objectUrl);
+      }
+
+      return {
+        open: false,
+        loading: false,
+        error: "",
+        name: "",
+        kind: PREVIEW_KIND.UNSUPPORTED,
+        objectUrl: "",
+        textContent: "",
+      };
+    });
+  };
+
+  const openFilePreview = async (file) => {
+    if (!file?.id) {
+      setToast("Không thể xem trước file này");
+      return;
+    }
+
+    setPreviewState({
+      open: true,
+      loading: true,
+      error: "",
+      name: file.name || "File",
+      kind: PREVIEW_KIND.UNSUPPORTED,
+      objectUrl: "",
+      textContent: "",
+    });
+
+    try {
+      const { blob, contentType } = await previewDocument(file.id);
+      const kind = detectPreviewKind({
+        name: file.name,
+        mimeType: contentType || file.mimeType,
+      });
+
+      if (kind === PREVIEW_KIND.UNSUPPORTED) {
+        setPreviewState((prev) => ({
+          ...prev,
+          loading: false,
+          error: "Không hỗ trợ xem trước file này",
+          kind,
+        }));
+        return;
+      }
+
+      if (kind === PREVIEW_KIND.TEXT) {
+        const textContent = await blob.text();
+        setPreviewState((prev) => ({
+          ...prev,
+          loading: false,
+          kind,
+          textContent,
+        }));
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(blob);
+
+      setPreviewState((prev) => ({
+        ...prev,
+        loading: false,
+        kind,
+        objectUrl,
+      }));
+    } catch (previewError) {
+      setPreviewState((prev) => ({
+        ...prev,
+        loading: false,
+        error: previewError.message || "Không thể xem trước file",
+      }));
+    }
   };
 
   const onClickCrumb = (crumb, index) => {
@@ -501,7 +654,7 @@ const MyDocuments = () => {
                     <tr
                       key={`${item.type}-${item.id}`}
                       className={`border-t border-slate-100 ${item.type === "folder" ? "cursor-pointer hover:bg-blue-50/50" : ""}`}
-                      onClick={item.type === "folder" ? () => openFolder(item) : undefined}
+                      onClick={item.type === "folder" ? () => openFolder(item) : () => openFilePreview(item)}
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800">
@@ -526,7 +679,7 @@ const MyDocuments = () => {
                 <button
                   key={`${item.type}-${item.id}`}
                   type="button"
-                  onClick={item.type === "folder" ? () => openFolder(item) : undefined}
+                  onClick={item.type === "folder" ? () => openFolder(item) : () => openFilePreview(item)}
                   className={`rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition ${
                     item.type === "folder" ? "hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md" : ""
                   }`}
@@ -581,6 +734,74 @@ const MyDocuments = () => {
       </div>
 
       <input ref={uploadInputRef} type="file" hidden onChange={handleUpload} />
+
+      {previewState.open && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-3">
+          <div className="relative flex h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+              <div>
+                <div className="text-sm font-semibold text-slate-800">Xem trước file</div>
+                <div className="text-xs text-slate-500">{previewState.name}</div>
+              </div>
+              <button
+                type="button"
+                onClick={closePreview}
+                className="rounded-lg border border-slate-200 p-1.5 text-slate-600 transition hover:bg-slate-50"
+              >
+                <CloseOutlinedIcon fontSize="small" />
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 bg-slate-50 p-3">
+              {previewState.loading && (
+                <div className="grid h-full place-items-center rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-600">
+                  Đang tải nội dung file...
+                </div>
+              )}
+
+              {!previewState.loading && previewState.error && (
+                <div className="grid h-full place-items-center rounded-xl border border-amber-100 bg-amber-50 text-sm font-semibold text-amber-800">
+                  {previewState.error}
+                </div>
+              )}
+
+              {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.PDF && previewState.objectUrl && (
+                <iframe
+                  title="PDF Preview"
+                  src={previewState.objectUrl}
+                  className="h-full w-full rounded-xl border border-slate-200 bg-white"
+                />
+              )}
+
+              {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.IMAGE && previewState.objectUrl && (
+                <div className="grid h-full place-items-center rounded-xl border border-slate-200 bg-white p-3">
+                  <img
+                    src={previewState.objectUrl}
+                    alt={previewState.name}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
+              )}
+
+              {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.TEXT && (
+                <pre className="h-full overflow-auto rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-700">
+                  {previewState.textContent}
+                </pre>
+              )}
+
+              {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.OFFICE && previewState.objectUrl && (
+                <div className="h-full rounded-xl border border-slate-200 bg-white p-2">
+                  <iframe
+                    title="Office Preview"
+                    src={previewState.objectUrl}
+                    className="h-full w-full rounded-lg"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && (
         <div className="fixed bottom-4 right-4 z-50 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-lg">
