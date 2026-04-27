@@ -23,6 +23,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 @RestController
@@ -60,14 +62,26 @@ public class ForderController {
 				.build();
 	}
 
+	@GetMapping("/root")
+	public ApiResponse<List<FolderResponse>> getActiveRootFolders() {
+		return ApiResponse.<List<FolderResponse>>builder()
+				.code(HttpStatus.OK.value())
+				.message("Get active root folders successfully")
+				.data(folderService.getActiveRootFolders())
+				.build();
+	}
+	
+
     @PutMapping("/{id}")
-    public ApiResponse<FolderResponse> putMethodName(@PathVariable Long id, @RequestBody UpdateFolderRequest request) {
+    public ApiResponse<FolderResponse> updateFolder(@PathVariable Long id, @RequestBody UpdateFolderRequest request) {
         return ApiResponse.<FolderResponse>builder()
                 .code(HttpStatus.OK.value())
                 .message("Update folder successfully")
                 .data(folderService.updateFolder(id, request))
                 .build();
     }
+
+	
 
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteFolder(@PathVariable Long id) {

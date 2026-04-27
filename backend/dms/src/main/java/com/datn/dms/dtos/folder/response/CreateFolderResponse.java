@@ -16,7 +16,6 @@ public class CreateFolderResponse {
 	String path;
 	Long parentId;
 	Long ownerId;
-	String color;
 	Boolean isDeleted;
 	LocalDateTime createdAt;
 }

@@ -8,15 +8,25 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 import com.datn.dms.dtos.ApiResponse;
 import com.datn.dms.dtos.files.request.CreateFileRequest;
+import com.datn.dms.dtos.files.request.UpdateFileRequest;
 import com.datn.dms.dtos.files.response.CreateFileResponse;
+import com.datn.dms.dtos.files.response.FileResponse;
+import com.datn.dms.dtos.files.response.HomeDashboardResponse;
+import com.datn.dms.dtos.files.response.HomeRecentItemResponse;
 import com.datn.dms.services.FileService;
 
 import lombok.AccessLevel;
@@ -38,7 +48,21 @@ public class FileController {
         return ApiResponse.<CreateFileResponse>builder()
                 .code(HttpStatus.CREATED.value())
                 .message("Upload file successfully")
-                .data(fileService.uploadFile(file, request))
+                .data(fileService.handleCreateFile(file, request))
+                .build();
+    }
+
+    @GetMapping("/home")
+    public ApiResponse<HomeDashboardResponse> getHomeDashboard(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String fileType,
+            @RequestParam(required = false) String time,
+            @RequestParam(required = false) String owner,
+            @RequestParam(required = false, defaultValue = "desc") String sort) {
+        return ApiResponse.<HomeDashboardResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("Get home dashboard successfully")
+                .data(fileService.getHomeDashboard(search, fileType, time, owner, sort))
                 .build();
     }
 
@@ -46,4 +70,34 @@ public class FileController {
     public ResponseEntity<Resource> downloadFile(@PathVariable Long fileId) {
         return fileService.downloadFile(fileId);
     }
+
+    @PutMapping("/{fileId}")
+    public ApiResponse<HomeRecentItemResponse> renameFile(
+            @PathVariable Long fileId,
+            @RequestBody UpdateFileRequest request) {
+        return ApiResponse.<HomeRecentItemResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("Rename file successfully")
+                .data(fileService.renameFile(fileId, request))
+                .build();
+    }
+
+    @DeleteMapping("/{fileId}")
+    public ApiResponse<Void> deleteFile(@PathVariable Long fileId) {
+        fileService.deleteFile(fileId);
+        return ApiResponse.<Void>builder()
+                .code(HttpStatus.OK.value())
+                .message("Delete file successfully")
+                .build();
+    }
+
+    @GetMapping("/root")
+    public ApiResponse<List<FileResponse>> getRootFiles() {
+        return ApiResponse.<List<FileResponse>>builder()
+                .code(HttpStatus.OK.value())
+                .message("Get root files successfully")
+                .data(fileService.getRootFiles())
+                .build();
+    }
+    
 }

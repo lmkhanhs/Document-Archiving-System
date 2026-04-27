@@ -118,6 +118,17 @@ public class FolderService {
                 .toList();
     }
 
+    public List<FolderResponse> getActiveRootFolders() {
+        String username = authenticationUtills.getUserName();
+        UserEntity owner = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        return folderRepository.findAllByOwner_IdAndParentIsNullAndIsDeletedFalseOrderByCreatedAtDesc(owner.getId())
+                .stream()
+                .map(folderMapper::toFolderResponse)
+                .toList();
+    }
+
     public FolderResponse updateFolder(Long folderId, UpdateFolderRequest request) {
         String username = authenticationUtills.getUserName();
         UserEntity owner = userRepository.findByUsername(username)
