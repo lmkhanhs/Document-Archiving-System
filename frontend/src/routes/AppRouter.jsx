@@ -4,6 +4,7 @@ import Home from "../pages/Home";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import MyDocuments from "../pages/documents/MyDocuments";
+import Trash from "../pages/documents/Trash";
 
 const isAuthenticated = () => Boolean(localStorage.getItem("accessToken"));
 
@@ -33,6 +34,15 @@ const AppRouter = () => {
         element={(
           <ProtectedRoute>
             <MyDocuments />
+          </ProtectedRoute>
+        )}
+      />
+
+      <Route
+        path="/trash"
+        element={(
+          <ProtectedRoute>
+            <Trash />
           </ProtectedRoute>
         )}
       />

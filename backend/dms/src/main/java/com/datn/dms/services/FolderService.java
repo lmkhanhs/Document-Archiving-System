@@ -152,6 +152,7 @@ public class FolderService {
                 .orElseThrow(() -> new AppException(ErrorCode.FOLDER_NOT_FOUND));
 
         folderEntity.setDeleted(false);
+        folderEntity.setDeletedAt(null);
         folderEntity = folderRepository.save(folderEntity);
 
         return folderMapper.toFolderResponse(folderEntity);
@@ -166,6 +167,7 @@ public class FolderService {
                 .orElseThrow(() -> new AppException(ErrorCode.FOLDER_NOT_FOUND));
 
         folderEntity.setDeleted(true);
+        folderEntity.setDeletedAt(java.time.LocalDateTime.now());
         folderRepository.save(folderEntity);
     }
 

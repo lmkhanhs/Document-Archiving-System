@@ -19,4 +19,6 @@ public interface FileRepository extends JpaRepository<FileEntity, Long> {
 	List<FileEntity> findAllByOwner_IdAndFolder_IdAndIsDeletedFalseOrderByCreatedAtDesc(Long ownerId, Long folderId);
 
 	List<FileEntity> findAllByOwner_IdAndIsDeletedTrueOrderByCreatedAtDesc(Long ownerId);
+
+	Optional<FileEntity> findByIdAndOwner_IdAndIsDeletedTrue(Long id, Long ownerId);
 }

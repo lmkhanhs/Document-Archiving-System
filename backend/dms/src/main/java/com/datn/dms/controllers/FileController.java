@@ -91,6 +91,15 @@ public class FileController {
                 .build();
     }
 
+    @PutMapping("/restore/{fileId}")
+    public ApiResponse<FileResponse> restoreFile(@PathVariable Long fileId) {
+        return ApiResponse.<FileResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("Restore file successfully")
+                .data(fileService.restoreFile(fileId))
+                .build();
+    }
+
     @GetMapping("/root")
     public ApiResponse<List<FileResponse>> getRootFiles() {
         return ApiResponse.<List<FileResponse>>builder()

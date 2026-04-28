@@ -19,6 +19,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,6 +59,8 @@ public class FolderEntity extends BaseEntity {
 
     @Column(columnDefinition = "boolean default false")
     boolean isDeleted = false;
+
+    LocalDateTime deletedAt;
 
     @Builder.Default
     @OneToMany(mappedBy = "folder", cascade = CascadeType.ALL, orphanRemoval = true)

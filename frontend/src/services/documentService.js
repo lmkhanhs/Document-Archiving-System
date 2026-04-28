@@ -116,6 +116,42 @@ export const deleteFolder = async (folderId) => {
   }
 };
 
+export const getTrashFolders = async () => {
+  try {
+    const response = await api.get("/folders/trash");
+    return parseApiResponse(response, "Không thể tải thư mục trong thùng rác");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể tải thư mục trong thùng rác");
+  }
+};
+
+export const getTrashFiles = async () => {
+  try {
+    const response = await api.get("/files/trash");
+    return parseApiResponse(response, "Không thể tải file trong thùng rác");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể tải file trong thùng rác");
+  }
+};
+
+export const restoreFolder = async (folderId) => {
+  try {
+    const response = await api.put(`/folders/restore/${folderId}`);
+    return parseApiResponse(response, "Không thể khôi phục thư mục");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể khôi phục thư mục");
+  }
+};
+
+export const restoreFile = async (fileId) => {
+  try {
+    const response = await api.put(`/files/restore/${fileId}`);
+    return parseApiResponse(response, "Không thể khôi phục file");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể khôi phục file");
+  }
+};
+
 export const uploadDocument = async ({ file, folderId = null }) => {
   const formData = new FormData();
   formData.append("file", file);

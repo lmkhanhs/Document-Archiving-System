@@ -284,7 +284,21 @@ public class FileService {
                 .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
 
         fileEntity.setDeleted(true);
+        fileEntity.setDeletedAt(java.time.LocalDateTime.now());
         fileRepository.save(fileEntity);
+    }
+
+    public FileResponse restoreFile(Long fileId) {
+        UserEntity owner = getCurrentUser();
+
+        FileEntity fileEntity = fileRepository.findByIdAndOwner_IdAndIsDeletedTrue(fileId, owner.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
+
+        fileEntity.setDeleted(false);
+        fileEntity.setDeletedAt(null);
+        fileEntity = fileRepository.save(fileEntity);
+
+        return fileMapper.toFileResponse(fileEntity);
     }
 
     public List<FileResponse> getRootFiles() {

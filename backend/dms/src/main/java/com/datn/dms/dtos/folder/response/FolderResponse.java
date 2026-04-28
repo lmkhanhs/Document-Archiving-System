@@ -17,4 +17,5 @@ public class FolderResponse {
     Long parentId;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
+    LocalDateTime deletedAt;
 }

@@ -19,4 +19,5 @@ public class FileResponse {
     Long folderId;
     String colorCode;
     LocalDateTime createdAt;
+    LocalDateTime deletedAt;
 }

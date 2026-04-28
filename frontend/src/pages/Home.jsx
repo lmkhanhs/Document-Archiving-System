@@ -514,6 +514,9 @@ const Home = () => {
                     if (item.key === "upload") {
                       openUploadDialog();
                     }
+                    if (item.key === "trash") {
+                      navigate("/trash");
+                    }
                   }}
                   className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition ${
                     isActive

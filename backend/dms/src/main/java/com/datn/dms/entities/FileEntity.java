@@ -1,5 +1,7 @@
 package com.datn.dms.entities;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -46,6 +48,8 @@ public class FileEntity extends BaseEntity {
 
     @Column(columnDefinition = "boolean default false")
     boolean isDeleted = false;
+
+    LocalDateTime deletedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "color_id")

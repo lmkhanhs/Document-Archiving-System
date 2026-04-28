@@ -705,7 +705,7 @@ const MyDocuments = () => {
     }
 
     if (menuKey === "trash") {
-      setToast("Mục Thùng rác sẽ được triển khai ở bước tiếp theo");
+      navigate("/trash");
       return;
     }
 
