@@ -91,6 +91,15 @@ public class FileController {
                 .build();
     }
 
+    @DeleteMapping("/{fileId}/force")
+    public ApiResponse<Void> forceDeleteFile(@PathVariable Long fileId) {
+        fileService.forceDeleteFile(fileId);
+        return ApiResponse.<Void>builder()
+                .code(HttpStatus.OK.value())
+                .message("Force delete file successfully")
+                .build();
+    }
+
     @PutMapping("/restore/{fileId}")
     public ApiResponse<FileResponse> restoreFile(@PathVariable Long fileId) {
         return ApiResponse.<FileResponse>builder()

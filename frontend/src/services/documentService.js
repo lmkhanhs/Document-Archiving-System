@@ -152,6 +152,24 @@ export const restoreFile = async (fileId) => {
   }
 };
 
+export const deleteTrashFolder = async (folderId) => {
+  try {
+    const response = await api.delete(`/folders/${folderId}/force`);
+    return parseApiResponse(response, "Không thể xóa vĩnh viễn thư mục");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể xóa vĩnh viễn thư mục");
+  }
+};
+
+export const deleteTrashFile = async (fileId) => {
+  try {
+    const response = await api.delete(`/files/${fileId}/force`);
+    return parseApiResponse(response, "Không thể xóa vĩnh viễn file");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể xóa vĩnh viễn file");
+  }
+};
+
 export const uploadDocument = async ({ file, folderId = null }) => {
   const formData = new FormData();
   formData.append("file", file);

@@ -30,6 +30,10 @@ public class FolderService {
     AuthenticationUtills authenticationUtills;
     FolderMapper folderMapper;
 
+    @lombok.experimental.NonFinal
+    @org.springframework.beans.factory.annotation.Value("${app.storage.upload-dir:uploads}")
+    String uploadDir;
+
     public CreateFolderResponse createFolder(CreateFolderRequest request) {
         String username = authenticationUtills.getUserName();
         UserEntity owner = userRepository.findByUsername(username)
@@ -180,5 +184,33 @@ public class FolderService {
                 .stream()
                 .map(folderMapper::toFolderResponse)
                 .toList();
+    }
+
+    public void forceDeleteFolder(Long folderId) {
+        String username = authenticationUtills.getUserName();
+        UserEntity owner = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        FolderEntity folderEntity = folderRepository.findByIdAndOwner_IdAndIsDeletedTrue(folderId, owner.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.FOLDER_NOT_FOUND));
+
+        deletePhysicalFolderRecursively(folderEntity, owner.getId());
+
+        folderRepository.delete(folderEntity);
+    }
+
+    private void deletePhysicalFolderRecursively(FolderEntity folder, Long ownerId) {
+        java.nio.file.Path targetPath = java.nio.file.Paths.get(uploadDir, "users", String.valueOf(ownerId), "folder-" + folder.getId()).toAbsolutePath().normalize();
+        try {
+            org.springframework.util.FileSystemUtils.deleteRecursively(targetPath);
+        } catch (java.io.IOException e) {
+            // Ignore if directory doesn't exist or cannot be deleted
+        }
+
+        if (folder.getSubFolders() != null) {
+            for (FolderEntity sub : folder.getSubFolders()) {
+                deletePhysicalFolderRecursively(sub, ownerId);
+            }
+        }
     }
 }

@@ -91,6 +91,15 @@ public class ForderController {
                 .message("Delete folder successfully")
                 .build();
     }
+
+    @DeleteMapping("/{id}/force")
+    public ApiResponse<Void> forceDeleteFolder(@PathVariable Long id) {
+        folderService.forceDeleteFolder(id);
+        return ApiResponse.<Void>builder()
+                .code(HttpStatus.OK.value())
+                .message("Force delete folder successfully")
+                .build();
+    }
     
     @PutMapping("restore/{id}")
     public ApiResponse<FolderResponse> restoreFolder(@PathVariable Long id) {

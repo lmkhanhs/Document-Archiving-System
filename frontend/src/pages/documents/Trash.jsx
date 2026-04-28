@@ -17,8 +17,10 @@ import TableChartOutlinedIcon from "@mui/icons-material/TableChartOutlined";
 import SlideshowOutlinedIcon from "@mui/icons-material/SlideshowOutlined";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
-import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
+import emptyTrashImage from "../../assets/trash-empty.svg";
 import {
+  deleteTrashFile,
+  deleteTrashFolder,
   getTrashFiles,
   getTrashFolders,
   restoreFile,
@@ -379,7 +381,23 @@ const Trash = () => {
     }
 
     if (action === "delete") {
-      setToast("Chưa hỗ trợ xóa vĩnh viễn");
+      if (!item?.id) {
+        setToast("Không thể xóa mục này");
+        return;
+      }
+
+      try {
+        if (item.type === "folder") {
+          await deleteTrashFolder(item.id);
+        } else {
+          await deleteTrashFile(item.id);
+        }
+
+        setToast("Đã xóa vĩnh viễn");
+        await loadTrash();
+      } catch (deleteError) {
+        setToast(deleteError.message || "Không thể xóa vĩnh viễn");
+      }
     }
   };
 
@@ -454,15 +472,6 @@ const Trash = () => {
                 Quản lý file và thư mục đã xóa gần đây.
               </p>
             </div>
-
-            <button
-              type="button"
-              onClick={loadTrash}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-            >
-              <RefreshOutlinedIcon fontSize="small" />
-              Làm mới
-            </button>
           </header>
 
           <section className="mt-5 flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-3 md:flex-row md:items-center md:justify-between">
@@ -511,7 +520,7 @@ const Trash = () => {
                 />
               ))}
             </div>
-          ) : isListMode ? (
+          ) : isListMode && allItems.length > 0 ? (
             <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white">
               <table className="min-w-full text-left">
                 <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
@@ -577,8 +586,14 @@ const Trash = () => {
           )}
 
           {!isLoading && allItems.length === 0 && !error && (
-            <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-sm font-medium text-slate-600">
-              Thùng rác trống.
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center">
+              <img
+                src={emptyTrashImage}
+                alt="Thùng rác trống"
+                className="mx-auto h-44 w-44 object-contain"
+              />
+              <div className="mt-4 text-base font-semibold text-slate-700">Thùng rác trống</div>
+              <div className="mt-1 text-sm text-slate-500">Không có file hoặc thư mục nào đã xóa.</div>
             </div>
           )}
         </main>

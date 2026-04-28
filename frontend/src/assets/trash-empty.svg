@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-labelledby="title desc">
+  <title id="title">Empty trash illustration</title>
+  <desc id="desc">Abstract layered cards with a star to indicate empty state.</desc>
+  <defs>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fafc" />
+      <stop offset="1" stop-color="#e2e8f0" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7c3aed" />
+      <stop offset="1" stop-color="#60a5fa" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="none" />
+  <rect x="70" y="140" width="260" height="110" rx="18" fill="url(#accent)" opacity="0.85" />
+  <rect x="90" y="110" width="220" height="120" rx="20" fill="url(#card)" stroke="#cbd5f5" stroke-width="2" />
+  <rect x="120" y="150" width="160" height="18" rx="9" fill="#e2e8f0" />
+  <rect x="135" y="176" width="130" height="12" rx="6" fill="#e2e8f0" />
+  <polygon points="290,60 305,95 343,95 312,116 323,150 290,130 257,150 268,116 237,95 275,95" fill="#fde68a" stroke="#f59e0b" stroke-width="3" />
+  <circle cx="95" cy="80" r="16" fill="#93c5fd" />
+  <circle cx="125" cy="92" r="10" fill="#bfdbfe" />
+</svg>
