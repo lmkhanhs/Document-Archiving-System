@@ -307,6 +307,14 @@ public class FileService {
                 .toList();
     }
 
+    public List<FileResponse> getTrashFiles() {
+        UserEntity currentUser = getCurrentUser();
+        return fileRepository.findAllByOwner_IdAndIsDeletedTrueOrderByCreatedAtDesc(currentUser.getId())
+                .stream()
+                .map(fileMapper::toFileResponse)
+                .toList();
+    }
+
     private UserEntity getCurrentUser() {
         String username = authenticationUtills.getUserName();
         return userRepository.findByUsername(username)

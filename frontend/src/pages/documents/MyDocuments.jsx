@@ -24,13 +24,16 @@ import RemoveOutlinedIcon from "@mui/icons-material/RemoveOutlined";
 import CropSquareOutlinedIcon from "@mui/icons-material/CropSquareOutlined";
 import FilterNoneOutlinedIcon from "@mui/icons-material/FilterNoneOutlined";
 import {
+  deleteFolder,
   getFilesByFolderId,
   getFoldersByParentId,
   previewDocument,
+  renameFolder,
   getRootFiles,
   getRootFolders,
   uploadDocument,
 } from "../../services/documentService";
+import { deleteDocument, renameDocument } from "../../services/fileActionService";
 
 const sidebarItems = [
   { key: "home", label: "Trang chủ", icon: HomeOutlinedIcon },
@@ -44,6 +47,11 @@ const VIEW_MODE = {
   LIST: "list",
   GRID: "grid",
 };
+
+const CONTEXT_ACTIONS = [
+  { key: "rename", label: "Đổi tên" },
+  { key: "delete", label: "Xóa" },
+];
 
 const ROOT_CRUMB = { id: null, name: "Root" };
 
@@ -287,6 +295,7 @@ const buildBreadcrumbs = (payload, fallback = [ROOT_CRUMB]) => {
 const MyDocuments = () => {
   const navigate = useNavigate();
   const uploadInputRef = useRef(null);
+  const menuRef = useRef(null);
 
   const [activeMenu, setActiveMenu] = useState("documents");
   const [viewMode, setViewMode] = useState(VIEW_MODE.LIST);
@@ -311,6 +320,18 @@ const MyDocuments = () => {
     hovered: false,
     minimized: false,
     maximized: false,
+  });
+  const [menuState, setMenuState] = useState(null);
+  const [renameState, setRenameState] = useState({
+    open: false,
+    item: null,
+    value: "",
+    submitting: false,
+  });
+  const [deleteState, setDeleteState] = useState({
+    open: false,
+    item: null,
+    submitting: false,
   });
 
   const loadDocuments = useCallback(async ({ folderId = null, fallbackPath = [ROOT_CRUMB] } = {}) => {
@@ -366,6 +387,28 @@ const MyDocuments = () => {
     const timer = setTimeout(() => setToast(""), 2500);
     return () => clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    if (!menuState) {
+      return undefined;
+    }
+
+    const closeMenu = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuState(null);
+      }
+    };
+
+    window.addEventListener("click", closeMenu);
+    window.addEventListener("resize", closeMenu);
+    window.addEventListener("scroll", closeMenu, true);
+
+    return () => {
+      window.removeEventListener("click", closeMenu);
+      window.removeEventListener("resize", closeMenu);
+      window.removeEventListener("scroll", closeMenu, true);
+    };
+  }, [menuState]);
 
   useEffect(() => () => {
     if (previewState.objectUrl) {
@@ -514,6 +557,115 @@ const MyDocuments = () => {
         ...prev,
         loading: false,
         error: previewError.message || "Không thể xem trước file",
+      }));
+    }
+  };
+
+  const openContextMenu = (event, item) => {
+    event.preventDefault();
+    setMenuState({
+      x: event.clientX,
+      y: event.clientY,
+      item,
+    });
+  };
+
+  const onMenuAction = (action, item) => {
+    setMenuState(null);
+
+    if (action === "rename") {
+      setRenameState({
+        open: true,
+        item,
+        value: item?.name || "",
+        submitting: false,
+      });
+      return;
+    }
+
+    if (action === "delete") {
+      setDeleteState({
+        open: true,
+        item,
+        submitting: false,
+      });
+    }
+  };
+
+  const handleRenameSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!renameState.item) {
+      return;
+    }
+
+    const nextName = renameState.value.trim();
+    if (!nextName) {
+      setToast("Vui lòng nhập tên mới");
+      return;
+    }
+
+    const target = renameState.item;
+    if (!target.id) {
+      setToast("Không thể đổi tên mục này");
+      return;
+    }
+
+    setRenameState((prev) => ({
+      ...prev,
+      submitting: true,
+    }));
+
+    try {
+      if (target.type === "folder") {
+        await renameFolder(target.id, nextName);
+      } else {
+        await renameDocument(target.id, nextName);
+      }
+
+      setToast("Đổi tên thành công");
+      await loadDocuments({ folderId: currentFolderId, fallbackPath: breadcrumbs });
+      setRenameState({ open: false, item: null, value: "", submitting: false });
+    } catch (renameError) {
+      setToast(renameError.message || "Không thể đổi tên");
+      setRenameState((prev) => ({
+        ...prev,
+        submitting: false,
+      }));
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteState.item) {
+      return;
+    }
+
+    const target = deleteState.item;
+    if (!target.id) {
+      setToast("Không thể xóa mục này");
+      return;
+    }
+
+    setDeleteState((prev) => ({
+      ...prev,
+      submitting: true,
+    }));
+
+    try {
+      if (target.type === "folder") {
+        await deleteFolder(target.id);
+      } else {
+        await deleteDocument(target.id);
+      }
+
+      setToast("Đã xóa thành công");
+      await loadDocuments({ folderId: currentFolderId, fallbackPath: breadcrumbs });
+      setDeleteState({ open: false, item: null, submitting: false });
+    } catch (deleteError) {
+      setToast(deleteError.message || "Không thể xóa");
+      setDeleteState((prev) => ({
+        ...prev,
+        submitting: false,
       }));
     }
   };
@@ -741,6 +893,7 @@ const MyDocuments = () => {
                         key={`${item.type}-${item.id}`}
                         className="cursor-pointer border-t border-slate-100 hover:bg-blue-50/50"
                         onClick={item.type === "folder" ? () => openFolder(item) : () => openFilePreview(item)}
+                        onContextMenu={(event) => openContextMenu(event, item)}
                       >
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800">
@@ -768,6 +921,7 @@ const MyDocuments = () => {
                     key={`${item.type}-${item.id}`}
                     type="button"
                     onClick={item.type === "folder" ? () => openFolder(item) : () => openFilePreview(item)}
+                    onContextMenu={(event) => openContextMenu(event, item)}
                     className="rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
                   >
                     <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800">
@@ -817,6 +971,93 @@ const MyDocuments = () => {
       </div>
 
       <input ref={uploadInputRef} type="file" hidden onChange={handleUpload} />
+
+      {menuState && (
+        <div
+          ref={menuRef}
+          style={{ left: menuState.x, top: menuState.y }}
+          className="fixed z-50 w-44 -translate-x-1/2 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl"
+        >
+          {CONTEXT_ACTIONS.map((action) => (
+            <button
+              key={action.key}
+              type="button"
+              onClick={() => onMenuAction(action.key, menuState.item)}
+              className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100"
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {renameState.open && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3">
+          <form
+            onSubmit={handleRenameSubmit}
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl"
+          >
+            <div className="text-lg font-semibold text-slate-800">Đổi tên</div>
+            <div className="mt-1 text-sm text-slate-500">
+              {renameState.item?.type === "folder" ? "Thư mục" : "File"}: {renameState.item?.name}
+            </div>
+
+            <input
+              value={renameState.value}
+              onChange={(event) => setRenameState((prev) => ({ ...prev, value: event.target.value }))}
+              className="mt-4 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-300"
+              placeholder="Nhập tên mới"
+              autoFocus
+            />
+
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setRenameState({ open: false, item: null, value: "", submitting: false })}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                disabled={renameState.submitting}
+                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+              >
+                {renameState.submitting ? "Đang lưu..." : "Lưu"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {deleteState.open && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <div className="text-lg font-semibold text-slate-800">Xóa mục</div>
+            <div className="mt-2 text-sm text-slate-600">
+              Bạn có chắc muốn xóa {deleteState.item?.type === "folder" ? "thư mục" : "file"} <span className="font-semibold">{deleteState.item?.name}</span>?
+            </div>
+
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteState({ open: false, item: null, submitting: false })}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteConfirm}
+                disabled={deleteState.submitting}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
+              >
+                {deleteState.submitting ? "Đang xóa..." : "Xóa"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {previewState.open && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-3">

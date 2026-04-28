@@ -108,5 +108,14 @@ public class FileController {
                 .data(fileService.getFilesByFolderId(folderId))
                 .build();
     }
+
+    @GetMapping("/trash")
+    public ApiResponse<List<FileResponse>> getTrashFiles() {
+        return ApiResponse.<List<FileResponse>>builder()
+                .code(HttpStatus.OK.value())
+                .message("Get trash files successfully")
+                .data(fileService.getTrashFiles())
+                .build();
+    }
     
 }

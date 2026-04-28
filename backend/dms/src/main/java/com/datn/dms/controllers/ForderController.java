@@ -100,4 +100,13 @@ public class ForderController {
                 .data(folderService.restoreFolder(id))
                 .build();
     }
+
+	@GetMapping("/trash")
+	public ApiResponse<List<FolderResponse>> getTrashFolders() {
+		return ApiResponse.<List<FolderResponse>>builder()
+				.code(HttpStatus.OK.value())
+				.message("Get trash folders successfully")
+				.data(folderService.getTrashFolders())
+				.build();
+	}
 }

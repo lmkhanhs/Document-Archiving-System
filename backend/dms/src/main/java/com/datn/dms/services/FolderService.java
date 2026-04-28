@@ -168,4 +168,15 @@ public class FolderService {
         folderEntity.setDeleted(true);
         folderRepository.save(folderEntity);
     }
+
+    public List<FolderResponse> getTrashFolders() {
+        String username = authenticationUtills.getUserName();
+        UserEntity owner = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        return folderRepository.findAllByOwner_IdAndIsDeletedTrueOrderByCreatedAtDesc(owner.getId())
+                .stream()
+                .map(folderMapper::toFolderResponse)
+                .toList();
+    }
 }

@@ -98,6 +98,24 @@ export const createMyFolder = async ({ name, parentId = null }) => {
   }
 };
 
+export const renameFolder = async (folderId, name) => {
+  try {
+    const response = await api.put(`/folders/${folderId}`, { name });
+    return parseApiResponse(response, "Không thể đổi tên thư mục");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể đổi tên thư mục");
+  }
+};
+
+export const deleteFolder = async (folderId) => {
+  try {
+    const response = await api.delete(`/folders/${folderId}`);
+    return parseApiResponse(response, "Không thể xóa thư mục");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể xóa thư mục");
+  }
+};
+
 export const uploadDocument = async ({ file, folderId = null }) => {
   const formData = new FormData();
   formData.append("file", file);
