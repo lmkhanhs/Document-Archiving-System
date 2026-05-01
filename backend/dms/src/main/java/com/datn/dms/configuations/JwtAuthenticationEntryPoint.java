@@ -2,7 +2,7 @@ package com.datn.dms.configuations;
 
 import java.io.IOException;
 
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 
@@ -15,7 +15,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@Configuration
+@Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     @Override

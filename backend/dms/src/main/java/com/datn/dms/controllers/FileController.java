@@ -71,6 +71,11 @@ public class FileController {
         return fileService.downloadFile(fileId);
     }
 
+    @GetMapping("/{fileId}/preview")
+    public ResponseEntity<Resource> previewFile(@PathVariable Long fileId) {
+        return fileService.previewFile(fileId);
+    }
+
     @PutMapping("/{fileId}")
     public ApiResponse<HomeRecentItemResponse> renameFile(
             @PathVariable Long fileId,

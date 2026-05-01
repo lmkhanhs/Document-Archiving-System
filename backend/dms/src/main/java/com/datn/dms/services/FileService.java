@@ -260,6 +260,65 @@ public class FileService {
                 .body(resource);
     }
 
+    public ResponseEntity<Resource> previewFile(Long fileId) {
+        UserEntity owner = getCurrentUser();
+
+        FileEntity fileEntity = fileRepository.findByIdAndOwner_IdAndIsDeletedFalse(fileId, owner.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
+
+        String fileUrl = fileEntity.getUrl();
+        String uploadPrefix = "/uploads/";
+        if (fileUrl == null || !fileUrl.startsWith(uploadPrefix)) {
+            throw new AppException(ErrorCode.FILE_PATH_INVALID);
+        }
+
+        String relativeFilePath = fileUrl.substring(uploadPrefix.length());
+        Path baseDir = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Path originalPath = baseDir.resolve(relativeFilePath).normalize();
+
+        if (!originalPath.startsWith(baseDir)) {
+            throw new AppException(ErrorCode.FILE_PATH_INVALID);
+        }
+
+        if (!Files.exists(originalPath) || !Files.isRegularFile(originalPath)) {
+            throw new AppException(ErrorCode.FILE_NOT_FOUND);
+        }
+
+        String fileName = originalPath.getFileName().toString();
+        String extension = getFileExtension(fileName).toLowerCase();
+
+        Path targetPath = originalPath;
+        MediaType mediaType = MediaType.APPLICATION_PDF;
+
+        // Nếu file không phải PDF, tiến hành convert và lấy/lưu file pdf từ bộ nhớ đệm (cache)
+        if (!extension.equals(".pdf")) {
+            String pdfFileName = fileName.substring(0, fileName.lastIndexOf('.')) + ".pdf";
+            targetPath = originalPath.getParent().resolve(pdfFileName);
+
+            if (!Files.exists(targetPath)) {
+                try {
+                    String fromFormat = extension.replace(".", "");
+                    com.convertapi.client.ConvertApi.convert(fromFormat, "pdf",
+                            new com.convertapi.client.Param("file", originalPath)
+                    ).get().saveFile(targetPath).get();
+                } catch (Exception ex) {
+                    throw new AppException(ErrorCode.FILE_STORE_FAILED);
+                }
+            }
+        }
+
+        Resource resource;
+        try {
+            resource = new UrlResource(targetPath.toUri());
+        } catch (MalformedURLException ex) {
+            throw new AppException(ErrorCode.FILE_PATH_INVALID);
+        }
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .body(resource);
+    }
+
     public HomeRecentItemResponse renameFile(Long fileId, UpdateFileRequest request) {
         UserEntity owner = getCurrentUser();
 

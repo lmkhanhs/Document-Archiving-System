@@ -204,7 +204,7 @@ export const downloadDocument = async (fileId) => {
 
 export const previewDocument = async (fileId) => {
   try {
-    const response = await api.get(`/files/${fileId}/download`, {
+    const response = await api.get(`/files/${fileId}/preview`, {
       responseType: "blob",
     });
 

@@ -32,3 +32,5 @@ app:
         expiresIn: 30000
         expiresRefresh: 36000
         secret: fEJ6qu3MQ1pwdpRYxhiXNpor7jNV6tCdhw73m9rR5TfH5rS6Zq1tVDsUooXljGi3
+    convertapi:
+        secret: 1JLAx4Db4irlpjFTbeIQjKHfmOlEJezz
