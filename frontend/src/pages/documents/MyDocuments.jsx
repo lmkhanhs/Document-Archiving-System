@@ -24,6 +24,7 @@ import RemoveOutlinedIcon from "@mui/icons-material/RemoveOutlined";
 import CropSquareOutlinedIcon from "@mui/icons-material/CropSquareOutlined";
 import FilterNoneOutlinedIcon from "@mui/icons-material/FilterNoneOutlined";
 import {
+  createMyFolder,
   deleteFolder,
   getFilesByFolderId,
   getFoldersByParentId,
@@ -51,6 +52,12 @@ const VIEW_MODE = {
 const CONTEXT_ACTIONS = [
   { key: "rename", label: "Đổi tên" },
   { key: "delete", label: "Xóa" },
+];
+
+const QUICK_ACTIONS = [
+  { key: "create-folder", label: "Tạo thư mục", icon: CreateNewFolderOutlinedIcon },
+  { key: "upload-file", label: "Tải file lên", icon: CloudUploadOutlinedIcon },
+  { key: "upload-folder", label: "Tải thư mục lên", icon: FolderOpenOutlinedIcon },
 ];
 
 const ROOT_CRUMB = { id: null, name: "Root" };
@@ -295,7 +302,9 @@ const buildBreadcrumbs = (payload, fallback = [ROOT_CRUMB]) => {
 const MyDocuments = () => {
   const navigate = useNavigate();
   const uploadInputRef = useRef(null);
+  const folderUploadInputRef = useRef(null);
   const menuRef = useRef(null);
+  const quickMenuRef = useRef(null);
 
   const [activeMenu, setActiveMenu] = useState("documents");
   const [viewMode, setViewMode] = useState(VIEW_MODE.LIST);
@@ -322,6 +331,16 @@ const MyDocuments = () => {
     maximized: false,
   });
   const [menuState, setMenuState] = useState(null);
+  const [quickMenuState, setQuickMenuState] = useState({
+    open: false,
+    x: 0,
+    y: 0,
+  });
+  const [createFolderState, setCreateFolderState] = useState({
+    open: false,
+    value: "",
+    submitting: false,
+  });
   const [renameState, setRenameState] = useState({
     open: false,
     item: null,
@@ -410,6 +429,28 @@ const MyDocuments = () => {
     };
   }, [menuState]);
 
+  useEffect(() => {
+    if (!quickMenuState.open) {
+      return undefined;
+    }
+
+    const closeMenu = (event) => {
+      if (quickMenuRef.current && !quickMenuRef.current.contains(event.target)) {
+        setQuickMenuState((prev) => ({ ...prev, open: false }));
+      }
+    };
+
+    window.addEventListener("click", closeMenu);
+    window.addEventListener("resize", closeMenu);
+    window.addEventListener("scroll", closeMenu, true);
+
+    return () => {
+      window.removeEventListener("click", closeMenu);
+      window.removeEventListener("resize", closeMenu);
+      window.removeEventListener("scroll", closeMenu, true);
+    };
+  }, [quickMenuState.open]);
+
   useEffect(() => () => {
     if (previewState.objectUrl) {
       URL.revokeObjectURL(previewState.objectUrl);
@@ -432,8 +473,34 @@ const MyDocuments = () => {
 
   const isListMode = viewMode === VIEW_MODE.LIST;
 
+  const openQuickMenu = (event) => {
+    event.preventDefault();
+    const target = event.target instanceof Element
+      ? event.target
+      : event.target?.parentElement;
+    if (target) {
+      const shouldIgnore = target.closest("button, a, input, textarea, select, [data-quick-menu-ignore='true']");
+      if (shouldIgnore) {
+        return;
+      }
+    }
+
+    setMenuState(null);
+    setQuickMenuState({
+      open: true,
+      x: event.clientX,
+      y: event.clientY,
+    });
+  };
+
   const openUploadDialog = () => {
+    setQuickMenuState((prev) => ({ ...prev, open: false }));
     uploadInputRef.current?.click();
+  };
+
+  const openFolderUploadDialog = () => {
+    setQuickMenuState((prev) => ({ ...prev, open: false }));
+    folderUploadInputRef.current?.click();
   };
 
   const handleUpload = async (event) => {
@@ -456,8 +523,101 @@ const MyDocuments = () => {
     }
   };
 
-  const handleCreateFolder = async () => {
-    setToast("Tạo thư mục sẽ được nối API ở bước tiếp theo");
+  const handleFolderUpload = async (event) => {
+    const filesToUpload = Array.from(event.target.files || []);
+
+    if (filesToUpload.length === 0) {
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const folderIdByPath = new Map();
+      folderIdByPath.set("", currentFolderId ?? null);
+
+      const ensureFolder = async (relativePath) => {
+        if (folderIdByPath.has(relativePath)) {
+          return folderIdByPath.get(relativePath);
+        }
+
+        const normalizedPath = relativePath.split("/").filter(Boolean).join("/");
+        if (!normalizedPath) {
+          return currentFolderId ?? null;
+        }
+
+        const segments = normalizedPath.split("/");
+        const parentPath = segments.slice(0, -1).join("/");
+        const folderName = segments[segments.length - 1];
+        const parentId = await ensureFolder(parentPath);
+
+        const created = await createMyFolder({ name: folderName, parentId });
+        const createdId = created?.id ?? created?.folderId ?? null;
+        folderIdByPath.set(normalizedPath, createdId);
+        return createdId;
+      };
+
+      for (const file of filesToUpload) {
+        const relativePath = String(file.webkitRelativePath || "").split("\\").join("/");
+        const normalizedPath = relativePath.split("/").filter(Boolean).join("/");
+        const parentPath = normalizedPath.split("/").slice(0, -1).join("/");
+        const targetFolderId = await ensureFolder(parentPath);
+        await uploadDocument({ file, folderId: targetFolderId });
+      }
+
+      setToast("Tải thư mục thành công");
+      await loadDocuments({ folderId: currentFolderId, fallbackPath: breadcrumbs });
+    } catch (uploadError) {
+      setToast(uploadError.message || "Tải thư mục thất bại");
+    } finally {
+      event.target.value = "";
+      setIsUploading(false);
+    }
+  };
+
+  const handleCreateFolder = () => {
+    setQuickMenuState((prev) => ({ ...prev, open: false }));
+    setCreateFolderState({ open: true, value: "", submitting: false });
+  };
+
+  const handleCreateFolderSubmit = async (event) => {
+    event.preventDefault();
+
+    const name = createFolderState.value.trim();
+    if (!name) {
+      setToast("Vui lòng nhập tên thư mục");
+      return;
+    }
+
+    setCreateFolderState((prev) => ({ ...prev, submitting: true }));
+
+    try {
+      await createMyFolder({
+        name,
+        parentId: currentFolderId ?? null,
+      });
+      setToast("Tạo thư mục thành công");
+      await loadDocuments({ folderId: currentFolderId, fallbackPath: breadcrumbs });
+      setCreateFolderState({ open: false, value: "", submitting: false });
+    } catch (createError) {
+      setToast(createError.message || "Không thể tạo thư mục");
+      setCreateFolderState((prev) => ({ ...prev, submitting: false }));
+    }
+  };
+
+  const onQuickAction = (action) => {
+    if (action === "create-folder") {
+      handleCreateFolder();
+      return;
+    }
+
+    if (action === "upload-file") {
+      openUploadDialog();
+      return;
+    }
+
+    if (action === "upload-folder") {
+      openFolderUploadDialog();
+    }
   };
 
   const openFolder = (folder) => {
@@ -780,7 +940,7 @@ const MyDocuments = () => {
           </div>
         </aside>
 
-        <main className="flex-1 p-4 md:p-6">
+        <main className="flex-1 p-4 md:p-6" onContextMenu={openQuickMenu}>
           <header className="flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-slate-800">Tài liệu của tôi</h1>
@@ -894,6 +1054,7 @@ const MyDocuments = () => {
                         className="cursor-pointer border-t border-slate-100 hover:bg-blue-50/50"
                         onClick={item.type === "folder" ? () => openFolder(item) : () => openFilePreview(item)}
                         onContextMenu={(event) => openContextMenu(event, item)}
+                        data-quick-menu-ignore="true"
                       >
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800">
@@ -922,6 +1083,7 @@ const MyDocuments = () => {
                     type="button"
                     onClick={item.type === "folder" ? () => openFolder(item) : () => openFilePreview(item)}
                     onContextMenu={(event) => openContextMenu(event, item)}
+                    data-quick-menu-ignore="true"
                     className="rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
                   >
                     <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800">
@@ -971,6 +1133,14 @@ const MyDocuments = () => {
       </div>
 
       <input ref={uploadInputRef} type="file" hidden onChange={handleUpload} />
+      <input
+        ref={folderUploadInputRef}
+        type="file"
+        hidden
+        multiple
+        webkitdirectory="true"
+        onChange={handleFolderUpload}
+      />
 
       {menuState && (
         <div
@@ -988,6 +1158,74 @@ const MyDocuments = () => {
               {action.label}
             </button>
           ))}
+        </div>
+      )}
+
+      {quickMenuState.open && (
+        <div
+          ref={quickMenuRef}
+          style={{ left: quickMenuState.x, top: quickMenuState.y }}
+          className="fixed z-50 w-56 -translate-x-1/2 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl"
+        >
+          <div className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Thao tác nhanh
+          </div>
+          <div className="space-y-1">
+            {QUICK_ACTIONS.map((action) => {
+              const ActionIcon = action.icon;
+
+              return (
+                <button
+                  key={action.key}
+                  type="button"
+                  onClick={() => onQuickAction(action.key)}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                >
+                  <ActionIcon fontSize="small" className="text-slate-500" />
+                  <span>{action.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {createFolderState.open && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3">
+          <form
+            onSubmit={handleCreateFolderSubmit}
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl"
+          >
+            <div className="text-lg font-semibold text-slate-800">Tạo thư mục</div>
+            <div className="mt-1 text-sm text-slate-500">
+              Thư mục sẽ được tạo trong: {breadcrumbs[breadcrumbs.length - 1]?.name || "Root"}
+            </div>
+
+            <input
+              value={createFolderState.value}
+              onChange={(event) => setCreateFolderState((prev) => ({ ...prev, value: event.target.value }))}
+              className="mt-4 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-300"
+              placeholder="Nhập tên thư mục"
+              autoFocus
+            />
+
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCreateFolderState({ open: false, value: "", submitting: false })}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                disabled={createFolderState.submitting}
+                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+              >
+                {createFolderState.submitting ? "Đang tạo..." : "Tạo"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

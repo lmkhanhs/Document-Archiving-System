@@ -88,10 +88,13 @@ export const getFolderContents = async (folderId) => {
 
 export const createMyFolder = async ({ name, parentId = null }) => {
   try {
-    const response = await api.post("/folders", {
-      name,
-      parentId,
-    });
+    const payload = { name };
+
+    if (parentId !== null && parentId !== undefined) {
+      payload.parentId = parentId;
+    }
+
+    const response = await api.post("/folders", payload);
     return parseApiResponse(response, "Không thể tạo thư mục");
   } catch (error) {
     throw new Error(error.response?.data?.message || "Không thể tạo thư mục");
@@ -176,6 +179,7 @@ export const uploadDocument = async ({ file, folderId = null }) => {
 
   if (folderId !== null && folderId !== undefined) {
     formData.append("folderId", String(folderId));
+    formData.append("folderID", String(folderId));
   }
 
   try {
