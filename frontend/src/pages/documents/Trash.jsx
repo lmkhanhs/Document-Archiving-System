@@ -17,6 +17,7 @@ import TableChartOutlinedIcon from "@mui/icons-material/TableChartOutlined";
 import SlideshowOutlinedIcon from "@mui/icons-material/SlideshowOutlined";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
+import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import emptyTrashImage from "../../assets/trash-empty.svg";
 import {
   deleteTrashFile,
@@ -32,6 +33,7 @@ const sidebarItems = [
   { key: "home", label: "Trang chủ", icon: HomeOutlinedIcon },
   { key: "documents", label: "Tài liệu của tôi", icon: FolderOpenOutlinedIcon },
   { key: "upload", label: "Tải lên tài liệu", icon: UploadFileOutlinedIcon },
+  { key: "summarize", label: "Tóm tắt AI", icon: AutoAwesomeOutlinedIcon },
   { key: "trash", label: "Thùng rác", icon: DeleteOutlineOutlinedIcon },
   { key: "settings", label: "Cài đặt", icon: SettingsOutlinedIcon },
 ];
@@ -334,6 +336,11 @@ const Trash = () => {
 
     if (menuKey === "upload") {
       openUploadDialog();
+      return;
+    }
+
+    if (menuKey === "summarize") {
+      navigate("/summarize");
       return;
     }
 

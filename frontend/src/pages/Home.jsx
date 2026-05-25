@@ -17,6 +17,7 @@ import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import CreateNewFolderOutlinedIcon from "@mui/icons-material/CreateNewFolderOutlined";
 import SortOutlinedIcon from "@mui/icons-material/SortOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
+import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import { API_ORIGIN } from "../services/api";
 import { getInfoUser, logout } from "../services/authService";
 import {
@@ -31,6 +32,7 @@ const sidebarItems = [
   { key: "home", label: "Trang chủ", icon: HomeOutlinedIcon },
   { key: "documents", label: "Tài liệu của tôi", icon: FolderOpenOutlinedIcon },
   { key: "upload", label: "Tải lên tài liệu", icon: UploadFileOutlinedIcon },
+  { key: "summarize", label: "Tóm tắt AI", icon: AutoAwesomeOutlinedIcon },
   { key: "trash", label: "Thùng rác", icon: DeleteOutlineOutlinedIcon },
   { key: "settings", label: "Cài đặt", icon: SettingsOutlinedIcon },
 ];
@@ -513,6 +515,9 @@ const Home = () => {
                     }
                     if (item.key === "upload") {
                       openUploadDialog();
+                    }
+                    if (item.key === "summarize") {
+                      navigate("/summarize");
                     }
                     if (item.key === "trash") {
                       navigate("/trash");
