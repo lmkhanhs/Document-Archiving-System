@@ -97,3 +97,18 @@ export const logout = async ({ accessToken, refreshToken }) => {
     throw new Error(error.response?.data?.message || "Đăng xuất thất bại");
   }
 };
+
+export const getRoles = async () => {
+  try {
+    const response = await api.get("/auth/roles");
+    const result = response.data;
+
+    if (result.code !== 200) {
+      throw new Error(result.message);
+    }
+
+    return result.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể lấy quyền người dùng");
+  }
+};

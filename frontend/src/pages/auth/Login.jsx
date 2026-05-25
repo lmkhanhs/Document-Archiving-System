@@ -1,7 +1,7 @@
 // src/pages/auth/Login.jsx
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { login, googleLogin } from "../../services/authService";
+import { getInfoUser, login, googleLogin } from "../../services/authService";
 import {
   Box,
   Container,
@@ -28,6 +28,8 @@ import {
   PersonOutline,
 } from "@mui/icons-material";
 import { GoogleLogin } from "@react-oauth/google";
+
+const USER_CACHE_KEY = "currentUser";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -80,6 +82,17 @@ const Login = () => {
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
+  const cacheCurrentUser = async () => {
+    try {
+      const user = await getInfoUser();
+      if (user) {
+        localStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
+      }
+    } catch {
+      // Skip caching if profile request fails.
+    }
+  };
+
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       setLoading(true);
@@ -93,6 +106,7 @@ const Login = () => {
 
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
+      await cacheCurrentUser();
 
       setSnackbar({
         open: true,
@@ -139,6 +153,7 @@ const Login = () => {
 
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
+      await cacheCurrentUser();
 
       setSnackbar({
         open: true,

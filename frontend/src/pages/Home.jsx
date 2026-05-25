@@ -19,7 +19,7 @@ import SortOutlinedIcon from "@mui/icons-material/SortOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import { API_ORIGIN } from "../services/api";
-import { getInfoUser, logout } from "../services/authService";
+import { getInfoUser, getRoles, logout } from "../services/authService";
 import {
   createMyFolder,
   downloadDocument,
@@ -58,6 +58,8 @@ const defaultHomeData = {
   },
 };
 
+const USER_CACHE_KEY = "currentUser";
+
 const resolveThumbnailUrl = (thumbnailUrl) => {
   if (!thumbnailUrl) {
     return "";
@@ -72,6 +74,36 @@ const resolveThumbnailUrl = (thumbnailUrl) => {
   }
 
   return `${API_ORIGIN}/${thumbnailUrl}`;
+};
+
+const getCachedUser = () => {
+  try {
+    const raw = localStorage.getItem(USER_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const setCachedUser = (user) => {
+  if (!user) {
+    return;
+  }
+
+  localStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
+};
+
+const getUserAvatarSource = (user) => (
+  user?.thumbnailUrl || user?.avatar || user?.photoURL || user?.picture || ""
+);
+
+const getUserDisplayName = (user) => (
+  user?.email || user?.username || user?.fullName || "Người dùng"
+);
+
+const getAvatarLabel = (value) => {
+  const normalized = String(value || "").trim();
+  return normalized ? normalized.charAt(0).toUpperCase() : "U";
 };
 
 const getFileType = (value = "") => {
@@ -162,12 +194,17 @@ const Home = () => {
   const navigate = useNavigate();
   const uploadInputRef = useRef(null);
   const menuRef = useRef(null);
+  const userMenuRef = useRef(null);
+  const userTriggerRef = useRef(null);
 
   const [activeMenu, setActiveMenu] = useState("home");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [userName, setUserName] = useState("Người dùng");
   const [avatarLabel, setAvatarLabel] = useState("U");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isRoleLoading, setIsRoleLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [search, setSearch] = useState("");
   const [fileType, setFileType] = useState("all");
@@ -185,6 +222,14 @@ const Home = () => {
   useEffect(() => {
     let isMounted = true;
 
+    const cachedUser = getCachedUser();
+    if (cachedUser) {
+      const cachedName = getUserDisplayName(cachedUser);
+      setAvatarUrl(resolveThumbnailUrl(getUserAvatarSource(cachedUser)));
+      setUserName(cachedName);
+      setAvatarLabel(getAvatarLabel(cachedName));
+    }
+
     const loadProfile = async () => {
       try {
         const user = await getInfoUser();
@@ -193,12 +238,15 @@ const Home = () => {
           return;
         }
 
-        setAvatarUrl(resolveThumbnailUrl(user?.thumbnailUrl));
-        setUserName(user?.username || "Người dùng");
-        setAvatarLabel(user?.username?.trim()?.charAt(0)?.toUpperCase() || "U");
+        const displayName = getUserDisplayName(user);
+        setAvatarUrl(resolveThumbnailUrl(getUserAvatarSource(user)));
+        setUserName(displayName);
+        setAvatarLabel(getAvatarLabel(displayName));
+        setCachedUser(user);
       } catch {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
+        localStorage.removeItem(USER_CACHE_KEY);
         navigate("/login", { replace: true });
       }
     };
@@ -259,6 +307,27 @@ const Home = () => {
   }, [menuState]);
 
   useEffect(() => {
+    if (!isUserMenuOpen) {
+      return undefined;
+    }
+
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current?.contains(event.target)) {
+        return;
+      }
+
+      if (userTriggerRef.current?.contains(event.target)) {
+        return;
+      }
+
+      setIsUserMenuOpen(false);
+    };
+
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, [isUserMenuOpen]);
+
+  useEffect(() => {
     if (!toast) {
       return undefined;
     }
@@ -284,9 +353,51 @@ const Home = () => {
     } finally {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
+      localStorage.removeItem(USER_CACHE_KEY);
       navigate("/login", { replace: true });
       setIsLoggingOut(false);
     }
+  };
+
+  const loadRoles = async () => {
+    setIsRoleLoading(true);
+    try {
+      const payload = await getRoles();
+      const roles = Array.isArray(payload?.roles) ? payload.roles : [];
+      setIsAdmin(roles.includes("ADMIN"));
+    } catch (error) {
+      setIsAdmin(false);
+      setToast(error.message || "Không thể lấy quyền người dùng");
+    } finally {
+      setIsRoleLoading(false);
+    }
+  };
+
+  const handleUserMenuToggle = async () => {
+    if (isUserMenuOpen) {
+      setIsUserMenuOpen(false);
+      return;
+    }
+
+    setIsUserMenuOpen(true);
+    if (!isRoleLoading) {
+      await loadRoles();
+    }
+  };
+
+  const handleAdminPanel = () => {
+    setIsUserMenuOpen(false);
+    setToast("Giao diện quản lý sẽ được cập nhật ở bước tiếp theo");
+  };
+
+  const handleSwitchAccount = () => {
+    setIsUserMenuOpen(false);
+    handleLogout();
+  };
+
+  const handleLogoutFromMenu = () => {
+    setIsUserMenuOpen(false);
+    handleLogout();
   };
 
   const openUploadDialog = () => {
@@ -593,14 +704,27 @@ const Home = () => {
               >
                 <NotificationsNoneOutlinedIcon fontSize="small" />
               </button>
-              <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-2 py-1.5">
-                <img
-                  src={avatarUrl || undefined}
-                  alt={userName}
-                  onError={() => setAvatarUrl("")}
-                  className="h-8 w-8 rounded-full border border-slate-200 object-cover"
-                />
-                <span className="max-w-28 truncate text-sm font-semibold text-slate-700">{userName || avatarLabel}</span>
+              <div className="relative flex items-center gap-2 rounded-xl border border-slate-200 px-2 py-1.5">
+                <button
+                  ref={userTriggerRef}
+                  type="button"
+                  onClick={handleUserMenuToggle}
+                  className="flex items-center gap-2 rounded-lg px-1.5 py-0.5 transition hover:bg-slate-50"
+                >
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt={userName}
+                      onError={() => setAvatarUrl("")}
+                      className="h-8 w-8 rounded-full border border-slate-200 object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-600">
+                      {avatarLabel}
+                    </div>
+                  )}
+                  <span className="max-w-28 truncate text-sm font-semibold text-slate-700">{userName || avatarLabel}</span>
+                </button>
                 <button
                   type="button"
                   onClick={handleLogout}
@@ -609,6 +733,43 @@ const Home = () => {
                 >
                   <LogoutOutlinedIcon fontSize="small" />
                 </button>
+                {isUserMenuOpen && (
+                  <div
+                    ref={userMenuRef}
+                    className="absolute right-0 top-full z-40 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl"
+                  >
+                    {isRoleLoading && (
+                      <div className="px-3 py-2 text-xs font-medium text-slate-500">
+                        Đang kiểm tra quyền...
+                      </div>
+                    )}
+                    {(isAdmin
+                      ? [
+                          {
+                            key: "admin",
+                            label: "Quản lý hệ thống ",
+                            onClick: handleAdminPanel,
+                          },
+                          { key: "switch", label: "Đổi tài khoản", onClick: handleSwitchAccount },
+                          { key: "logout", label: "Đăng xuất", onClick: handleLogoutFromMenu },
+                        ]
+                      : [
+                          { key: "switch", label: "Đổi tài khoản", onClick: handleSwitchAccount },
+                          { key: "logout", label: "Đăng xuất", onClick: handleLogoutFromMenu },
+                        ]
+                    ).map((item) => (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={item.onClick}
+                        disabled={isRoleLoading}
+                        className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </header>

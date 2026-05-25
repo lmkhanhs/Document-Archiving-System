@@ -16,8 +16,12 @@ import com.datn.dms.dtos.auth.request.GoogleLoginRequest;
 import com.datn.dms.dtos.auth.response.LoginResponse;
 import com.datn.dms.dtos.auth.response.LogoutResponse;
 import com.datn.dms.dtos.auth.response.RegisterResponse;
+import com.datn.dms.dtos.auth.response.RolesResponse;
 import com.datn.dms.services.AuthService;
 import com.datn.dms.dtos.ApiResponse;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequestMapping("${app.prefix}/auth")
@@ -61,4 +65,19 @@ public class AuthController {
                 .data(authService.googleLogin(request))
                 .build();
     }
+
+    @GetMapping("/roles")
+    public ApiResponse<RolesResponse> getRoles() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        java.util.List<String> roles = authentication.getAuthorities().stream()
+                .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+                .toList();
+
+        return ApiResponse.<RolesResponse>builder()
+                .code(200)
+                .message("Get roles successfully")
+                .data(RolesResponse.builder().roles(roles).build())
+                .build();
+    }
+    
 }
