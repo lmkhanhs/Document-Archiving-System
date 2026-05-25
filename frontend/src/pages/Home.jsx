@@ -387,7 +387,7 @@ const Home = () => {
 
   const handleAdminPanel = () => {
     setIsUserMenuOpen(false);
-    setToast("Giao diện quản lý sẽ được cập nhật ở bước tiếp theo");
+    navigate("/admin");
   };
 
   const handleSwitchAccount = () => {
@@ -747,7 +747,7 @@ const Home = () => {
                       ? [
                           {
                             key: "admin",
-                            label: "Quản lý hệ thống ",
+                            label: "Quản lý hệ thống / Giao diện quản lý",
                             onClick: handleAdminPanel,
                           },
                           { key: "switch", label: "Đổi tài khoản", onClick: handleSwitchAccount },
