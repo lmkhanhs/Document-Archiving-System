@@ -12,8 +12,19 @@ import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import SyncAltOutlinedIcon from "@mui/icons-material/SyncAltOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import { API_ORIGIN } from "../../services/api";
 import { getInfoUser, getRoles, logout } from "../../services/authService";
+import {
+  deleteUser,
+  getUsers,
+  updateUserRole,
+  updateUserStatus,
+} from "../../services/userService";
 
 const USER_CACHE_KEY = "currentUser";
 
@@ -61,6 +72,49 @@ const getUserDisplayName = (user) => (
 const getAvatarLabel = (value) => {
   const normalized = String(value || "").trim();
   return normalized ? normalized.charAt(0).toUpperCase() : "A";
+};
+
+const getUserRoleLabel = (user) => {
+  if (user?.role) {
+    return String(user.role).toUpperCase();
+  }
+
+  if (user?.userRole) {
+    return String(user.userRole).toUpperCase();
+  }
+
+  if (Array.isArray(user?.roles) && user.roles.length > 0) {
+    return String(user.roles[0]).toUpperCase();
+  }
+
+  if (user?.username === "admin") {
+    return "ADMIN";
+  }
+
+  return "USER";
+};
+
+const formatDate = (value) => {
+  if (!value) {
+    return "—";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
+  return date.toLocaleDateString("vi-VN");
+};
+
+const statusBadgeMap = {
+  ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  LOCKED: "bg-rose-50 text-rose-700 border-rose-200",
+};
+
+const roleBadgeMap = {
+  ADMIN: "bg-blue-50 text-blue-700 border-blue-200",
+  USER: "bg-slate-50 text-slate-700 border-slate-200",
 };
 
 const sidebarItems = [
@@ -116,6 +170,24 @@ const AdminDashboard = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isRoleLoading, setIsRoleLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [users, setUsers] = useState([]);
+  const [isUserLoading, setIsUserLoading] = useState(false);
+  const [userError, setUserError] = useState("");
+  const [userReloadKey, setUserReloadKey] = useState(0);
+  const [detailUser, setDetailUser] = useState(null);
+  const [roleDialog, setRoleDialog] = useState({
+    open: false,
+    user: null,
+    role: "USER",
+    submitting: false,
+  });
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    user: null,
+    submitting: false,
+  });
   const [toast, setToast] = useState("");
   const userMenuRef = useRef(null);
   const userTriggerRef = useRef(null);
@@ -215,6 +287,41 @@ const AdminDashboard = () => {
     return () => clearTimeout(timer);
   }, [toast]);
 
+  useEffect(() => {
+    if (activeMenu !== "users") {
+      return undefined;
+    }
+
+    let isMounted = true;
+
+    const loadUsers = async () => {
+      setIsUserLoading(true);
+      setUserError("");
+
+      try {
+        const payload = await getUsers();
+        const data = Array.isArray(payload) ? payload : payload?.data || [];
+        if (isMounted) {
+          setUsers(data);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setUserError(error.message || "Không thể tải danh sách người dùng");
+        }
+      } finally {
+        if (isMounted) {
+          setIsUserLoading(false);
+        }
+      }
+    };
+
+    loadUsers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeMenu, userReloadKey]);
+
   const handleLogout = async () => {
     if (isLoggingOut) {
       return;
@@ -272,7 +379,122 @@ const AdminDashboard = () => {
       return;
     }
 
+    if (item.key === "users" || item.key === "dashboard") {
+      return;
+    }
+
     setToast("Tinh nang nay se duoc cap nhat o buoc tiep theo");
+  };
+
+  const normalizedUsers = useMemo(() => (
+    users.map((user) => ({
+      ...user,
+      role: getUserRoleLabel(user),
+      active: Boolean(user?.active),
+      status: user?.active ? "ACTIVE" : "LOCKED",
+      thumbnailUrl: resolveThumbnailUrl(user?.thumbnailUrl || user?.avatar || ""),
+    }))
+  ), [users]);
+
+  const filteredUsers = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+
+    return normalizedUsers.filter((user) => {
+      if (keyword) {
+        const candidate = `${user.username || ""} ${user.email || ""}`.toLowerCase();
+        if (!candidate.includes(keyword)) {
+          return false;
+        }
+      }
+
+      if (roleFilter !== "all" && user.role !== roleFilter) {
+        return false;
+      }
+
+      if (statusFilter !== "all" && user.status !== statusFilter) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [normalizedUsers, roleFilter, search, statusFilter]);
+
+  const handleRoleDialogOpen = (user) => {
+    setRoleDialog({
+      open: true,
+      user,
+      role: user.role || "USER",
+      submitting: false,
+    });
+  };
+
+  const handleRoleDialogClose = () => {
+    setRoleDialog({ open: false, user: null, role: "USER", submitting: false });
+  };
+
+  const handleRoleConfirm = async () => {
+    if (!roleDialog.user) {
+      return;
+    }
+
+    setRoleDialog((prev) => ({ ...prev, submitting: true }));
+
+    try {
+      await updateUserRole(roleDialog.user.id, roleDialog.role);
+      setUsers((prev) => prev.map((item) => (
+        item.id === roleDialog.user.id
+          ? { ...item, role: roleDialog.role }
+          : item
+      )));
+      setToast("Đã cập nhật vai trò người dùng");
+      handleRoleDialogClose();
+    } catch (error) {
+      setToast(error.message || "Không thể cập nhật vai trò");
+      setRoleDialog((prev) => ({ ...prev, submitting: false }));
+    }
+  };
+
+  const handleToggleStatus = async (user) => {
+    const nextActive = !user.active;
+    setUsers((prev) => prev.map((item) => (
+      item.id === user.id ? { ...item, active: nextActive } : item
+    )));
+
+    try {
+      await updateUserStatus(user.id, nextActive);
+      setToast(nextActive ? "Đã mở khóa tài khoản" : "Đã khóa tài khoản");
+    } catch (error) {
+      setUsers((prev) => prev.map((item) => (
+        item.id === user.id ? { ...item, active: user.active } : item
+      )));
+      setToast(error.message || "Không thể cập nhật trạng thái");
+    }
+  };
+
+  const handleDeleteOpen = (user) => {
+    setDeleteDialog({ open: true, user, submitting: false });
+  };
+
+  const handleDeleteClose = () => {
+    setDeleteDialog({ open: false, user: null, submitting: false });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.user) {
+      return;
+    }
+
+    setDeleteDialog((prev) => ({ ...prev, submitting: true }));
+
+    try {
+      await deleteUser(deleteDialog.user.id);
+      setUsers((prev) => prev.filter((item) => item.id !== deleteDialog.user.id));
+      setToast("Đã xóa người dùng");
+      handleDeleteClose();
+    } catch (error) {
+      setToast(error.message || "Không thể xóa người dùng");
+      setDeleteDialog((prev) => ({ ...prev, submitting: false }));
+    }
   };
 
   const summaryHighlight = useMemo(
@@ -354,7 +576,9 @@ const AdminDashboard = () => {
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Tim kiem nguoi dung, tai lieu..."
+                  placeholder={activeMenu === "users"
+                    ? "Tim theo username hoặc email..."
+                    : "Tim kiem nguoi dung, tai lieu..."}
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
                 />
               </div>
@@ -427,80 +651,402 @@ const AdminDashboard = () => {
             </div>
           </header>
 
-          <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {statCards.map((card) => (
-              <div
-                key={card.key}
-                className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-sm"
-              >
-                <div
-                  className={`inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r ${card.tone} px-3 py-1 text-xs font-semibold text-white`}
-                >
-                  <AutoAwesomeOutlinedIcon fontSize="inherit" />
-                  Bao cao
-                </div>
-                <div className="mt-3 text-sm font-semibold text-slate-600">{card.label}</div>
-                <div className="mt-1 text-2xl font-bold text-slate-900">{card.value}</div>
-                <div className="mt-2 text-xs text-slate-500">{card.sub}</div>
-              </div>
-            ))}
-          </section>
-
-          <section className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="flex items-center justify-between">
+          {activeMenu === "users" ? (
+            <section className="mt-6 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    Hoat dong gan day
+                    Quan ly tai khoan
                   </div>
-                  <div className="text-base font-bold text-slate-900">He thong dang van hanh on dinh</div>
+                  <div className="text-lg font-bold text-slate-900">Danh sách người dùng</div>
                 </div>
-                <button
-                  type="button"
-                  className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
-                >
-                  Xem tat ca
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={roleFilter}
+                    onChange={(event) => setRoleFilter(event.target.value)}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+                  >
+                    <option value="all">Tat ca vai tro</option>
+                    <option value="ADMIN">ADMIN</option>
+                    <option value="USER">USER</option>
+                  </select>
+                  <select
+                    value={statusFilter}
+                    onChange={(event) => setStatusFilter(event.target.value)}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+                  >
+                    <option value="all">Tat ca trang thai</option>
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="LOCKED">LOCKED</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="mt-4 space-y-3">
-                {[
-                  "Nguoi dung moi dang ky: 24",
-                  "Tai lieu moi tai len: 148",
-                  "Luot tom tat hoan tat: 312",
-                ].map((item, index) => (
-                  <div
-                    key={item}
-                    className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600"
-                  >
-                    <span>{item}</span>
-                    <span className="text-xs font-semibold text-slate-500">{index + 1} gio truoc</span>
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-sm text-slate-600">
+                    {filteredUsers.length} nguoi dung
                   </div>
-                ))}
-              </div>
-            </div>
+                  <button
+                    type="button"
+                    onClick={() => setUserReloadKey((prev) => prev + 1)}
+                    className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                  >
+                    Lam moi
+                  </button>
+                </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Chat luong tom tat
+                {isUserLoading && (
+                  <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm font-semibold text-slate-500">
+                    Dang tai danh sach nguoi dung...
+                  </div>
+                )}
+
+                {!isUserLoading && userError && (
+                  <div className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-6 text-center text-sm font-semibold text-rose-700">
+                    {userError}
+                  </div>
+                )}
+
+                {!isUserLoading && !userError && filteredUsers.length === 0 && (
+                  <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm font-semibold text-slate-500">
+                    Khong tim thay nguoi dung phu hop.
+                  </div>
+                )}
+
+                {!isUserLoading && !userError && filteredUsers.length > 0 && (
+                  <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
+                    <div className="overflow-auto">
+                      <table className="min-w-[960px] w-full text-left">
+                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                          <tr>
+                            <th className="px-4 py-3">Avatar</th>
+                            <th className="px-4 py-3">Username</th>
+                            <th className="px-4 py-3">Email</th>
+                            <th className="px-4 py-3">Vai tro</th>
+                            <th className="px-4 py-3">Trang thai</th>
+                            <th className="px-4 py-3">Ngay tao</th>
+                            <th className="px-4 py-3 text-right">Hanh dong</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredUsers.map((user) => (
+                            <tr
+                              key={user.id}
+                              className="border-t border-slate-100 text-sm text-slate-700 transition hover:bg-blue-50/40"
+                            >
+                              <td className="px-4 py-3">
+                                {user.thumbnailUrl ? (
+                                  <img
+                                    src={user.thumbnailUrl}
+                                    alt={user.username}
+                                    onError={(event) => {
+                                      event.currentTarget.src = "";
+                                    }}
+                                    className="h-9 w-9 rounded-full border border-slate-200 object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-600">
+                                    {getAvatarLabel(user.username || user.email)}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 font-semibold text-slate-800">
+                                {user.username || "—"}
+                              </td>
+                              <td className="px-4 py-3 text-slate-600">
+                                {user.email || "—"}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span
+                                  className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                                    roleBadgeMap[user.role] || roleBadgeMap.USER
+                                  }`}
+                                >
+                                  {user.role}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span
+                                  className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                                    statusBadgeMap[user.status] || statusBadgeMap.ACTIVE
+                                  }`}
+                                >
+                                  {user.status}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-slate-600">
+                                {formatDate(user.createdAt || user.createdDate || user.created_at)}
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center justify-end gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setDetailUser(user)}
+                                    className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
+                                    title="Xem chi tiet"
+                                    aria-label="Xem chi tiet"
+                                  >
+                                    <VisibilityOutlinedIcon fontSize="small" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRoleDialogOpen(user)}
+                                    className="rounded-lg border border-slate-200 p-2 text-blue-600 transition hover:bg-blue-50"
+                                    title="Cap nhat vai tro"
+                                    aria-label="Cap nhat vai tro"
+                                  >
+                                    <ManageAccountsOutlinedIcon fontSize="small" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleStatus(user)}
+                                    className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
+                                    title={user.active ? "Khoa tai khoan" : "Mo khoa tai khoan"}
+                                    aria-label={user.active ? "Khoa tai khoan" : "Mo khoa tai khoan"}
+                                  >
+                                    {user.active ? (
+                                      <LockOutlinedIcon fontSize="small" />
+                                    ) : (
+                                      <LockOpenOutlinedIcon fontSize="small" />
+                                    )}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteOpen(user)}
+                                    className="rounded-lg border border-slate-200 p-2 text-rose-600 transition hover:bg-rose-50"
+                                    title="Xoa nguoi dung"
+                                    aria-label="Xoa nguoi dung"
+                                  >
+                                    <DeleteOutlineOutlinedIcon fontSize="small" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="mt-2 text-base font-bold text-slate-900">Hieu suat he thong</div>
-              <div className="mt-4 space-y-3">
-                {summaryHighlight.map((item) => (
+            </section>
+          ) : (
+            <>
+              <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {statCards.map((card) => (
                   <div
-                    key={item.label}
-                    className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
+                    key={card.key}
+                    className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-sm"
                   >
-                    <div className="text-xs font-semibold text-slate-500">{item.label}</div>
-                    <div className="mt-1 text-xl font-bold text-slate-900">{item.value}</div>
-                    <div className="mt-1 text-xs text-slate-500">{item.detail}</div>
+                    <div
+                      className={`inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r ${card.tone} px-3 py-1 text-xs font-semibold text-white`}
+                    >
+                      <AutoAwesomeOutlinedIcon fontSize="inherit" />
+                      Bao cao
+                    </div>
+                    <div className="mt-3 text-sm font-semibold text-slate-600">{card.label}</div>
+                    <div className="mt-1 text-2xl font-bold text-slate-900">{card.value}</div>
+                    <div className="mt-2 text-xs text-slate-500">{card.sub}</div>
                   </div>
                 ))}
-              </div>
-            </div>
-          </section>
+              </section>
+
+              <section className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        Hoat dong gan day
+                      </div>
+                      <div className="text-base font-bold text-slate-900">He thong dang van hanh on dinh</div>
+                    </div>
+                    <button
+                      type="button"
+                      className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                    >
+                      Xem tat ca
+                    </button>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    {[
+                      "Nguoi dung moi dang ky: 24",
+                      "Tai lieu moi tai len: 148",
+                      "Luot tom tat hoan tat: 312",
+                    ].map((item, index) => (
+                      <div
+                        key={item}
+                        className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600"
+                      >
+                        <span>{item}</span>
+                        <span className="text-xs font-semibold text-slate-500">{index + 1} gio truoc</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    Chat luong tom tat
+                  </div>
+                  <div className="mt-2 text-base font-bold text-slate-900">Hieu suat he thong</div>
+                  <div className="mt-4 space-y-3">
+                    {summaryHighlight.map((item) => (
+                      <div
+                        key={item.label}
+                        className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
+                      >
+                        <div className="text-xs font-semibold text-slate-500">{item.label}</div>
+                        <div className="mt-1 text-xl font-bold text-slate-900">{item.value}</div>
+                        <div className="mt-1 text-xs text-slate-500">{item.detail}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            </>
+          )}
         </main>
       </div>
+
+      {detailUser && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-lg font-semibold text-slate-800">Chi tiet nguoi dung</div>
+                <div className="mt-1 text-sm text-slate-500">Thong tin tai khoan</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDetailUser(null)}
+                className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                Dong
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3 text-sm text-slate-700">
+              <div className="flex items-center gap-3">
+                {detailUser.thumbnailUrl ? (
+                  <img
+                    src={detailUser.thumbnailUrl}
+                    alt={detailUser.username}
+                    className="h-12 w-12 rounded-full border border-slate-200 object-cover"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-sm font-semibold text-slate-600">
+                    {getAvatarLabel(detailUser.username || detailUser.email)}
+                  </div>
+                )}
+                <div>
+                  <div className="text-base font-semibold text-slate-800">
+                    {detailUser.username || "—"}
+                  </div>
+                  <div className="text-xs text-slate-500">ID: {detailUser.id}</div>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <div className="text-xs text-slate-500">Email</div>
+                  <div className="font-semibold text-slate-700">{detailUser.email || "—"}</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <div className="text-xs text-slate-500">So dien thoai</div>
+                  <div className="font-semibold text-slate-700">{detailUser.phone || "—"}</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <div className="text-xs text-slate-500">Vai tro</div>
+                  <div className="font-semibold text-slate-700">{detailUser.role}</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <div className="text-xs text-slate-500">Trang thai</div>
+                  <div className="font-semibold text-slate-700">{detailUser.status}</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 sm:col-span-2">
+                  <div className="text-xs text-slate-500">Dia chi</div>
+                  <div className="font-semibold text-slate-700">{detailUser.address || "—"}</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 sm:col-span-2">
+                  <div className="text-xs text-slate-500">Ngay tao</div>
+                  <div className="font-semibold text-slate-700">
+                    {formatDate(detailUser.createdAt || detailUser.createdDate || detailUser.created_at)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {roleDialog.open && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <div className="text-lg font-semibold text-slate-800">Cap nhat vai tro</div>
+            <div className="mt-1 text-sm text-slate-500">
+              {roleDialog.user?.username || "Nguoi dung"}
+            </div>
+
+            <select
+              value={roleDialog.role}
+              onChange={(event) => setRoleDialog((prev) => ({ ...prev, role: event.target.value }))}
+              className="mt-4 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-blue-300"
+            >
+              <option value="ADMIN">ADMIN</option>
+              <option value="USER">USER</option>
+            </select>
+
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={handleRoleDialogClose}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                Huy
+              </button>
+              <button
+                type="button"
+                onClick={handleRoleConfirm}
+                disabled={roleDialog.submitting}
+                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+              >
+                {roleDialog.submitting ? "Dang cap nhat..." : "Xac nhan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteDialog.open && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <div className="text-lg font-semibold text-slate-800">Xoa nguoi dung</div>
+            <div className="mt-2 text-sm text-slate-600">
+              Ban co chac muon xoa tai khoan <span className="font-semibold">{deleteDialog.user?.username}</span>?
+            </div>
+
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={handleDeleteClose}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                Huy
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteConfirm}
+                disabled={deleteDialog.submitting}
+                className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:opacity-60"
+              >
+                {deleteDialog.submitting ? "Dang xoa..." : "Xoa"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && (
         <div className="fixed bottom-4 right-4 z-50 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-lg">

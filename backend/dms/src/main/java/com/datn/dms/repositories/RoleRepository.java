@@ -10,4 +10,5 @@ import com.datn.dms.entities.RoleEntity;
 @Repository
 public interface RoleRepository extends JpaRepository<RoleEntity, Long> {
     Optional<RoleEntity> findByName(String name);
+    java.util.Set<RoleEntity> findByNameIn(java.util.List<String> names);
 }

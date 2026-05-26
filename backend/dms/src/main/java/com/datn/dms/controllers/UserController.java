@@ -1,6 +1,7 @@
 package com.datn.dms.controllers;
 
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,7 +21,9 @@ import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
@@ -72,6 +75,40 @@ public class UserController {
                 .code(200)
                 .message("Users filtered successfully")
                 .data(userService.filterUsers(role, status))
+                .build();
+    }
+
+    @PutMapping("/{id}/roles")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<InfoUserResponse> updateRoles(
+            @PathVariable Long id,
+            @RequestBody List<String> roles) {
+        return ApiResponse.<InfoUserResponse>builder()
+                .code(200)
+                .message("User roles updated successfully")
+                .data(userService.updateRoles(id, roles))
+                .build();
+    }
+
+    @PutMapping("/{id}/status")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<InfoUserResponse> updateStatus(
+            @PathVariable Long id,
+            @RequestParam boolean isActive) {
+        return ApiResponse.<InfoUserResponse>builder()
+                .code(200)
+                .message("User status updated successfully")
+                .data(userService.updateStatus(id, isActive))
+                .build();
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<Void> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ApiResponse.<Void>builder()
+                .code(200)
+                .message("User deleted successfully")
                 .build();
     }
 }

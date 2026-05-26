@@ -1,12 +1,14 @@
 package com.datn.dms.services;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
 import com.datn.dms.dtos.users.request.CreateUserRequest;
 import com.datn.dms.dtos.users.response.CreateUserResponse;
 import com.datn.dms.dtos.users.response.InfoUserResponse;
+import com.datn.dms.entities.RoleEntity;
 import com.datn.dms.entities.UserEntity;
 import com.datn.dms.mapper.UserMapper;
 import com.datn.dms.repositories.UserRepository;
@@ -25,6 +27,7 @@ public class UserService {
     UserMapper userMapper;
     UserRepository userRepository;
     AuthenticationUtills authenticationUtills;
+    com.datn.dms.repositories.RoleRepository roleRepository;
 
     // public CreateUserResponse createUser(CreateUserRequest request) {
     //     UserEntity userEntity = this.userMapper.toUserEntity(request);
@@ -65,5 +68,33 @@ public class UserService {
         return this.userRepository.filterUsers(role, isActive).stream()
                 .map(this.userMapper::toInfoUserResponse)
                 .toList();
+    }
+
+    public InfoUserResponse updateRoles(Long userId, List<String> roleNames) {
+        UserEntity userEntity = this.userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        
+        Set<RoleEntity> roles = this.roleRepository.findByNameIn(roleNames);
+        userEntity.setRoles(roles);
+        userEntity = this.userRepository.save(userEntity);
+        
+        return this.userMapper.toInfoUserResponse(userEntity);
+    }
+
+    public InfoUserResponse updateStatus(Long userId, boolean isActive) {
+        UserEntity userEntity = this.userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        
+        userEntity.setActive(isActive);
+        userEntity = this.userRepository.save(userEntity);
+        
+        return this.userMapper.toInfoUserResponse(userEntity);
+    }
+
+    public void deleteUser(Long userId) {
+        if (!this.userRepository.existsById(userId)) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        this.userRepository.deleteById(userId);
     }
 }
