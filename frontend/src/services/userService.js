@@ -17,7 +17,14 @@ const parseApiResponse = (response, fallbackMessage) => {
 export const getUsers = async () => {
   try {
     const response = await api.get("/users");
-    return parseApiResponse(response, "Khong the tai danh sach nguoi dung");
+    const users = parseApiResponse(response, "Khong the tai danh sach nguoi dung");
+    // Đảm bảo mỗi user đều có thuộc tính roles là mảng
+    return Array.isArray(users)
+      ? users.map((user) => ({
+          ...user,
+          roles: Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : []),
+        }))
+      : [];
   } catch (error) {
     throw new Error(error.response?.data?.message || "Khong the tai danh sach nguoi dung");
   }
@@ -57,9 +64,12 @@ export const filterUsers = async ({ role, status }) => {
   }
 };
 
-export const updateUserRole = async (userId, roles) => {
+// Update user role: expects roleName param (ADMIN or USER)
+export const updateUserRole = async (userId, roleName) => {
   try {
-    const response = await api.put(`/users/${userId}/roles`, roles);
+    const response = await api.put(`/users/${userId}/roles`, null, {
+      params: { roleName },
+    });
     return parseApiResponse(response, "Khong the cap nhat vai tro");
   } catch (error) {
     throw new Error(error.response?.data?.message || "Khong the cap nhat vai tro");

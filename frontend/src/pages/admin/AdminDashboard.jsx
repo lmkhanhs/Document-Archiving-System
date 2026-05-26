@@ -528,7 +528,8 @@ const AdminDashboard = () => {
     setRoleDialog((prev) => ({ ...prev, submitting: true }));
 
     try {
-      await updateUserRole(roleDialog.user.id, [roleDialog.role]);
+      // API mới: truyền roleName là string ("ADMIN" hoặc "USER")
+      await updateUserRole(roleDialog.user.id, roleDialog.role);
       setUsers((prev) => prev.map((item) => (
         item.id === roleDialog.user.id
           ? { ...item, role: roleDialog.role, roles: [roleDialog.role] }
@@ -1109,15 +1110,15 @@ const AdminDashboard = () => {
           <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
             <div className="flex items-start justify-between">
               <div>
-                <div className="text-lg font-semibold text-slate-800">Chi tiet nguoi dung</div>
-                <div className="mt-1 text-sm text-slate-500">Thong tin tai khoan</div>
+                <div className="text-lg font-semibold text-slate-800">Chi tiết người dùng</div>
+                <div className="mt-1 text-sm text-slate-500">Thông tin tài khoản</div>
               </div>
               <button
                 type="button"
                 onClick={() => setDetailUser(null)}
                 className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
               >
-                Dong
+                Đóng
               </button>
             </div>
 
@@ -1148,23 +1149,23 @@ const AdminDashboard = () => {
                   <div className="font-semibold text-slate-700">{detailUser.email || "—"}</div>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  <div className="text-xs text-slate-500">So dien thoai</div>
+                  <div className="text-xs text-slate-500">Số điện thoại</div>
                   <div className="font-semibold text-slate-700">{detailUser.phone || "—"}</div>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  <div className="text-xs text-slate-500">Vai tro</div>
+                  <div className="text-xs text-slate-500">Vai trò</div>
                   <div className="font-semibold text-slate-700">{detailUser.role}</div>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  <div className="text-xs text-slate-500">Trang thai</div>
+                  <div className="text-xs text-slate-500">Trạng thái</div>
                   <div className="font-semibold text-slate-700">{detailUser.status}</div>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 sm:col-span-2">
-                  <div className="text-xs text-slate-500">Dia chi</div>
+                  <div className="text-xs text-slate-500">Địa chỉ</div>
                   <div className="font-semibold text-slate-700">{detailUser.address || "—"}</div>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 sm:col-span-2">
-                  <div className="text-xs text-slate-500">Ngay tao</div>
+                  <div className="text-xs text-slate-500">Ngày tạo</div>
                   <div className="font-semibold text-slate-700">
                     {formatDate(detailUser.createdAt || detailUser.createdDate || detailUser.created_at)}
                   </div>
