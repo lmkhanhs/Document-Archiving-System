@@ -19,4 +19,6 @@ public interface UserRepository extends JpaRepository<UserEntity,  Long> {
     List<UserEntity> filterUsers(@Param("role") String role, @Param("isActive") Boolean isActive);
     
     List<UserEntity> findByIsDeletedTrue();
+
+    List<UserEntity> findAllByIsDeletedFalse();
 }

@@ -20,13 +20,19 @@ import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined
 import { API_ORIGIN } from "../../services/api";
 import { getInfoUser, getRoles, logout } from "../../services/authService";
 import {
-  deleteUser,
   filterUsers,
+  getDeletedUsers,
   getUsers,
+  hardDeleteUser,
+  restoreUser,
   searchUsers,
+  softDeleteUser,
   updateUserRole,
   updateUserStatus,
 } from "../../services/userService";
+import DeletedUsersPage from "./components/DeletedUsersPage";
+import RestoreUserDialog from "./components/RestoreUserDialog";
+import HardDeleteDialog from "./components/HardDeleteDialog";
 
 const USER_CACHE_KEY = "currentUser";
 
@@ -172,12 +178,17 @@ const AdminDashboard = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isRoleLoading, setIsRoleLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [usersView, setUsersView] = useState("active");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [users, setUsers] = useState([]);
   const [isUserLoading, setIsUserLoading] = useState(false);
   const [userError, setUserError] = useState("");
   const [userReloadKey, setUserReloadKey] = useState(0);
+  const [deletedUsers, setDeletedUsers] = useState([]);
+  const [isDeletedLoading, setIsDeletedLoading] = useState(false);
+  const [deletedError, setDeletedError] = useState("");
+  const [deletedReloadKey, setDeletedReloadKey] = useState(0);
   const [detailUser, setDetailUser] = useState(null);
   const [roleDialog, setRoleDialog] = useState({
     open: false,
@@ -185,7 +196,17 @@ const AdminDashboard = () => {
     role: "USER",
     submitting: false,
   });
-  const [deleteDialog, setDeleteDialog] = useState({
+  const [softDeleteDialog, setSoftDeleteDialog] = useState({
+    open: false,
+    user: null,
+    submitting: false,
+  });
+  const [restoreDialog, setRestoreDialog] = useState({
+    open: false,
+    user: null,
+    submitting: false,
+  });
+  const [hardDeleteDialog, setHardDeleteDialog] = useState({
     open: false,
     user: null,
     submitting: false,
@@ -294,6 +315,10 @@ const AdminDashboard = () => {
       return undefined;
     }
 
+    if (usersView !== "active") {
+      return undefined;
+    }
+
     let isMounted = true;
     const keyword = search.trim();
     const shouldSearch = keyword.length > 0;
@@ -335,7 +360,46 @@ const AdminDashboard = () => {
       isMounted = false;
       clearTimeout(debounceTimer);
     };
-  }, [activeMenu, roleFilter, search, statusFilter, userReloadKey]);
+  }, [activeMenu, roleFilter, search, statusFilter, userReloadKey, usersView]);
+
+  useEffect(() => {
+    if (activeMenu !== "users") {
+      return undefined;
+    }
+
+    if (usersView !== "deleted") {
+      return undefined;
+    }
+
+    let isMounted = true;
+
+    const loadDeletedUsers = async () => {
+      setIsDeletedLoading(true);
+      setDeletedError("");
+
+      try {
+        const payload = await getDeletedUsers();
+        const data = Array.isArray(payload) ? payload : payload?.data || [];
+        if (isMounted) {
+          setDeletedUsers(data);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setDeletedError(error.message || "Không thể tải danh sách người dùng đã xóa");
+        }
+      } finally {
+        if (isMounted) {
+          setIsDeletedLoading(false);
+        }
+      }
+    };
+
+    loadDeletedUsers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeMenu, deletedReloadKey, usersView]);
 
   const handleLogout = async () => {
     if (isLoggingOut) {
@@ -410,6 +474,15 @@ const AdminDashboard = () => {
       thumbnailUrl: resolveThumbnailUrl(user?.thumbnailUrl || user?.avatar || ""),
     }))
   ), [users]);
+
+  const normalizedDeletedUsers = useMemo(() => (
+    deletedUsers.map((user) => ({
+      ...user,
+      active: Boolean(user?.active),
+      status: "DELETED",
+      thumbnailUrl: resolveThumbnailUrl(user?.thumbnailUrl || user?.avatar || ""),
+    }))
+  ), [deletedUsers]);
 
   const filteredUsers = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -486,29 +559,93 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDeleteOpen = (user) => {
-    setDeleteDialog({ open: true, user, submitting: false });
+  const handleSoftDeleteOpen = (user) => {
+    setSoftDeleteDialog({ open: true, user, submitting: false });
   };
 
-  const handleDeleteClose = () => {
-    setDeleteDialog({ open: false, user: null, submitting: false });
+  const handleSoftDeleteClose = () => {
+    setSoftDeleteDialog({ open: false, user: null, submitting: false });
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!deleteDialog.user) {
+  const handleSoftDeleteConfirm = async () => {
+    if (!softDeleteDialog.user) {
       return;
     }
 
-    setDeleteDialog((prev) => ({ ...prev, submitting: true }));
+    setSoftDeleteDialog((prev) => ({ ...prev, submitting: true }));
 
     try {
-      await deleteUser(deleteDialog.user.id);
-      setUsers((prev) => prev.filter((item) => item.id !== deleteDialog.user.id));
-      setToast("Đã xóa người dùng");
-      handleDeleteClose();
+      await softDeleteUser(softDeleteDialog.user.id);
+      setUsers((prev) => prev.filter((item) => item.id !== softDeleteDialog.user.id));
+      setToast("Đã xóa mềm người dùng");
+      setDeletedReloadKey((prev) => prev + 1);
+      handleSoftDeleteClose();
     } catch (error) {
-      setToast(error.message || "Không thể xóa người dùng");
-      setDeleteDialog((prev) => ({ ...prev, submitting: false }));
+      setToast(error.message || "Không thể xóa mềm người dùng");
+      setSoftDeleteDialog((prev) => ({ ...prev, submitting: false }));
+    }
+  };
+
+  const handleRestoreOpen = (user) => {
+    setRestoreDialog({ open: true, user, submitting: false });
+  };
+
+  const handleRestoreClose = () => {
+    setRestoreDialog({ open: false, user: null, submitting: false });
+  };
+
+  const handleRestoreConfirm = async () => {
+    if (!restoreDialog.user) {
+      return;
+    }
+
+    setRestoreDialog((prev) => ({ ...prev, submitting: true }));
+
+    try {
+      await restoreUser(restoreDialog.user.id);
+      setDeletedUsers((prev) => prev.filter((item) => item.id !== restoreDialog.user.id));
+      setUserReloadKey((prev) => prev + 1);
+      setToast("Đã khôi phục tài khoản");
+      handleRestoreClose();
+    } catch (error) {
+      setToast(error.message || "Không thể khôi phục tài khoản");
+      setRestoreDialog((prev) => ({ ...prev, submitting: false }));
+    }
+  };
+
+  const handleHardDeleteOpen = (user) => {
+    setHardDeleteDialog({ open: true, user, submitting: false });
+  };
+
+  const handleHardDeleteClose = () => {
+    setHardDeleteDialog({ open: false, user: null, submitting: false });
+  };
+
+  const handleHardDeleteConfirm = async () => {
+    if (!hardDeleteDialog.user) {
+      return;
+    }
+
+    setHardDeleteDialog((prev) => ({ ...prev, submitting: true }));
+
+    try {
+      await hardDeleteUser(hardDeleteDialog.user.id);
+      setDeletedUsers((prev) => prev.filter((item) => item.id !== hardDeleteDialog.user.id));
+      setToast("Đã xóa vĩnh viễn người dùng");
+      handleHardDeleteClose();
+    } catch (error) {
+      const message = error.message || "Không thể xóa vĩnh viễn người dùng";
+      const normalizedMessage = message.toLowerCase();
+      if (
+        normalizedMessage.includes("foreign")
+        || normalizedMessage.includes("constraint")
+        || normalizedMessage.includes("khoa ngoai")
+      ) {
+        setToast("Không thể xóa người dùng vì vẫn còn dữ liệu liên quan.");
+      } else {
+        setToast(message);
+      }
+      setHardDeleteDialog((prev) => ({ ...prev, submitting: false }));
     }
   };
 
@@ -581,7 +718,7 @@ const AdminDashboard = () => {
                 Admin Dashboard
               </div>
               <div className="text-xl font-bold text-slate-800">
-                He thong tom tat van ban
+                Hệ thống lưu trữ tài liệu
               </div>
             </div>
 
@@ -619,7 +756,7 @@ const AdminDashboard = () => {
                   )}
                   <div className="text-left">
                     <div className="text-sm font-semibold text-slate-800">{userName}</div>
-                    <div className="text-xs text-slate-500">Quan tri he thong</div>
+                    <div className="text-xs text-slate-500">Quản trị hệ thống</div>
                   </div>
                 </button>
                 {isAdmin && isUserMenuOpen && (
@@ -671,180 +808,222 @@ const AdminDashboard = () => {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    Quan ly tai khoan
+                    Quản lý tài khoản
                   </div>
                   <div className="text-lg font-bold text-slate-900">Danh sách người dùng</div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <select
-                    value={roleFilter}
-                    onChange={(event) => setRoleFilter(event.target.value)}
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
-                  >
-                    <option value="all">Tat ca vai tro</option>
-                    <option value="ADMIN">ADMIN</option>
-                    <option value="USER">USER</option>
-                  </select>
-                  <select
-                    value={statusFilter}
-                    onChange={(event) => setStatusFilter(event.target.value)}
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
-                  >
-                    <option value="all">Tat ca trang thai</option>
-                    <option value="ACTIVE">ACTIVE</option>
-                    <option value="LOCKED">LOCKED</option>
-                  </select>
+                  <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-1">
+                    <button
+                      type="button"
+                      onClick={() => setUsersView("active")}
+                      className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+                        usersView === "active"
+                          ? "bg-blue-600 text-white"
+                          : "text-slate-600 hover:bg-slate-100"
+                      }`}
+                    >
+                      Đang hoạt động
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUsersView("deleted")}
+                      className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+                        usersView === "deleted"
+                          ? "bg-slate-900 text-white"
+                          : "text-slate-600 hover:bg-slate-100"
+                      }`}
+                    >
+                      Người dùng đã xóa
+                    </button>
+                  </div>
+
+                  {usersView === "active" && (
+                    <>
+                      <select
+                        value={roleFilter}
+                        onChange={(event) => setRoleFilter(event.target.value)}
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+                      >
+                        <option value="all">Tất cả vai trò</option>
+                        <option value="ADMIN">ADMIN</option>
+                        <option value="USER">USER</option>
+                      </select>
+                      <select
+                        value={statusFilter}
+                        onChange={(event) => setStatusFilter(event.target.value)}
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+                      >
+                        <option value="all">Tất cả trạng thái</option>
+                        <option value="ACTIVE">ACTIVE</option>
+                        <option value="LOCKED">LOCKED</option>
+                      </select>
+                    </>
+                  )}
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="text-sm text-slate-600">
-                    {filteredUsers.length} nguoi dung
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setUserReloadKey((prev) => prev + 1)}
-                    className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
-                  >
-                    Lam moi
-                  </button>
-                </div>
-
-                {isUserLoading && (
-                  <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm font-semibold text-slate-500">
-                    Dang tai danh sach nguoi dung...
-                  </div>
-                )}
-
-                {!isUserLoading && userError && (
-                  <div className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-6 text-center text-sm font-semibold text-rose-700">
-                    {userError}
-                  </div>
-                )}
-
-                {!isUserLoading && !userError && filteredUsers.length === 0 && (
-                  <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm font-semibold text-slate-500">
-                    Khong tim thay nguoi dung phu hop.
-                  </div>
-                )}
-
-                {!isUserLoading && !userError && filteredUsers.length > 0 && (
-                  <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
-                    <div className="overflow-auto">
-                      <table className="min-w-[960px] w-full text-left">
-                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                          <tr>
-                            <th className="px-4 py-3">Avatar</th>
-                            <th className="px-4 py-3">Username</th>
-                            <th className="px-4 py-3">Email</th>
-                            <th className="px-4 py-3">Vai tro</th>
-                            <th className="px-4 py-3">Trang thai</th>
-                            <th className="px-4 py-3">Ngay tao</th>
-                            <th className="px-4 py-3 text-right">Hanh dong</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredUsers.map((user) => (
-                            <tr
-                              key={user.id}
-                              className="border-t border-slate-100 text-sm text-slate-700 transition hover:bg-blue-50/40"
-                            >
-                              <td className="px-4 py-3">
-                                {user.thumbnailUrl ? (
-                                  <img
-                                    src={user.thumbnailUrl}
-                                    alt={user.username}
-                                    onError={(event) => {
-                                      event.currentTarget.src = "";
-                                    }}
-                                    className="h-9 w-9 rounded-full border border-slate-200 object-cover"
-                                  />
-                                ) : (
-                                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-600">
-                                    {getAvatarLabel(user.username || user.email)}
-                                  </div>
-                                )}
-                              </td>
-                              <td className="px-4 py-3 font-semibold text-slate-800">
-                                {user.username || "—"}
-                              </td>
-                              <td className="px-4 py-3 text-slate-600">
-                                {user.email || "—"}
-                              </td>
-                              <td className="px-4 py-3">
-                                <span
-                                  className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
-                                    roleBadgeMap[user.role] || roleBadgeMap.USER
-                                  }`}
-                                >
-                                  {user.role}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3">
-                                <span
-                                  className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
-                                    statusBadgeMap[user.status] || statusBadgeMap.ACTIVE
-                                  }`}
-                                >
-                                  {user.status}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 text-slate-600">
-                                {formatDate(user.createdAt || user.createdDate || user.created_at)}
-                              </td>
-                              <td className="px-4 py-3">
-                                <div className="flex items-center justify-end gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => setDetailUser(user)}
-                                    className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
-                                    title="Xem chi tiet"
-                                    aria-label="Xem chi tiet"
-                                  >
-                                    <VisibilityOutlinedIcon fontSize="small" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRoleDialogOpen(user)}
-                                    className="rounded-lg border border-slate-200 p-2 text-blue-600 transition hover:bg-blue-50"
-                                    title="Cap nhat vai tro"
-                                    aria-label="Cap nhat vai tro"
-                                  >
-                                    <ManageAccountsOutlinedIcon fontSize="small" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleStatus(user)}
-                                    className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
-                                    title={user.active ? "Khoa tai khoan" : "Mo khoa tai khoan"}
-                                    aria-label={user.active ? "Khoa tai khoan" : "Mo khoa tai khoan"}
-                                  >
-                                    {user.active ? (
-                                      <LockOutlinedIcon fontSize="small" />
-                                    ) : (
-                                      <LockOpenOutlinedIcon fontSize="small" />
-                                    )}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteOpen(user)}
-                                    className="rounded-lg border border-slate-200 p-2 text-rose-600 transition hover:bg-rose-50"
-                                    title="Xoa nguoi dung"
-                                    aria-label="Xoa nguoi dung"
-                                  >
-                                    <DeleteOutlineOutlinedIcon fontSize="small" />
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+              {usersView === "active" ? (
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="text-sm text-slate-600">
+                      {filteredUsers.length} nguoi dung
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setUserReloadKey((prev) => prev + 1)}
+                      className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                    >
+                      F5
+                    </button>
                   </div>
-                )}
-              </div>
+
+                  {isUserLoading && (
+                    <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm font-semibold text-slate-500">
+                      Dang tai danh sach nguoi dung...
+                    </div>
+                  )}
+
+                  {!isUserLoading && userError && (
+                    <div className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-6 text-center text-sm font-semibold text-rose-700">
+                      {userError}
+                    </div>
+                  )}
+
+                  {!isUserLoading && !userError && filteredUsers.length === 0 && (
+                    <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm font-semibold text-slate-500">
+                      Không tìm thấy người dùng nào phù hợp.
+                    </div>
+                  )}
+
+                  {!isUserLoading && !userError && filteredUsers.length > 0 && (
+                    <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
+                      <div className="overflow-auto">
+                        <table className="min-w-[960px] w-full text-left">
+                          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                            <tr>
+                              <th className="px-4 py-3">Avatar</th>
+                              <th className="px-4 py-3">Username</th>
+                              <th className="px-4 py-3">Email</th>
+                              <th className="px-4 py-3">Vai trò</th>
+                              <th className="px-4 py-3">Trạng thái</th>
+                              <th className="px-4 py-3">Ngày tạo</th>
+                              <th className="px-4 py-3 text-right">Hành động</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredUsers.map((user) => (
+                              <tr
+                                key={user.id}
+                                className="border-t border-slate-100 text-sm text-slate-700 transition hover:bg-blue-50/40"
+                              >
+                                <td className="px-4 py-3">
+                                  {user.thumbnailUrl ? (
+                                    <img
+                                      src={user.thumbnailUrl}
+                                      alt={user.username}
+                                      onError={(event) => {
+                                        event.currentTarget.src = "";
+                                      }}
+                                      className="h-9 w-9 rounded-full border border-slate-200 object-cover"
+                                    />
+                                  ) : (
+                                    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-600">
+                                      {getAvatarLabel(user.username || user.email)}
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 font-semibold text-slate-800">
+                                  {user.username || "—"}
+                                </td>
+                                <td className="px-4 py-3 text-slate-600">
+                                  {user.email || "—"}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span
+                                    className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                                      roleBadgeMap[user.role] || roleBadgeMap.USER
+                                    }`}
+                                  >
+                                    {user.role}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span
+                                    className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                                      statusBadgeMap[user.status] || statusBadgeMap.ACTIVE
+                                    }`}
+                                  >
+                                    {user.status}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-slate-600">
+                                  {formatDate(user.createdAt || user.createdDate || user.created_at)}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center justify-end gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => setDetailUser(user)}
+                                      className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
+                                      title="Xem chi tiet"
+                                      aria-label="Xem chi tiet"
+                                    >
+                                      <VisibilityOutlinedIcon fontSize="small" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRoleDialogOpen(user)}
+                                      className="rounded-lg border border-slate-200 p-2 text-blue-600 transition hover:bg-blue-50"
+                                      title="Cap nhat vai tro"
+                                      aria-label="Cap nhat vai tro"
+                                    >
+                                      <ManageAccountsOutlinedIcon fontSize="small" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleStatus(user)}
+                                      className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
+                                      title={user.active ? "Khoa tai khoan" : "Mo khoa tai khoan"}
+                                      aria-label={user.active ? "Khoa tai khoan" : "Mo khoa tai khoan"}
+                                    >
+                                      {user.active ? (
+                                        <LockOutlinedIcon fontSize="small" />
+                                      ) : (
+                                        <LockOpenOutlinedIcon fontSize="small" />
+                                      )}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSoftDeleteOpen(user)}
+                                      className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
+                                      title="Xoa mem"
+                                      aria-label="Xoa mem"
+                                    >
+                                      <DeleteOutlineOutlinedIcon fontSize="small" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <DeletedUsersPage
+                  users={normalizedDeletedUsers}
+                  isLoading={isDeletedLoading}
+                  error={deletedError}
+                  onRefresh={() => setDeletedReloadKey((prev) => prev + 1)}
+                  onRestore={handleRestoreOpen}
+                  onHardDelete={handleHardDeleteOpen}
+                  getAvatarLabel={getAvatarLabel}
+                  formatDate={formatDate}
+                />
+              )}
             </section>
           ) : (
             <>
@@ -1034,34 +1213,50 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {deleteDialog.open && (
+      {softDeleteDialog.open && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
-            <div className="text-lg font-semibold text-slate-800">Xoa nguoi dung</div>
+          <div className="w-full max-w-md animate-[fadeUp_160ms_ease-out] rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <div className="text-lg font-semibold text-slate-800">Xoa mem nguoi dung</div>
             <div className="mt-2 text-sm text-slate-600">
-              Ban co chac muon xoa tai khoan <span className="font-semibold">{deleteDialog.user?.username}</span>?
+              Ban co chac muon xoa mem nguoi dung nay khong?
             </div>
 
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
                 type="button"
-                onClick={handleDeleteClose}
+                onClick={handleSoftDeleteClose}
                 className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
               >
                 Huy
               </button>
               <button
                 type="button"
-                onClick={handleDeleteConfirm}
-                disabled={deleteDialog.submitting}
-                className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:opacity-60"
+                onClick={handleSoftDeleteConfirm}
+                disabled={softDeleteDialog.submitting}
+                className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:opacity-60"
               >
-                {deleteDialog.submitting ? "Dang xoa..." : "Xoa"}
+                {softDeleteDialog.submitting ? "Dang xoa..." : "Xoa mem"}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <RestoreUserDialog
+        open={restoreDialog.open}
+        user={restoreDialog.user}
+        submitting={restoreDialog.submitting}
+        onClose={handleRestoreClose}
+        onConfirm={handleRestoreConfirm}
+      />
+
+      <HardDeleteDialog
+        open={hardDeleteDialog.open}
+        user={hardDeleteDialog.user}
+        submitting={hardDeleteDialog.submitting}
+        onClose={handleHardDeleteClose}
+        onConfirm={handleHardDeleteConfirm}
+      />
 
       {toast && (
         <div className="fixed bottom-4 right-4 z-50 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-lg">

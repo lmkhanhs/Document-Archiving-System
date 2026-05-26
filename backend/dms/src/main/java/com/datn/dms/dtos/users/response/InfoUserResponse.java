@@ -1,6 +1,7 @@
 package com.datn.dms.dtos.users.response;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,4 +24,5 @@ public class InfoUserResponse {
     boolean isActive;
     String thumbnailUrl;
     LocalDateTime createdAt;
+    List<String> roles;
 }

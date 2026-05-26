@@ -47,7 +47,7 @@ public class UserService {
     }
 
     public List<InfoUserResponse> getAllUsers(org.springframework.data.domain.Pageable pageable) {
-        return this.userRepository.findAll().stream()
+        return this.userRepository.findAllByIsDeletedFalse().stream()
                 .map(this.userMapper::toInfoUserResponse)
                 .toList();
     }
@@ -70,11 +70,15 @@ public class UserService {
                 .toList();
     }
 
-    public InfoUserResponse updateRoles(Long userId, List<String> roleNames) {
+    public InfoUserResponse updateRoles(Long userId, String roleName) {
         UserEntity userEntity = this.userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         
-        Set<RoleEntity> roles = this.roleRepository.findByNameIn(roleNames);
+        List<String> targetRoles = "ADMIN".equalsIgnoreCase(roleName) 
+                ? List.of("ADMIN", "USER") 
+                : List.of("USER");
+                
+        Set<RoleEntity> roles = this.roleRepository.findByNameIn(targetRoles);
         userEntity.setRoles(roles);
         userEntity = this.userRepository.save(userEntity);
         

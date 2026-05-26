@@ -82,11 +82,11 @@ public class UserController {
     @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<InfoUserResponse> updateRoles(
             @PathVariable Long id,
-            @RequestBody List<String> roles) {
+            @RequestParam String roleName) {
         return ApiResponse.<InfoUserResponse>builder()
                 .code(200)
                 .message("User roles updated successfully")
-                .data(userService.updateRoles(id, roles))
+                .data(userService.updateRoles(id, roleName))
                 .build();
     }
 

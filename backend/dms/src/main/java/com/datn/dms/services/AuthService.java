@@ -78,6 +78,12 @@ public class AuthService {
         if (!authenticated) {
             throw new AppException(ErrorCode.AUTHENTICATION_EXCEPTION);
         }
+        if(user.isDeleted()) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        if(user.isActive() == false) {
+            throw new AppException(ErrorCode.USER_IS_LOCKED);
+        }
 
         String accessToken = generateToken(user, false);
         String refreshToken = generateToken(user, true);

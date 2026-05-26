@@ -23,6 +23,15 @@ export const getUsers = async () => {
   }
 };
 
+export const getDeletedUsers = async () => {
+  try {
+    const response = await api.get("/users/deleted");
+    return parseApiResponse(response, "Khong the tai danh sach nguoi dung da xoa");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Khong the tai danh sach nguoi dung da xoa");
+  }
+};
+
 export const searchUsers = async (keyword) => {
   try {
     const response = await api.get("/users/search", {
@@ -65,6 +74,33 @@ export const updateUserStatus = async (userId, active) => {
     return parseApiResponse(response, "Khong the cap nhat trang thai");
   } catch (error) {
     throw new Error(error.response?.data?.message || "Khong the cap nhat trang thai");
+  }
+};
+
+export const softDeleteUser = async (userId) => {
+  try {
+    const response = await api.delete(`/users/${userId}/soft`);
+    return parseApiResponse(response, "Khong the xoa mem nguoi dung");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Khong the xoa mem nguoi dung");
+  }
+};
+
+export const hardDeleteUser = async (userId) => {
+  try {
+    const response = await api.delete(`/users/${userId}/hard`);
+    return parseApiResponse(response, "Khong the xoa vinh vien nguoi dung");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Khong the xoa vinh vien nguoi dung");
+  }
+};
+
+export const restoreUser = async (userId) => {
+  try {
+    const response = await api.put(`/users/${userId}/restore`);
+    return parseApiResponse(response, "Khong the khoi phuc nguoi dung");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Khong the khoi phuc nguoi dung");
   }
 };
 
