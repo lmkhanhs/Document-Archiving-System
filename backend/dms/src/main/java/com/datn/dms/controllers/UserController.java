@@ -131,4 +131,14 @@ public class UserController {
                 .message("User restored successfully")
                 .build();
     }
+
+    @GetMapping("/deleted")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<List<InfoUserResponse>> getSoftDeletedUsers() {
+        return ApiResponse.<List<InfoUserResponse>>builder()
+                .code(200)
+                .message("Soft deleted users retrieved successfully")
+                .data(userService.getSoftDeletedUsers())
+                .build();
+    }
 }

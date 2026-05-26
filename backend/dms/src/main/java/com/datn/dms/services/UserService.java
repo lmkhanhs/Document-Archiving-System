@@ -111,4 +111,10 @@ public class UserService {
         }
         this.userRepository.deleteById(userId);
     }
+
+    public List<InfoUserResponse> getSoftDeletedUsers() {
+        return this.userRepository.findByIsDeletedTrue().stream()
+                .map(this.userMapper::toInfoUserResponse)
+                .toList();
+    }
 }

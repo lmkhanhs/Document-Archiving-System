@@ -17,4 +17,6 @@ public interface UserRepository extends JpaRepository<UserEntity,  Long> {
     
     @Query("SELECT DISTINCT u FROM UserEntity u LEFT JOIN u.roles r WHERE (:role IS NULL OR r.name = :role) AND (:isActive IS NULL OR u.isActive = :isActive)")
     List<UserEntity> filterUsers(@Param("role") String role, @Param("isActive") Boolean isActive);
+    
+    List<UserEntity> findByIsDeletedTrue();
 }
