@@ -14,26 +14,6 @@ const parseApiResponse = (response, fallbackMessage) => {
   return result.data;
 };
 
-const tryRequests = async (requests, fallbackMessage) => {
-  let lastError = null;
-
-  for (const request of requests) {
-    try {
-      const response = await request();
-      return parseApiResponse(response, fallbackMessage);
-    } catch (error) {
-      lastError = error;
-      const status = error?.response?.status;
-
-      if (status && status !== 404) {
-        throw new Error(error.response?.data?.message || fallbackMessage);
-      }
-    }
-  }
-
-  throw new Error(lastError?.response?.data?.message || fallbackMessage);
-};
-
 export const getUsers = async () => {
   try {
     const response = await api.get("/users");
@@ -43,16 +23,35 @@ export const getUsers = async () => {
   }
 };
 
-export const updateUserRole = async (userId, role) => {
+export const searchUsers = async (keyword) => {
   try {
-    const payload = { role };
+    const response = await api.get("/users/search", {
+      params: { keyword },
+    });
+    return parseApiResponse(response, "Khong the tim kiem nguoi dung");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Khong the tim kiem nguoi dung");
+  }
+};
 
-    return await tryRequests([
-      () => api.patch(`/users/${userId}/role`, payload),
-      () => api.put(`/users/${userId}/role`, payload),
-      () => api.patch(`/users/${userId}`, payload),
-      () => api.put(`/users/${userId}`, payload),
-    ], "Khong the cap nhat vai tro");
+export const filterUsers = async ({ role, status }) => {
+  try {
+    const response = await api.get("/users/filter", {
+      params: {
+        role,
+        status,
+      },
+    });
+    return parseApiResponse(response, "Khong the loc nguoi dung");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Khong the loc nguoi dung");
+  }
+};
+
+export const updateUserRole = async (userId, roles) => {
+  try {
+    const response = await api.put(`/users/${userId}/roles`, roles);
+    return parseApiResponse(response, "Khong the cap nhat vai tro");
   } catch (error) {
     throw new Error(error.response?.data?.message || "Khong the cap nhat vai tro");
   }
@@ -60,16 +59,10 @@ export const updateUserRole = async (userId, role) => {
 
 export const updateUserStatus = async (userId, active) => {
   try {
-    const payload = { active };
-
-    return await tryRequests([
-      () => api.patch(`/users/${userId}/status`, payload),
-      () => api.put(`/users/${userId}/status`, payload),
-      () => api.patch(`/users/${userId}/active`, payload),
-      () => api.put(`/users/${userId}/active`, payload),
-      () => api.patch(`/users/${userId}`, payload),
-      () => api.put(`/users/${userId}`, payload),
-    ], "Khong the cap nhat trang thai");
+    const response = await api.put(`/users/${userId}/status`, null, {
+      params: { isActive: active },
+    });
+    return parseApiResponse(response, "Khong the cap nhat trang thai");
   } catch (error) {
     throw new Error(error.response?.data?.message || "Khong the cap nhat trang thai");
   }

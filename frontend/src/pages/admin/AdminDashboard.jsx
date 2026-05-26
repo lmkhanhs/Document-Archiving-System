@@ -21,7 +21,9 @@ import { API_ORIGIN } from "../../services/api";
 import { getInfoUser, getRoles, logout } from "../../services/authService";
 import {
   deleteUser,
+  filterUsers,
   getUsers,
+  searchUsers,
   updateUserRole,
   updateUserStatus,
 } from "../../services/userService";
@@ -293,34 +295,47 @@ const AdminDashboard = () => {
     }
 
     let isMounted = true;
+    const keyword = search.trim();
+    const shouldSearch = keyword.length > 0;
+    const shouldFilter = roleFilter !== "all" && statusFilter !== "all";
+    const debounceTimer = setTimeout(() => {
+      const loadUsers = async () => {
+        setIsUserLoading(true);
+        setUserError("");
 
-    const loadUsers = async () => {
-      setIsUserLoading(true);
-      setUserError("");
+        try {
+          let payload = null;
 
-      try {
-        const payload = await getUsers();
-        const data = Array.isArray(payload) ? payload : payload?.data || [];
-        if (isMounted) {
-          setUsers(data);
+          if (shouldSearch) {
+            payload = await searchUsers(keyword);
+          } else if (shouldFilter) {
+            payload = await filterUsers({ role: roleFilter, status: statusFilter });
+          } else {
+            payload = await getUsers();
+          }
+
+          const data = Array.isArray(payload) ? payload : payload?.data || [];
+          if (isMounted) {
+            setUsers(data);
+          }
+        } catch (error) {
+          if (isMounted) {
+            setUserError(error.message || "Không thể tải danh sách người dùng");
+          }
+        } finally {
+          if (isMounted) {
+            setIsUserLoading(false);
+          }
         }
-      } catch (error) {
-        if (isMounted) {
-          setUserError(error.message || "Không thể tải danh sách người dùng");
-        }
-      } finally {
-        if (isMounted) {
-          setIsUserLoading(false);
-        }
-      }
-    };
+      };
 
-    loadUsers();
-
+      loadUsers();
+    }, 350);
     return () => {
       isMounted = false;
+      clearTimeout(debounceTimer);
     };
-  }, [activeMenu, userReloadKey]);
+  }, [activeMenu, roleFilter, search, statusFilter, userReloadKey]);
 
   const handleLogout = async () => {
     if (isLoggingOut) {
@@ -440,10 +455,10 @@ const AdminDashboard = () => {
     setRoleDialog((prev) => ({ ...prev, submitting: true }));
 
     try {
-      await updateUserRole(roleDialog.user.id, roleDialog.role);
+      await updateUserRole(roleDialog.user.id, [roleDialog.role]);
       setUsers((prev) => prev.map((item) => (
         item.id === roleDialog.user.id
-          ? { ...item, role: roleDialog.role }
+          ? { ...item, role: roleDialog.role, roles: [roleDialog.role] }
           : item
       )));
       setToast("Đã cập nhật vai trò người dùng");

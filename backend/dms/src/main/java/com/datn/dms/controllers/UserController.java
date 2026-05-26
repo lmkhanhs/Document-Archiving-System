@@ -102,13 +102,33 @@ public class UserController {
                 .build();
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}/soft")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ApiResponse<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
+    public ApiResponse<Void> softDeleteUser(@PathVariable Long id) {
+        userService.softDeleteUser(id);
         return ApiResponse.<Void>builder()
                 .code(200)
-                .message("User deleted successfully")
+                .message("User soft deleted successfully")
+                .build();
+    }
+
+    @DeleteMapping("/{id}/hard")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<Void> hardDeleteUser(@PathVariable Long id) {
+        userService.hardDeleteUser(id);
+        return ApiResponse.<Void>builder()
+                .code(200)
+                .message("User hard deleted successfully")
+                .build();
+    }
+
+    @PutMapping("/{id}/restore")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<Void> restoreUser(@PathVariable Long id) {
+        userService.restoreUser(id);
+        return ApiResponse.<Void>builder()
+                .code(200)
+                .message("User restored successfully")
                 .build();
     }
 }

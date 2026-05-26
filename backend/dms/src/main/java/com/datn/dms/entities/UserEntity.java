@@ -50,6 +50,9 @@ public class UserEntity extends BaseEntity {
     boolean isActive = true;
 
     @Builder.Default
+    boolean isDeleted = false;
+
+    @Builder.Default
     @OneToMany(mappedBy = "owner")
     List<FolderEntity> folders = new ArrayList<>();
 

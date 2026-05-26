@@ -91,7 +91,21 @@ public class UserService {
         return this.userMapper.toInfoUserResponse(userEntity);
     }
 
-    public void deleteUser(Long userId) {
+    public void softDeleteUser(Long userId) {
+        UserEntity userEntity = this.userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        userEntity.setDeleted(true);
+        this.userRepository.save(userEntity);
+    }
+
+    public void restoreUser(Long userId) {
+        UserEntity userEntity = this.userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        userEntity.setDeleted(false);
+        this.userRepository.save(userEntity);
+    }
+
+    public void hardDeleteUser(Long userId) {
         if (!this.userRepository.existsById(userId)) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
