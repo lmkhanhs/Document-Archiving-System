@@ -13,10 +13,9 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @AllArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-public class InfoUserResponse {
+public class UserDetailsResponse {
     Long id;
     String username;
-    String password;   
     String email;
     String phone;
     String address;

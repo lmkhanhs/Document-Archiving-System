@@ -67,7 +67,7 @@ const sidebarItems = [
   { key: "dashboard", label: "Dashboard", icon: DashboardOutlinedIcon },
   { key: "users", label: "Quản lý người dùng", icon: PeopleOutlinedIcon },
   { key: "documents", label: "Quản lý tài liệu", icon: FolderOpenOutlinedIcon },
-  { key: "history", label: "ịch sử tóm tắt", icon: HistoryOutlinedIcon },
+  { key: "history", label: "Lịch sử tóm tắt", icon: HistoryOutlinedIcon },
   { key: "roles", label: "Quản lý vai trò", icon: VerifiedUserOutlinedIcon },
   { key: "stats", label: "Thống kê", icon: BarChartOutlinedIcon },
   { key: "settings", label: "Cài đặt", icon: SettingsOutlinedIcon },
@@ -117,7 +117,6 @@ const AdminDashboard = () => {
   const [isRoleLoading, setIsRoleLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState("");
-  const highlightRef = useRef(null);
   const userMenuRef = useRef(null);
   const userTriggerRef = useRef(null);
 
@@ -286,21 +285,23 @@ const AdminDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white px-4 py-5 md:px-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white p-3 md:p-5">
       <style>{"@keyframes fadeUp{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}"}</style>
-      <div className="mx-auto flex min-h-[calc(100vh-40px)] max-w-[1500px] flex-col overflow-hidden rounded-[32px] border border-blue-100 bg-white shadow-[0_20px_65px_rgba(27,78,163,0.12)] md:flex-row">
-        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 bg-slate-50/70 p-5 md:w-72 md:border-b-0 md:border-r">
-          <div className="flex items-center gap-3">
+      <div className="mx-auto flex min-h-[calc(100vh-24px)] max-w-[1500px] overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_20px_65px_rgba(27,78,163,0.12)] md:flex-row">
+        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 bg-slate-50/70 p-4 md:w-20 md:border-b-0 md:border-r lg:w-64">
+          <div className="flex items-center gap-3 px-1">
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-tr from-blue-700 to-sky-500 text-lg font-extrabold text-white">
               A
             </div>
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-700">Admin Suite</div>
-              <div className="text-base font-bold text-slate-800">Text Summary Control</div>
+            <div className="hidden lg:block">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+                Admin Suite
+              </div>
+              <div className="text-sm font-bold text-slate-700">Text Summary Control</div>
             </div>
           </div>
 
-          <nav className="grid gap-2">
+          <nav className="grid grid-cols-2 gap-2 md:grid-cols-1">
             {sidebarItems.map((item) => {
               const ItemIcon = item.icon;
               const isActive = activeMenu === item.key;
@@ -310,30 +311,21 @@ const AdminDashboard = () => {
                   key={item.key}
                   type="button"
                   onClick={() => handleSidebarClick(item)}
-                  className={`group flex items-center gap-3 rounded-2xl px-4 py-2.5 text-left text-sm font-semibold transition ${
+                  className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-semibold transition ${
                     isActive
                       ? "bg-blue-100 text-blue-700 ring-1 ring-blue-200"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
-                  <span
-                    ref={isActive ? highlightRef : null}
-                    className={`grid h-9 w-9 place-items-center rounded-xl transition ${
-                      isActive
-                        ? "bg-blue-200/60"
-                        : "bg-slate-100 text-slate-500 group-hover:bg-slate-200"
-                    }`}
-                  >
-                    <ItemIcon fontSize="small" />
-                  </span>
-                  <span className="truncate">{item.label}</span>
+                  <ItemIcon fontSize="small" />
+                  <span className="truncate md:hidden lg:inline">{item.label}</span>
                 </button>
               );
             })}
           </nav>
 
-          <div className="mt-auto rounded-2xl border border-blue-100 bg-white p-4">
-            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+          <div className="mt-auto rounded-2xl border border-blue-100 bg-white p-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-blue-700">
               Tổng quan
             </div>
             <div className="mt-2 text-sm font-semibold text-slate-700">
@@ -345,29 +337,29 @@ const AdminDashboard = () => {
           </div>
         </aside>
 
-        <div className="flex flex-1 flex-col">
-          <header className="flex flex-col gap-4 border-b border-slate-100 bg-white px-5 py-4 md:flex-row md:items-center md:justify-between">
+        <main className="flex-1 p-4 md:p-6">
+          <header className="flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-center">
             <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.26em] text-blue-700">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
                 Admin Dashboard
               </div>
-              <div className="text-2xl font-bold text-slate-900">
+              <div className="text-xl font-bold text-slate-800">
                 He thong tom tat van ban
               </div>
             </div>
 
-            <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center md:justify-end">
-              <div className="relative w-full max-w-xs">
-                <SearchOutlinedIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <div className="flex flex-1 flex-wrap items-center gap-2">
+              <div className="relative flex-1 min-w-[220px]">
+                <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Tim kiem nguoi dung, tai lieu..."
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-3 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
                 />
               </div>
 
-              <div className="relative flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2">
+              <div className="relative flex items-center gap-2 rounded-xl border border-slate-200 px-2 py-1.5">
                 <button
                   ref={userTriggerRef}
                   type="button"
@@ -379,10 +371,10 @@ const AdminDashboard = () => {
                       src={avatarUrl}
                       alt={userName}
                       onError={() => setAvatarUrl("")}
-                      className="h-9 w-9 rounded-full border border-slate-200 object-cover"
+                      className="h-8 w-8 rounded-full border border-slate-200 object-cover"
                     />
                   ) : (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-600">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-600">
                       {avatarLabel}
                     </div>
                   )}
@@ -431,94 +423,83 @@ const AdminDashboard = () => {
                     })}
                   </div>
                 )}
-                <button
-                  type="button"
-                  onClick={handleSwitchAccount}
-                  disabled={isLoggingOut}
-                  className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-60"
-                >
-                  <SyncAltOutlinedIcon fontSize="inherit" />
-                  Doi tai khoan
-                </button>
               </div>
             </div>
           </header>
 
-          <main className="flex-1 space-y-6 bg-gradient-to-br from-white via-slate-50 to-blue-50 px-5 py-6">
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {statCards.map((card) => (
+          <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {statCards.map((card) => (
+              <div
+                key={card.key}
+                className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-sm"
+              >
                 <div
-                  key={card.key}
-                  className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  className={`inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r ${card.tone} px-3 py-1 text-xs font-semibold text-white`}
                 >
+                  <AutoAwesomeOutlinedIcon fontSize="inherit" />
+                  Bao cao
+                </div>
+                <div className="mt-3 text-sm font-semibold text-slate-600">{card.label}</div>
+                <div className="mt-1 text-2xl font-bold text-slate-900">{card.value}</div>
+                <div className="mt-2 text-xs text-slate-500">{card.sub}</div>
+              </div>
+            ))}
+          </section>
+
+          <section className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    Hoat dong gan day
+                  </div>
+                  <div className="text-base font-bold text-slate-900">He thong dang van hanh on dinh</div>
+                </div>
+                <button
+                  type="button"
+                  className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                >
+                  Xem tat ca
+                </button>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {[
+                  "Nguoi dung moi dang ky: 24",
+                  "Tai lieu moi tai len: 148",
+                  "Luot tom tat hoan tat: 312",
+                ].map((item, index) => (
                   <div
-                    className={`inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r ${card.tone} px-3 py-1 text-xs font-semibold text-white`}
+                    key={item}
+                    className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600"
                   >
-                    <AutoAwesomeOutlinedIcon fontSize="inherit" />
-                    Bao cao
+                    <span>{item}</span>
+                    <span className="text-xs font-semibold text-slate-500">{index + 1} gio truoc</span>
                   </div>
-                  <div className="mt-4 text-sm font-semibold text-slate-500">{card.label}</div>
-                  <div className="mt-1 text-3xl font-bold text-slate-900">{card.value}</div>
-                  <div className="mt-2 text-xs text-slate-500">{card.sub}</div>
-                </div>
-              ))}
-            </section>
+                ))}
+              </div>
+            </div>
 
-            <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-              <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                      Hoat dong gan day
-                    </div>
-                    <div className="text-lg font-bold text-slate-900">He thong dang van hanh on dinh</div>
-                  </div>
-                  <button
-                    type="button"
-                    className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                Chat luong tom tat
+              </div>
+              <div className="mt-2 text-base font-bold text-slate-900">Hieu suat he thong</div>
+              <div className="mt-4 space-y-3">
+                {summaryHighlight.map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
                   >
-                    Xem tat ca
-                  </button>
-                </div>
-
-                <div className="mt-4 space-y-3">
-                  {[
-                    "Nguoi dung moi dang ky: 24",
-                    "Tai lieu moi tai len: 148",
-                    "Luot tom tat hoan tat: 312",
-                  ].map((item, index) => (
-                    <div
-                      key={item}
-                      className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600"
-                    >
-                      <span>{item}</span>
-                      <span className="text-xs font-semibold text-slate-500">{index + 1} gio truoc</span>
-                    </div>
-                  ))}
-                </div>
+                    <div className="text-xs font-semibold text-slate-500">{item.label}</div>
+                    <div className="mt-1 text-xl font-bold text-slate-900">{item.value}</div>
+                    <div className="mt-1 text-xs text-slate-500">{item.detail}</div>
+                  </div>
+                ))}
               </div>
-
-              <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                  Chat luong tom tat
-                </div>
-                <div className="mt-2 text-lg font-bold text-slate-900">Hieu suat he thong</div>
-                <div className="mt-4 space-y-3">
-                  {summaryHighlight.map((item) => (
-                    <div
-                      key={item.label}
-                      className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
-                    >
-                      <div className="text-xs font-semibold text-slate-500">{item.label}</div>
-                      <div className="mt-1 text-xl font-bold text-slate-900">{item.value}</div>
-                      <div className="mt-1 text-xs text-slate-500">{item.detail}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          </main>
-        </div>
+            </div>
+          </section>
+        </main>
       </div>
 
       {toast && (

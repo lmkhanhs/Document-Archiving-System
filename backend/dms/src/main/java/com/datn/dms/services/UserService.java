@@ -1,5 +1,7 @@
 package com.datn.dms.services;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import com.datn.dms.dtos.users.request.CreateUserRequest;
@@ -39,5 +41,29 @@ public class UserService {
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
                     
         return this.userMapper.toInfoUserResponse(userEntity);
+    }
+
+    public List<InfoUserResponse> getAllUsers(org.springframework.data.domain.Pageable pageable) {
+        return this.userRepository.findAll().stream()
+                .map(this.userMapper::toInfoUserResponse)
+                .toList();
+    }
+    public List<InfoUserResponse> searchUsers(String keyword) {
+        return this.userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(keyword, keyword).stream()
+                .map(this.userMapper::toInfoUserResponse)
+                .toList();
+    }
+
+    public List<InfoUserResponse> filterUsers(String role, String status) {
+        Boolean isActive = null;
+        if ("ACTIVE".equalsIgnoreCase(status)) {
+            isActive = true;
+        } else if ("LOCKED".equalsIgnoreCase(status)) {
+            isActive = false;
+        }
+        
+        return this.userRepository.filterUsers(role, isActive).stream()
+                .map(this.userMapper::toInfoUserResponse)
+                .toList();
     }
 }
