@@ -112,3 +112,20 @@ export const getRoles = async () => {
     throw new Error(error.response?.data?.message || "Không thể lấy quyền người dùng");
   }
 };
+
+export const changePassword = async ({ currentPassword, newPassword }) => {
+  try {
+    const response = await api.put("/auth/change-password", {
+      currentPassword,
+      newPassword,
+    });
+    
+    const result = response.data;
+    if (result.code !== 200) {
+      throw new Error(result.message);
+    }
+    return result.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Đổi mật khẩu thất bại");
+  }
+};

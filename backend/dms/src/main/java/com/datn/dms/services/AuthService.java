@@ -10,6 +10,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import java.util.Collections;
 
+import com.datn.dms.dtos.auth.request.ChangePasswordRequest;
 import com.datn.dms.dtos.auth.request.GoogleLoginRequest;
 import com.datn.dms.dtos.auth.request.LoginRequest;
 import com.datn.dms.dtos.auth.request.LogoutRequest;
@@ -24,6 +25,7 @@ import com.datn.dms.exception.AppException;
 import com.datn.dms.exception.ErrorCode;
 import com.datn.dms.repositories.RoleRepository;
 import com.datn.dms.repositories.UserRepository;
+import com.datn.dms.utils.AuthenticationUtills;
 import com.datn.dms.utils.BaseRedisUtils;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -55,6 +57,7 @@ public class AuthService {
     final UserRepository userRepository;
     final RoleRepository roleRepository;
     final PasswordEncoder passwordEncoder;
+    final AuthenticationUtills authenticationUtills;
 
     @Value("${app.security.expiresIn}")
     Integer expiresIn;
@@ -278,5 +281,18 @@ public class AuthService {
         return RegisterResponse.builder()
                 .success(true)
                 .build();
+    }
+
+    public void changePassword(ChangePasswordRequest request) {
+        String username = authenticationUtills.getUserName();
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.INVALID_PASSWORD);
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 }

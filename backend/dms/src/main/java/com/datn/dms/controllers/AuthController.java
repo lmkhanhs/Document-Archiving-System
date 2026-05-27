@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import com.datn.dms.dtos.auth.request.LoginRequest;
 import com.datn.dms.dtos.auth.request.LogoutRequest;
 import com.datn.dms.dtos.auth.request.RegisterRequest;
+import com.datn.dms.dtos.auth.request.ChangePasswordRequest;
 import com.datn.dms.dtos.auth.request.GoogleLoginRequest;
 import com.datn.dms.dtos.auth.response.LoginResponse;
 import com.datn.dms.dtos.auth.response.LogoutResponse;
@@ -20,6 +21,7 @@ import com.datn.dms.dtos.auth.response.RolesResponse;
 import com.datn.dms.services.AuthService;
 import com.datn.dms.dtos.ApiResponse;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 
@@ -79,5 +81,13 @@ public class AuthController {
                 .data(RolesResponse.builder().roles(roles).build())
                 .build();
     }
-    
+
+    @PutMapping("/change-password")
+    public ApiResponse<Void> changePassword(@RequestBody ChangePasswordRequest request) {
+        authService.changePassword(request);
+        return ApiResponse.<Void>builder()
+                .code(200)
+                .message("Change password successfully")
+                .build();
+    }
 }

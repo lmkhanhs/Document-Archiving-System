@@ -1127,7 +1127,8 @@ const MyDocuments = () => {
     }
 
     if (menuKey === "settings") {
-      setToast("Mục Cài đặt sẽ được triển khai ở bước tiếp theo");
+      navigate("/settings");
+      return;
     }
   };
 
