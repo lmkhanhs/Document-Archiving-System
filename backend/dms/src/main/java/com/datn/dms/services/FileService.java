@@ -427,6 +427,46 @@ public class FileService {
                 .toList();
     }
 
+    public void deleteFileAdmin(Long fileId) {
+        FileEntity fileEntity = fileRepository.findByIdAndIsDeletedFalse(fileId)
+                .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
+
+        fileEntity.setDeleted(true);
+        fileEntity.setDeletedAt(java.time.LocalDateTime.now());
+        fileRepository.save(fileEntity);
+    }
+
+    public void forceDeleteFileAdmin(Long fileId) {
+        FileEntity fileEntity = fileRepository.findByIdAndIsDeletedTrue(fileId)
+                .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
+
+        String fileUrl = fileEntity.getUrl();
+        String uploadPrefix = "/uploads/";
+        if (fileUrl != null && fileUrl.startsWith(uploadPrefix)) {
+            String relativeFilePath = fileUrl.substring(uploadPrefix.length());
+            Path baseDir = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Path targetPath = baseDir.resolve(relativeFilePath).normalize();
+            try {
+                Files.deleteIfExists(targetPath);
+            } catch (IOException e) {
+                // Ignore if file is already deleted or cannot be deleted
+            }
+        }
+
+        fileRepository.delete(fileEntity);
+    }
+
+    public FileResponse restoreFileAdmin(Long fileId) {
+        FileEntity fileEntity = fileRepository.findByIdAndIsDeletedTrue(fileId)
+                .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
+
+        fileEntity.setDeleted(false);
+        fileEntity.setDeletedAt(null);
+        fileEntity = fileRepository.save(fileEntity);
+
+        return fileMapper.toFileResponse(fileEntity);
+    }
+
     private UserEntity getCurrentUser() {
         String username = authenticationUtills.getUserName();
         return userRepository.findByUsername(username)

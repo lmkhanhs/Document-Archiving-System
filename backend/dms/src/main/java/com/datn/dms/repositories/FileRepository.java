@@ -26,6 +26,10 @@ public interface FileRepository extends JpaRepository<FileEntity, Long> {
 
 	List<FileEntity> findAllByIsDeletedFalseOrderByCreatedAtDesc();
 
+	Optional<FileEntity> findByIdAndIsDeletedFalse(Long id);
+	
+	Optional<FileEntity> findByIdAndIsDeletedTrue(Long id);
+
 	@Query("SELECT f FROM FileEntity f WHERE f.isDeleted = false " +
 		   "AND (:fileName IS NULL OR LOWER(f.name) LIKE LOWER(CONCAT('%', :fileName, '%'))) " +
 		   "AND (:uploader IS NULL OR LOWER(f.owner.username) LIKE LOWER(CONCAT('%', :uploader, '%'))) " +

@@ -39,7 +39,7 @@ export const searchAdminFiles = async ({ fileName = "", uploader = "" } = {}) =>
 
 export const softDeleteAdminFile = async (fileId) => {
   try {
-    const response = await api.delete(`/files/${fileId}`);
+    const response = await api.delete(`/files/admin/${fileId}`);
     return parseApiResponse(response, "Khong the xoa mem tai lieu");
   } catch (error) {
     throw new Error(error.response?.data?.message || "Khong the xoa mem tai lieu");
@@ -48,7 +48,7 @@ export const softDeleteAdminFile = async (fileId) => {
 
 export const restoreAdminFile = async (fileId) => {
   try {
-    const response = await api.put(`/files/restore/${fileId}`);
+    const response = await api.put(`/files/admin/restore/${fileId}`);
     return parseApiResponse(response, "Khong the khoi phuc tai lieu");
   } catch (error) {
     throw new Error(error.response?.data?.message || "Khong the khoi phuc tai lieu");
@@ -57,7 +57,7 @@ export const restoreAdminFile = async (fileId) => {
 
 export const hardDeleteAdminFile = async (fileId) => {
   try {
-    const response = await api.delete(`/files/${fileId}/force`);
+    const response = await api.delete(`/files/admin/${fileId}/force`);
     return parseApiResponse(response, "Khong the xoa vinh vien tai lieu");
   } catch (error) {
     throw new Error(error.response?.data?.message || "Khong the xoa vinh vien tai lieu");

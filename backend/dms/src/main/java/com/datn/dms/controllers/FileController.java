@@ -163,4 +163,34 @@ public class FileController {
                 .data(fileService.searchFilesAdmin(fileName, uploader))
                 .build();
     }
+
+    @DeleteMapping("/admin/{fileId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<Void> deleteFileAdmin(@PathVariable Long fileId) {
+        fileService.deleteFileAdmin(fileId);
+        return ApiResponse.<Void>builder()
+                .code(HttpStatus.OK.value())
+                .message("Delete file successfully")
+                .build();
+    }
+
+    @DeleteMapping("/admin/{fileId}/force")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<Void> forceDeleteFileAdmin(@PathVariable Long fileId) {
+        fileService.forceDeleteFileAdmin(fileId);
+        return ApiResponse.<Void>builder()
+                .code(HttpStatus.OK.value())
+                .message("Force delete file successfully")
+                .build();
+    }
+
+    @PutMapping("/admin/restore/{fileId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<FileResponse> restoreFileAdmin(@PathVariable Long fileId) {
+        return ApiResponse.<FileResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("Restore file successfully")
+                .data(fileService.restoreFileAdmin(fileId))
+                .build();
+    }
 }
