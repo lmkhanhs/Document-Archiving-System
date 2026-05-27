@@ -122,3 +122,53 @@ export const deleteUser = async (userId) => {
     throw new Error(error.response?.data?.message || "Khong the xoa nguoi dung");
   }
 };
+
+export const getDetailUser = async () => {
+  try {
+    const response = await api.get("/users/me");
+    return parseApiResponse(response, "Không thể lấy chi tiết người dùng");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể lấy chi tiết người dùng");
+  }
+};
+
+export const updateProfile = async (data) => {
+  try {
+    const response = await api.put("/users/profile", data);
+    return parseApiResponse(response, "Không thể cập nhật hồ sơ");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể cập nhật hồ sơ");
+  }
+};
+
+export const updateAvatar = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await api.put("/users/avatar", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return parseApiResponse(response, "Không thể cập nhật ảnh đại diện");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể cập nhật ảnh đại diện");
+  }
+};
+
+export const getGenders = async () => {
+  try {
+    const response = await api.get("/genders");
+    return parseApiResponse(response, "Không thể lấy danh sách giới tính");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể lấy danh sách giới tính");
+  }
+};
+
+export const getCountries = async () => {
+  try {
+    const response = await api.get("/countries");
+    return parseApiResponse(response, "Không thể lấy danh sách quốc gia");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể lấy danh sách quốc gia");
+  }
+};
+

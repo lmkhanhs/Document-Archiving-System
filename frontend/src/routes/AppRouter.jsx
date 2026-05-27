@@ -8,6 +8,7 @@ import MyDocuments from "../pages/documents/MyDocuments";
 import Trash from "../pages/documents/Trash";
 import Summarize from "../pages/documents/Summarize";
 import AdminDashboard from "../pages/admin/AdminDashboard";
+import Settings from "../pages/Settings";
 import { getRoles } from "../services/authService";
 
 const isAuthenticated = () => Boolean(localStorage.getItem("accessToken"));
@@ -105,6 +106,15 @@ const AppRouter = () => {
         element={(
           <ProtectedRoute>
             <Summarize />
+          </ProtectedRoute>
+        )}
+      />
+
+      <Route
+        path="/settings"
+        element={(
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         )}
       />

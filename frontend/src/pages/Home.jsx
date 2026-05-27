@@ -633,6 +633,9 @@ const Home = () => {
                     if (item.key === "trash") {
                       navigate("/trash");
                     }
+                    if (item.key === "settings") {
+                      navigate("/settings");
+                    }
                   }}
                   className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition ${
                     isActive

@@ -69,6 +69,10 @@ public class UserService {
         UserEntity userEntity = this.userRepository.findByUsername(username)
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        if (request.getEmail() != null && (userEntity.getEmail() == null || userEntity.getEmail().trim().isEmpty())) {
+            userEntity.setEmail(request.getEmail());
+        }
+
         if (request.getFullName() != null) {
             userEntity.setFullName(request.getFullName());
         }

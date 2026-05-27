@@ -49,8 +49,8 @@ public class UserController {
                 .build();
     }
 
-    @GetMapping("/detail")
-    public ApiResponse<DetailUserResponse> getDetailUser() {
+    @GetMapping("/me")
+    public ApiResponse<DetailUserResponse> getMe() {
         return ApiResponse.<DetailUserResponse>builder()
                 .code(200)
                 .message("User detail retrieved successfully")

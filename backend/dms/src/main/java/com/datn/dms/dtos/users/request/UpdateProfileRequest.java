@@ -11,6 +11,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateProfileRequest {
+    String email;
     String fullName;
     String phone;
     String address;
