@@ -217,6 +217,17 @@ public class FileService {
         FileEntity fileEntity = fileRepository.findByIdAndOwner_IdAndIsDeletedFalse(fileId, owner.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
 
+        return buildDownloadResponse(fileEntity);
+    }
+
+    public ResponseEntity<Resource> downloadFileAdmin(Long fileId) {
+        FileEntity fileEntity = fileRepository.findById(fileId)
+                .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
+
+        return buildDownloadResponse(fileEntity);
+    }
+
+    private ResponseEntity<Resource> buildDownloadResponse(FileEntity fileEntity) {
         String fileUrl = fileEntity.getUrl();
         String uploadPrefix = "/uploads/";
         if (fileUrl == null || !fileUrl.startsWith(uploadPrefix)) {

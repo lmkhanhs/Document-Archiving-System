@@ -28,6 +28,9 @@ import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import RemoveOutlinedIcon from "@mui/icons-material/RemoveOutlined";
+import CropSquareOutlinedIcon from "@mui/icons-material/CropSquareOutlined";
+import FilterNoneOutlinedIcon from "@mui/icons-material/FilterNoneOutlined";
 import { API_ORIGIN } from "../../services/api";
 import { getInfoUser, getRoles, logout } from "../../services/authService";
 import {
@@ -426,6 +429,11 @@ const AdminDashboard = () => {
     kind: PREVIEW_KIND.UNSUPPORTED,
     objectUrl: "",
     textContent: "",
+  });
+  const [docPreviewWindowState, setDocPreviewWindowState] = useState({
+    hovered: false,
+    minimized: false,
+    maximized: false,
   });
   const [docSummaryState, setDocSummaryState] = useState({
     open: false,
@@ -1066,10 +1074,25 @@ const AdminDashboard = () => {
       objectUrl: "",
       textContent: "",
     });
+    setDocPreviewWindowState({
+      hovered: false,
+      minimized: false,
+      maximized: false,
+    });
 
     try {
       const preview = await previewAdminFile(file.id);
       const kind = detectPreviewKind({ name: file.name, mimeType: preview.contentType || file.mimeType });
+
+      if (kind === PREVIEW_KIND.UNSUPPORTED) {
+        setDocPreviewState((prev) => ({
+          ...prev,
+          loading: false,
+          error: "Khong ho tro xem truoc file nay",
+          kind,
+        }));
+        return;
+      }
 
       if (kind === PREVIEW_KIND.TEXT) {
         const text = await preview.blob.text();
@@ -1099,6 +1122,11 @@ const AdminDashboard = () => {
   };
 
   const handleDocPreviewClose = () => {
+    setDocPreviewWindowState({
+      hovered: false,
+      minimized: false,
+      maximized: false,
+    });
     setDocPreviewState({
       open: false,
       loading: false,
@@ -2215,71 +2243,147 @@ const AdminDashboard = () => {
 
       {docPreviewState.open && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 p-3">
-          <div className="w-full max-w-4xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
-            <div className="flex items-center justify-between gap-3">
+          <div
+            onMouseEnter={() => setDocPreviewWindowState((prev) => ({ ...prev, hovered: true }))}
+            onMouseLeave={() => setDocPreviewWindowState((prev) => ({ ...prev, hovered: false }))}
+            className={`relative flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl transition-all ${
+              docPreviewWindowState.minimized
+                ? "h-16 max-w-xl self-end"
+                : docPreviewWindowState.maximized
+                  ? "h-[95vh] max-w-none"
+                  : "h-[90vh] max-w-6xl"
+            } ${docPreviewWindowState.hovered ? "ring-2 ring-slate-300/80" : ""}`}
+          >
+            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
               <div>
-                <div className="text-lg font-semibold text-slate-800">Xem noi dung</div>
-                <div className="mt-1 text-sm text-slate-500">{docPreviewState.file?.name}</div>
+                <div className="text-sm font-semibold text-slate-800">Xem truoc file</div>
+                <div className="text-xs text-slate-500">{docPreviewState.file?.name}</div>
               </div>
-              <button
-                type="button"
-                onClick={handleDocPreviewClose}
-                className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50"
-                aria-label="Dong"
+              <div
+                className={`flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 transition-all duration-200 ${
+                  docPreviewWindowState.hovered
+                    ? "translate-y-0 opacity-100"
+                    : "pointer-events-none -translate-y-1 opacity-0"
+                }`}
               >
-                <CloseOutlinedIcon fontSize="small" />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setDocPreviewWindowState((prev) => ({ ...prev, minimized: true, hovered: false }))}
+                  className="rounded-md p-1 text-slate-600 transition hover:bg-slate-100"
+                  aria-label="Minimize preview"
+                  title="Thu nho"
+                >
+                  <RemoveOutlinedIcon fontSize="small" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDocPreviewWindowState((prev) => ({
+                    ...prev,
+                    maximized: !prev.maximized,
+                  }))}
+                  className="rounded-md p-1 text-slate-600 transition hover:bg-slate-100"
+                  aria-label="Toggle maximize preview"
+                  title={docPreviewWindowState.maximized ? "Khoi phuc" : "Phong to"}
+                >
+                  {docPreviewWindowState.maximized ? (
+                    <FilterNoneOutlinedIcon fontSize="small" />
+                  ) : (
+                    <CropSquareOutlinedIcon fontSize="small" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDocPreviewClose}
+                  className="rounded-md p-1 text-slate-600 transition hover:bg-red-100 hover:text-red-700"
+                  aria-label="Close preview"
+                  title="Dong"
+                >
+                  <CloseOutlinedIcon fontSize="small" />
+                </button>
+              </div>
             </div>
 
-            <div className="mt-4">
-              {docPreviewState.loading && (
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm font-semibold text-slate-500">
-                  Dang tai noi dung...
-                </div>
-              )}
-
-              {!docPreviewState.loading && docPreviewState.error && (
-                <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-6 text-center text-sm font-semibold text-rose-700">
-                  {docPreviewState.error}
-                </div>
-              )}
-
-              {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.TEXT && (
-                <pre className="max-h-[65vh] overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700">
-                  {docPreviewState.textContent || "Khong co noi dung"}
-                </pre>
-              )}
-
-              {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.IMAGE && (
-                <div className="flex justify-center">
-                  <img
-                    src={docPreviewState.objectUrl}
-                    alt={docPreviewState.file?.name || "preview"}
-                    className="max-h-[65vh] rounded-2xl border border-slate-200 object-contain"
-                  />
-                </div>
-              )}
-
-              {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.PDF && (
-                <iframe
-                  title="preview"
-                  src={docPreviewState.objectUrl}
-                  className="h-[65vh] w-full rounded-2xl border border-slate-200"
+            {!docPreviewWindowState.minimized && (
+              <div className="relative min-h-0 flex-1 bg-slate-50 p-3">
+                <div
+                  className={`pointer-events-none absolute inset-0 bg-slate-500/10 transition-opacity duration-200 ${
+                    docPreviewWindowState.hovered ? "opacity-100" : "opacity-0"
+                  }`}
                 />
-              )}
 
-              {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.OFFICE && (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-600">
-                  File office khong the preview truc tiep. Hay tai ve de xem.
-                </div>
-              )}
+                {docPreviewState.loading && (
+                  <div className="grid h-full place-items-center rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-600">
+                    Dang tai noi dung...
+                  </div>
+                )}
 
-              {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.UNSUPPORTED && (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-600">
-                  Dinh dang khong ho tro preview.
+                {!docPreviewState.loading && docPreviewState.error && (
+                  <div className="grid h-full place-items-center rounded-xl border border-amber-100 bg-amber-50 text-sm font-semibold text-amber-800">
+                    {docPreviewState.error}
+                  </div>
+                )}
+
+                {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.PDF && docPreviewState.objectUrl && (
+                  <iframe
+                    title="PDF Preview"
+                    src={docPreviewState.objectUrl}
+                    className="h-full w-full rounded-xl border border-slate-200 bg-white"
+                  />
+                )}
+
+                {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.IMAGE && docPreviewState.objectUrl && (
+                  <div className="grid h-full place-items-center rounded-xl border border-slate-200 bg-white p-3">
+                    <img
+                      src={docPreviewState.objectUrl}
+                      alt={docPreviewState.file?.name || "preview"}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </div>
+                )}
+
+                {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.TEXT && (
+                  <pre className="h-full overflow-auto rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-700">
+                    {docPreviewState.textContent || "Khong co noi dung"}
+                  </pre>
+                )}
+
+                {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.OFFICE && docPreviewState.objectUrl && (
+                  <div className="h-full rounded-xl border border-slate-200 bg-white p-2">
+                    <iframe
+                      title="Office Preview"
+                      src={docPreviewState.objectUrl}
+                      className="h-full w-full rounded-lg"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {docPreviewWindowState.minimized && (
+              <div className="flex items-center justify-between px-4 py-2.5">
+                <div className="truncate text-sm font-semibold text-slate-700">
+                  {docPreviewState.file?.name}
                 </div>
-              )}
-            </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setDocPreviewWindowState((prev) => ({ ...prev, minimized: false }))}
+                    className="rounded-md p-1 text-slate-600 transition hover:bg-slate-100"
+                    title="Mo lai"
+                  >
+                    <CropSquareOutlinedIcon fontSize="small" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDocPreviewClose}
+                    className="rounded-md p-1 text-slate-600 transition hover:bg-red-100 hover:text-red-700"
+                    title="Dong"
+                  >
+                    <CloseOutlinedIcon fontSize="small" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

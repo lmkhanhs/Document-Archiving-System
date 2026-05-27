@@ -75,7 +75,7 @@ export const hardDeleteAdminFile = async (fileId) => {
 
 export const previewAdminFile = async (fileId) => {
   try {
-    const response = await api.get(`/files/${fileId}/preview`, {
+    const response = await api.get(`/files/admin/${fileId}/preview`, {
       responseType: "blob",
     });
 

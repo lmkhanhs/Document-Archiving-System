@@ -209,4 +209,10 @@ public class FileController {
     public ResponseEntity<Resource> previewFileAdmin(@PathVariable Long fileId) {
         return fileService.previewFileAdmin(fileId);
     }
+
+    @GetMapping("/admin/{fileId}/download")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Resource> downloadFileAdmin(@PathVariable Long fileId) {
+        return fileService.downloadFileAdmin(fileId);
+    }
 }
