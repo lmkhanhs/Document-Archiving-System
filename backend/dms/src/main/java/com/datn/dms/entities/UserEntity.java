@@ -45,6 +45,7 @@ public class UserEntity extends BaseEntity {
     String email;
     String phone;
     String address;
+    String city;
     String thumbnailUrl;
     @Builder.Default
     boolean isActive = true;

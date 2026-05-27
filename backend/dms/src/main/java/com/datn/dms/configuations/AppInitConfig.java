@@ -1,8 +1,18 @@
 package com.datn.dms.configuations;
 
+import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,14 +33,14 @@ import com.datn.dms.entities.CountryEntity;
 import com.datn.dms.emuns.CountryDefaultEnums;
 import com.datn.dms.repositories.CountryRepository;
 
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class AppInitConfig {
     RoleRepository roleRepository;
@@ -39,6 +49,11 @@ public class AppInitConfig {
     ColorRepository colorRepository;
     GenderRepository genderRepository;
     CountryRepository countryRepository;
+
+    @NonFinal
+    @Value("${app.storage.upload-dir:uploads}")
+    String uploadDir;
+
     @Bean
     ApplicationRunner init() {
         return args -> {
@@ -86,11 +101,48 @@ public class AppInitConfig {
                 }
             }
 
+            // Init countries with flag images
+            Path flagsDir = Paths.get(uploadDir, "public", "flags").toAbsolutePath().normalize();
+            Files.createDirectories(flagsDir);
+
+            HttpClient httpClient = HttpClient.newHttpClient();
+
             for (CountryDefaultEnums countryEnum : CountryDefaultEnums.values()) {
                 if (countryRepository.findByName(countryEnum.getName()).isEmpty()) {
+                    String fileName = countryEnum.getCountryCode() + ".png";
+                    Path flagFile = flagsDir.resolve(fileName);
+                    String thumbnailUrl = "/uploads/public/flags/" + fileName;
+
+                    // Download flag if file doesn't exist yet
+                    if (!Files.exists(flagFile)) {
+                        try {
+                            HttpRequest request = HttpRequest.newBuilder()
+                                    .uri(URI.create(countryEnum.getFlagUrl()))
+                                    .GET()
+                                    .build();
+                            HttpResponse<InputStream> response = httpClient.send(
+                                    request, HttpResponse.BodyHandlers.ofInputStream());
+
+                            if (response.statusCode() == 200) {
+                                Files.copy(response.body(), flagFile, StandardCopyOption.REPLACE_EXISTING);
+                                log.info("Downloaded flag for {}", countryEnum.getName());
+                            } else {
+                                log.warn("Failed to download flag for {} (HTTP {})",
+                                        countryEnum.getName(), response.statusCode());
+                                thumbnailUrl = null;
+                            }
+                        } catch (Exception e) {
+                            log.warn("Failed to download flag for {}: {}",
+                                    countryEnum.getName(), e.getMessage());
+                            thumbnailUrl = null;
+                        }
+                    }
+
                     CountryEntity country = new CountryEntity();
                     country.setName(countryEnum.getName());
+                    country.setThumbnailUrl(thumbnailUrl);
                     countryRepository.save(country);
+                    log.info("Created country: {}", countryEnum.getName());
                 }
             }
         };
