@@ -410,18 +410,18 @@ const Trash = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white p-3 md:p-5">
-      <div className="mx-auto flex min-h-[calc(100vh-24px)] max-w-[1500px] overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_20px_65px_rgba(27,78,163,0.12)]">
-        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 bg-slate-50/70 p-4 md:w-20 md:border-b-0 md:border-r lg:w-64">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white p-3 md:p-5 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors">
+      <div className="mx-auto flex min-h-[calc(100vh-24px)] max-w-[1500px] overflow-hidden rounded-3xl border border-blue-100 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-[0_20px_65px_rgba(27,78,163,0.12)] dark:shadow-none transition-colors">
+        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50/70 dark:bg-slate-800/40 p-4 md:w-20 md:border-b-0 md:border-r lg:w-64 transition-colors">
           <div className="flex items-center gap-3 px-1">
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-tr from-blue-700 to-sky-500 text-lg font-extrabold text-white">
               D
             </div>
             <div className="hidden lg:block">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700 dark:text-blue-400">
                 Workspace
               </div>
-              <div className="text-sm font-bold text-slate-700">Document Management System</div>
+              <div className="text-sm font-bold text-slate-700 dark:text-slate-200">Document Management System</div>
             </div>
           </div>
 
@@ -437,8 +437,8 @@ const Trash = () => {
                   onClick={() => handleSidebarClick(item.key)}
                   className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition ${
                     isActive
-                      ? "bg-blue-100 text-blue-700 ring-1 ring-blue-200"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      ? "bg-blue-100 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200"
                   }`}
                 >
                   <MenuIcon fontSize="small" />
@@ -448,8 +448,8 @@ const Trash = () => {
             })}
           </nav>
 
-          <div className="mt-auto rounded-2xl border border-blue-100 bg-white p-3">
-            <div className="text-xs font-semibold uppercase tracking-wide text-blue-700">Quick Actions</div>
+          <div className="mt-auto rounded-2xl border border-blue-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">Quick Actions</div>
             <div className="mt-2 space-y-2">
               <button
                 type="button"
@@ -463,7 +463,7 @@ const Trash = () => {
               <button
                 type="button"
                 onClick={handleCreateFolder}
-                className="flex w-full items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="flex w-full items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700/50"
               >
                 <CreateNewFolderOutlinedIcon fontSize="small" />
                 <span className="md:hidden lg:inline">Tạo thư mục</span>
@@ -472,25 +472,25 @@ const Trash = () => {
           </div>
         </aside>
 
-        <main className="flex-1 p-4 md:p-6">
-          <header className="flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-center lg:justify-between">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+          <header className="flex flex-col gap-4 border-b border-slate-100 dark:border-slate-700/50 pb-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">Thùng rác</h1>
-              <p className="mt-1 text-sm text-slate-500">
+              <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Thùng rác</h1>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 Quản lý file và thư mục đã xóa gần đây.
               </p>
             </div>
           </header>
 
-          <section className="mt-5 flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-3 md:flex-row md:items-center md:justify-between">
-            <div className="inline-flex items-center rounded-xl border border-slate-200 bg-white p-1">
+          <section className="mt-5 flex flex-col gap-3 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 p-3 md:flex-row md:items-center md:justify-between">
+            <div className="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 p-1">
               <button
                 type="button"
                 onClick={() => setViewMode(VIEW_MODE.LIST)}
                 className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
                   isListMode
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-slate-600 hover:text-slate-800"
+                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400"
+                    : "text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                 }`}
               >
                 <ViewListOutlinedIcon fontSize="small" />
@@ -501,8 +501,8 @@ const Trash = () => {
                 onClick={() => setViewMode(VIEW_MODE.GRID)}
                 className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
                   !isListMode
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-slate-600 hover:text-slate-800"
+                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400"
+                    : "text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                 }`}
               >
                 <GridViewOutlinedIcon fontSize="small" />
@@ -510,11 +510,11 @@ const Trash = () => {
               </button>
             </div>
 
-            <div className="text-sm text-slate-500">Tổng: {allItems.length} mục</div>
+            <div className="text-sm text-slate-500 dark:text-slate-400">Tổng: {allItems.length} mục</div>
           </section>
 
           {error && (
-            <div className="mt-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            <div className="mt-4 rounded-xl border border-red-100 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm font-medium text-red-700 dark:text-red-400">
               {error}
             </div>
           )}
@@ -524,21 +524,21 @@ const Trash = () => {
               {Array.from({ length: 6 }).map((_, index) => (
                 <div
                   key={index}
-                  className="h-14 animate-pulse rounded-xl border border-slate-200 bg-slate-100"
+                  className="h-14 animate-pulse rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800"
                 />
               ))}
             </div>
           ) : isListMode && allItems.length > 0 ? (
-            <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
               <table className="min-w-full text-left">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="bg-slate-50 dark:bg-slate-900/50 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700">
                   <tr>
                     <th className="px-4 py-3">Name</th>
                     <th className="px-4 py-3">Date deleted</th>
                     <th className="px-4 py-3 text-right">File size</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                   {allItems.map((item) => {
                     const iconMeta = item.type === "folder"
                       ? { Icon: FolderOutlinedIcon, className: "text-amber-600" }
@@ -547,17 +547,17 @@ const Trash = () => {
                     return (
                       <tr
                         key={`${item.type}-${item.id}`}
-                        className="cursor-pointer border-t border-slate-100 hover:bg-blue-50/50"
+                        className="cursor-pointer transition hover:bg-blue-50/50 dark:hover:bg-slate-700/50"
                         onContextMenu={(event) => openContextMenu(event, item)}
                       >
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800">
+                          <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
                             <iconMeta.Icon className={iconMeta.className} fontSize="small" />
                             <span className="truncate">{item.name}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">{formatDate(item.dateDeleted)}</td>
-                        <td className="px-4 py-3 text-right text-sm text-slate-600">{formatFileSize(item.fileSize)}</td>
+                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">{formatDate(item.dateDeleted)}</td>
+                        <td className="px-4 py-3 text-right text-sm text-slate-600 dark:text-slate-400">{formatFileSize(item.fileSize)}</td>
                       </tr>
                     );
                   })}
@@ -575,18 +575,20 @@ const Trash = () => {
                   <div
                     key={`${item.type}-${item.id}`}
                     onContextMenu={(event) => openContextMenu(event, item)}
-                    className="rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+                    className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 dark:hover:border-blue-500/50 hover:shadow-md"
                   >
-                    <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800">
-                      <iconMeta.Icon className={iconMeta.className} fontSize="small" />
+                    <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                      <div className={`rounded-xl p-2 ${iconMeta.className} dark:bg-opacity-20`}>
+                        <iconMeta.Icon fontSize="small" />
+                      </div>
                       <span className="truncate">{item.name}</span>
                     </div>
 
-                    <div className="mt-3 text-xs text-slate-500">Date deleted</div>
-                    <div className="text-sm text-slate-700">{formatDate(item.dateDeleted)}</div>
+                    <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">Date deleted</div>
+                    <div className="text-sm text-slate-700 dark:text-slate-300">{formatDate(item.dateDeleted)}</div>
 
-                    <div className="mt-2 text-xs text-slate-500">File size</div>
-                    <div className="text-sm text-slate-700">{formatFileSize(item.fileSize)}</div>
+                    <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">File size</div>
+                    <div className="text-sm text-slate-700 dark:text-slate-300">{formatFileSize(item.fileSize)}</div>
                   </div>
                 );
               })}
@@ -594,14 +596,14 @@ const Trash = () => {
           )}
 
           {!isLoading && allItems.length === 0 && !error && (
-            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center">
+            <div className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-8 text-center">
               <img
                 src={emptyTrashImage}
                 alt="Thùng rác trống"
-                className="mx-auto h-44 w-44 object-contain"
+                className="mx-auto h-44 w-44 object-contain opacity-70 dark:opacity-50"
               />
-              <div className="mt-4 text-base font-semibold text-slate-700">Thùng rác trống</div>
-              <div className="mt-1 text-sm text-slate-500">Không có file hoặc thư mục nào đã xóa.</div>
+              <div className="mt-4 text-base font-semibold text-slate-700 dark:text-slate-300">Thùng rác trống</div>
+              <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">Không có file hoặc thư mục nào đã xóa.</div>
             </div>
           )}
         </main>
@@ -613,14 +615,18 @@ const Trash = () => {
         <div
           ref={menuRef}
           style={{ left: menuState.x, top: menuState.y }}
-          className="fixed z-50 w-48 -translate-x-1/2 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl"
+          className="fixed z-50 w-48 -translate-x-1/2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1.5 shadow-xl"
         >
           {CONTEXT_ACTIONS.map((action) => (
             <button
               key={action.key}
               type="button"
               onClick={() => onMenuAction(action.key, menuState.item)}
-              className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100"
+              className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
+                action.key === "delete"
+                  ? "text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
+                  : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+              }`}
             >
               {action.label}
             </button>

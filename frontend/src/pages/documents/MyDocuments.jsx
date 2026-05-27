@@ -1136,18 +1136,18 @@ const MyDocuments = () => {
   const fileCount = files.length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white p-3 md:p-5">
-      <div className="mx-auto flex min-h-[calc(100vh-24px)] max-w-[1500px] overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_20px_65px_rgba(27,78,163,0.12)]">
-        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 bg-slate-50/70 p-4 md:w-20 md:border-b-0 md:border-r lg:w-64">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white p-3 md:p-5 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors">
+      <div className="mx-auto flex min-h-[calc(100vh-24px)] max-w-[1500px] overflow-hidden rounded-3xl border border-blue-100 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-[0_20px_65px_rgba(27,78,163,0.12)] dark:shadow-none transition-colors">
+        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50/70 dark:bg-slate-800/40 p-4 md:w-20 md:border-b-0 md:border-r lg:w-64 transition-colors">
           <div className="flex items-center gap-3 px-1">
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-tr from-blue-700 to-sky-500 text-lg font-extrabold text-white">
               D
             </div>
             <div className="hidden lg:block">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700 dark:text-blue-400">
                 Workspace
               </div>
-              <div className="text-sm font-bold text-slate-700">Document Management System</div>
+              <div className="text-sm font-bold text-slate-700 dark:text-slate-200">Document Management System</div>
             </div>
           </div>
 
@@ -1163,8 +1163,8 @@ const MyDocuments = () => {
                   onClick={() => handleSidebarClick(item.key)}
                   className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition ${
                     isActive
-                      ? "bg-blue-100 text-blue-700 ring-1 ring-blue-200"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      ? "bg-blue-100 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200"
                   }`}
                 >
                   <MenuIcon fontSize="small" />
@@ -1174,8 +1174,8 @@ const MyDocuments = () => {
             })}
           </nav>
 
-          <div className="mt-auto rounded-2xl border border-blue-100 bg-white p-3">
-            <div className="text-xs font-semibold uppercase tracking-wide text-blue-700">Quick Actions</div>
+          <div className="mt-auto rounded-2xl border border-blue-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">Quick Actions</div>
             <div className="mt-2 space-y-2">
               <button
                 type="button"
@@ -1189,7 +1189,7 @@ const MyDocuments = () => {
               <button
                 type="button"
                 onClick={handleCreateFolder}
-                className="flex w-full items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="flex w-full items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700/50"
               >
                 <CreateNewFolderOutlinedIcon fontSize="small" />
                 <span className="md:hidden lg:inline">Tạo thư mục</span>
@@ -1198,11 +1198,11 @@ const MyDocuments = () => {
           </div>
         </aside>
 
-        <main className="flex-1 p-4 md:p-6" onContextMenu={openQuickMenu}>
-          <header className="flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-center lg:justify-between">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto" onContextMenu={openQuickMenu}>
+          <header className="flex flex-col gap-4 border-b border-slate-100 dark:border-slate-700/50 pb-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">Tài liệu của tôi</h1>
-              <p className="mt-1 text-sm text-slate-500">
+              <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Tài liệu của tôi</h1>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 Quản lý thư mục và tệp với điều hướng phân cấp theo cấu trúc thư mục.
               </p>
             </div>
@@ -1210,22 +1210,22 @@ const MyDocuments = () => {
             <button
               type="button"
               onClick={onRefresh}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               <RefreshOutlinedIcon fontSize="small" />
               Làm mới
             </button>
           </header>
 
-          <section className="mt-5 flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-3 md:flex-row md:items-center md:justify-between">
-            <div className="inline-flex items-center rounded-xl border border-slate-200 bg-white p-1">
+          <section className="mt-5 flex flex-col gap-3 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 p-3 md:flex-row md:items-center md:justify-between">
+            <div className="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 p-1">
               <button
                 type="button"
                 onClick={() => setViewMode(VIEW_MODE.LIST)}
                 className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
                   isListMode
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-slate-600 hover:text-slate-800"
+                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400"
+                    : "text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                 }`}
               >
                 <ViewListOutlinedIcon fontSize="small" />
@@ -1236,8 +1236,8 @@ const MyDocuments = () => {
                 onClick={() => setViewMode(VIEW_MODE.GRID)}
                 className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
                   !isListMode
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-slate-600 hover:text-slate-800"
+                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400"
+                    : "text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                 }`}
               >
                 <GridViewOutlinedIcon fontSize="small" />
@@ -1245,11 +1245,11 @@ const MyDocuments = () => {
               </button>
             </div>
 
-            <div className="text-sm text-slate-500">Tổng: {allDocuments.length} mục</div>
+            <div className="text-sm text-slate-500 dark:text-slate-400">Tổng: {allDocuments.length} mục</div>
           </section>
 
-          <section className="mt-4 rounded-2xl border border-slate-200 bg-white px-3 py-2.5">
-            <div className="flex flex-wrap items-center gap-1 text-sm text-slate-600">
+          <section className="mt-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5">
+            <div className="flex flex-wrap items-center gap-1 text-sm text-slate-600 dark:text-slate-300">
               {breadcrumbs.map((segment, index) => {
                 const isLast = index === breadcrumbs.length - 1;
 
@@ -1262,13 +1262,13 @@ const MyDocuments = () => {
                       onClick={() => onClickCrumb(segment, index)}
                       className={`rounded px-1.5 py-0.5 transition ${
                         isLast
-                          ? "cursor-default font-semibold text-slate-800"
-                          : "text-blue-700 hover:bg-blue-50"
+                          ? "cursor-default font-semibold text-slate-800 dark:text-slate-200"
+                          : "text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-slate-700"
                       }`}
                     >
                       {segment.name}
                     </button>
-                    {!isLast && <ChevronRightOutlinedIcon fontSize="inherit" className="text-slate-400" />}
+                    {!isLast && <ChevronRightOutlinedIcon fontSize="inherit" className="text-slate-400 dark:text-slate-500" />}
                   </div>
                 );
               })}
@@ -1286,21 +1286,21 @@ const MyDocuments = () => {
               {Array.from({ length: 6 }).map((_, index) => (
                 <div
                   key={index}
-                  className="h-14 animate-pulse rounded-xl border border-slate-200 bg-slate-100"
+                  className="h-14 animate-pulse rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800"
                 />
               ))}
             </div>
           ) : isListMode ? (
-            <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
               <table className="min-w-full text-left">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="bg-slate-50 dark:bg-slate-900/50 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700">
                   <tr>
                     <th className="px-4 py-3">Name</th>
                     <th className="px-4 py-3">Date modified</th>
                     <th className="px-4 py-3 text-right">File size</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                   {allDocuments.map((item) => {
                     const iconMeta = item.type === "folder"
                       ? { Icon: FolderOutlinedIcon, className: "text-amber-600" }
@@ -1309,19 +1309,19 @@ const MyDocuments = () => {
                     return (
                       <tr
                         key={`${item.type}-${item.id}`}
-                        className="cursor-pointer border-t border-slate-100 hover:bg-blue-50/50"
+                        className="cursor-pointer transition hover:bg-blue-50/50 dark:hover:bg-slate-700/50"
                         onClick={item.type === "folder" ? () => openFolder(item) : () => openFilePreview(item)}
                         onContextMenu={(event) => openContextMenu(event, item)}
                         data-quick-menu-ignore="true"
                       >
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800">
+                          <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
                             <iconMeta.Icon className={iconMeta.className} fontSize="small" />
                             <span className="truncate">{item.name}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">{formatDate(item.dateModified)}</td>
-                        <td className="px-4 py-3 text-right text-sm text-slate-600">{formatFileSize(item.fileSize)}</td>
+                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">{formatDate(item.dateModified)}</td>
+                        <td className="px-4 py-3 text-right text-sm text-slate-600 dark:text-slate-400">{formatFileSize(item.fileSize)}</td>
                       </tr>
                     );
                   })}
@@ -1342,18 +1342,20 @@ const MyDocuments = () => {
                     onClick={item.type === "folder" ? () => openFolder(item) : () => openFilePreview(item)}
                     onContextMenu={(event) => openContextMenu(event, item)}
                     data-quick-menu-ignore="true"
-                    className="rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+                    className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 dark:hover:border-blue-500/50 hover:shadow-md"
                   >
-                    <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800">
-                      <iconMeta.Icon className={iconMeta.className} fontSize="small" />
+                    <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                      <div className={`rounded-xl p-2 ${iconMeta.className} dark:bg-opacity-20`}>
+                        <iconMeta.Icon fontSize="small" />
+                      </div>
                       <span className="truncate">{item.name}</span>
                     </div>
 
-                    <div className="mt-3 text-xs text-slate-500">Date modified</div>
-                    <div className="text-sm text-slate-700">{formatDate(item.dateModified)}</div>
+                    <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">Date modified</div>
+                    <div className="text-sm text-slate-700 dark:text-slate-300">{formatDate(item.dateModified)}</div>
 
-                    <div className="mt-2 text-xs text-slate-500">File size</div>
-                    <div className="text-sm text-slate-700">{formatFileSize(item.fileSize)}</div>
+                    <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">File size</div>
+                    <div className="text-sm text-slate-700 dark:text-slate-300">{formatFileSize(item.fileSize)}</div>
                   </button>
                 );
               })}
@@ -1361,27 +1363,27 @@ const MyDocuments = () => {
           )}
 
           {!isLoading && allDocuments.length === 0 && !error && (
-            <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-sm font-medium text-slate-600">
+            <div className="mt-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-6 text-center text-sm font-medium text-slate-600 dark:text-slate-400">
               Chưa có tài liệu nào trong thư mục hiện tại.
             </div>
           )}
 
           <section className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-xs uppercase tracking-wide text-slate-500">Folders</div>
-              <div className="mt-2 text-2xl font-bold text-slate-800">{folderCount}</div>
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+              <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Folders</div>
+              <div className="mt-2 text-2xl font-bold text-slate-800 dark:text-slate-100">{folderCount}</div>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-xs uppercase tracking-wide text-slate-500">Files</div>
-              <div className="mt-2 text-2xl font-bold text-slate-800">{fileCount}</div>
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+              <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Files</div>
+              <div className="mt-2 text-2xl font-bold text-slate-800 dark:text-slate-100">{fileCount}</div>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-xs uppercase tracking-wide text-slate-500">Total items</div>
-              <div className="mt-2 text-2xl font-bold text-slate-800">{allDocuments.length}</div>
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+              <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Total items</div>
+              <div className="mt-2 text-2xl font-bold text-slate-800 dark:text-slate-100">{allDocuments.length}</div>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-xs uppercase tracking-wide text-slate-500">Current folder</div>
-              <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+              <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Current folder</div>
+              <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
                 <FolderOpenOutlinedIcon fontSize="small" />
                 <span className="truncate">{breadcrumbs[breadcrumbs.length - 1]?.name || "Root"}</span>
               </div>
@@ -1404,14 +1406,14 @@ const MyDocuments = () => {
         <div
           ref={menuRef}
           style={{ left: menuState.x, top: menuState.y }}
-          className="fixed z-50 w-44 -translate-x-1/2 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl"
+          className="fixed z-50 w-44 -translate-x-1/2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1.5 shadow-xl"
         >
           {CONTEXT_ACTIONS.map((action) => (
             <button
               key={action.key}
               type="button"
               onClick={() => onMenuAction(action.key, menuState.item)}
-              className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100"
+              className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 transition hover:bg-slate-100 dark:hover:bg-slate-700"
             >
               {action.label}
             </button>
@@ -1423,9 +1425,9 @@ const MyDocuments = () => {
         <div
           ref={quickMenuRef}
           style={{ left: quickMenuState.x, top: quickMenuState.y }}
-          className="fixed z-50 w-56 -translate-x-1/2 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl"
+          className="fixed z-50 w-56 -translate-x-1/2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 shadow-2xl"
         >
-          <div className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <div className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
             Thao tác nhanh
           </div>
           <div className="space-y-1">
@@ -1437,9 +1439,9 @@ const MyDocuments = () => {
                   key={action.key}
                   type="button"
                   onClick={() => onQuickAction(action.key)}
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200 transition hover:bg-slate-100 dark:hover:bg-slate-700"
                 >
-                  <ActionIcon fontSize="small" className="text-slate-500" />
+                  <ActionIcon fontSize="small" className="text-slate-500 dark:text-slate-400" />
                   <span>{action.label}</span>
                 </button>
               );
@@ -1449,20 +1451,20 @@ const MyDocuments = () => {
       )}
 
       {createFolderState.open && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3 backdrop-blur-sm transition-opacity">
           <form
             onSubmit={handleCreateFolderSubmit}
-            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl"
+            className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-2xl"
           >
-            <div className="text-lg font-semibold text-slate-800">Tạo thư mục</div>
-            <div className="mt-1 text-sm text-slate-500">
+            <div className="text-lg font-semibold text-slate-800 dark:text-slate-100">Tạo thư mục</div>
+            <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Thư mục sẽ được tạo trong: {breadcrumbs[breadcrumbs.length - 1]?.name || "Root"}
             </div>
 
             <input
               value={createFolderState.value}
               onChange={(event) => setCreateFolderState((prev) => ({ ...prev, value: event.target.value }))}
-              className="mt-4 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-300"
+              className="mt-4 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-blue-300 dark:focus:border-blue-500/50"
               placeholder="Nhập tên thư mục"
               autoFocus
             />
@@ -1471,7 +1473,7 @@ const MyDocuments = () => {
               <button
                 type="button"
                 onClick={() => setCreateFolderState({ open: false, value: "", submitting: false })}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700"
               >
                 Hủy
               </button>
@@ -1488,20 +1490,20 @@ const MyDocuments = () => {
       )}
 
       {renameState.open && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3 backdrop-blur-sm transition-opacity">
           <form
             onSubmit={handleRenameSubmit}
-            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl"
+            className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-2xl"
           >
-            <div className="text-lg font-semibold text-slate-800">Đổi tên</div>
-            <div className="mt-1 text-sm text-slate-500">
+            <div className="text-lg font-semibold text-slate-800 dark:text-slate-100">Đổi tên</div>
+            <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               {renameState.item?.type === "folder" ? "Thư mục" : "File"}: {renameState.item?.name}
             </div>
 
             <input
               value={renameState.value}
               onChange={(event) => setRenameState((prev) => ({ ...prev, value: event.target.value }))}
-              className="mt-4 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-300"
+              className="mt-4 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-blue-300 dark:focus:border-blue-500/50"
               placeholder="Nhập tên mới"
               autoFocus
             />
@@ -1510,7 +1512,7 @@ const MyDocuments = () => {
               <button
                 type="button"
                 onClick={() => setRenameState({ open: false, item: null, value: "", submitting: false })}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700"
               >
                 Hủy
               </button>
@@ -1527,18 +1529,18 @@ const MyDocuments = () => {
       )}
 
       {deleteState.open && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
-            <div className="text-lg font-semibold text-slate-800">Xóa mục</div>
-            <div className="mt-2 text-sm text-slate-600">
-              Bạn có chắc muốn xóa {deleteState.item?.type === "folder" ? "thư mục" : "file"} <span className="font-semibold">{deleteState.item?.name}</span>?
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3 backdrop-blur-sm transition-opacity">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-2xl">
+            <div className="text-lg font-semibold text-slate-800 dark:text-slate-100">Xóa mục</div>
+            <div className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+              Bạn có chắc muốn xóa {deleteState.item?.type === "folder" ? "thư mục" : "file"} <span className="font-semibold text-slate-800 dark:text-slate-200">{deleteState.item?.name}</span>?
             </div>
 
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setDeleteState({ open: false, item: null, submitting: false })}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700"
               >
                 Hủy
               </button>
@@ -1556,9 +1558,9 @@ const MyDocuments = () => {
       )}
 
       {previewState.open && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-3">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-3 backdrop-blur-sm transition-opacity">
           <div
-            className={`relative flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl transition-all duration-300 ${
+            className={`relative flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl transition-all duration-300 ${
               previewWindowState.minimized
                 ? "h-16 max-w-xl self-end"
                 : previewWindowState.maximized
@@ -1567,16 +1569,16 @@ const MyDocuments = () => {
             }`}
           >
             {/* ── Fixed Header ── always visible ── */}
-            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3">
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 dark:border-slate-700 px-4 py-3">
               <div className="min-w-0">
-                <div className="truncate text-sm font-semibold text-slate-800">
+                <div className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
                   {previewWindowState.minimized ? previewState.name : "Xem trước file"}
                 </div>
                 {!previewWindowState.minimized && (
-                  <div className="truncate text-xs text-slate-500">{previewState.name}</div>
+                  <div className="truncate text-xs text-slate-500 dark:text-slate-400">{previewState.name}</div>
                 )}
               </div>
-              <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
+              <div className="flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1">
                 {/* Tóm tắt AI */}
                 {!previewWindowState.minimized && (
                   <button
@@ -1584,8 +1586,8 @@ const MyDocuments = () => {
                     onClick={summaryState.open ? closeSummaryPanel : openSummaryPanel}
                     className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold transition ${
                       summaryState.open
-                        ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                        : "text-blue-600 hover:bg-blue-50"
+                        ? "bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-400 dark:hover:bg-blue-900/60"
+                        : "text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-slate-700"
                     }`}
                     title={summaryState.open ? "Đóng tóm tắt AI" : "Tóm tắt AI"}
                   >
@@ -1601,7 +1603,7 @@ const MyDocuments = () => {
                       ? setPreviewWindowState((prev) => ({ ...prev, minimized: false }))
                       : setPreviewWindowState((prev) => ({ ...prev, minimized: true }))
                   }
-                  className="rounded-md p-1 text-slate-600 transition hover:bg-slate-100"
+                  className="rounded-md p-1 text-slate-600 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-200"
                   aria-label={previewWindowState.minimized ? "Restore preview" : "Minimize preview"}
                   title={previewWindowState.minimized ? "Mở lại" : "Thu nhỏ"}
                 >
@@ -1621,7 +1623,7 @@ const MyDocuments = () => {
                         maximized: !prev.maximized,
                       }))
                     }
-                    className="rounded-md p-1 text-slate-600 transition hover:bg-slate-100"
+                    className="rounded-md p-1 text-slate-600 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-200"
                     aria-label="Toggle maximize preview"
                     title={previewWindowState.maximized ? "Khôi phục" : "Phóng to"}
                   >
@@ -1636,7 +1638,7 @@ const MyDocuments = () => {
                 <button
                   type="button"
                   onClick={closePreview}
-                  className="rounded-md p-1 text-slate-600 transition hover:bg-red-100 hover:text-red-700"
+                  className="rounded-md p-1 text-slate-600 dark:text-slate-400 transition hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400"
                   aria-label="Close preview"
                   title="Đóng"
                 >
@@ -1647,7 +1649,7 @@ const MyDocuments = () => {
 
             {/* ── Content Area ── viewer + optional summary panel ── */}
             {!previewWindowState.minimized && (
-              <div className="relative min-h-0 flex-1 bg-slate-50 p-3">
+              <div className="relative min-h-0 flex-1 bg-slate-50 dark:bg-slate-900/50 p-3">
                 <div className="relative flex h-full gap-3">
                   {/* PDF / Image / Text / Office Viewer */}
                   <div
@@ -1660,13 +1662,13 @@ const MyDocuments = () => {
                     } ${summaryState.open ? "flex-shrink-0" : "flex-1"}`}
                   >
                     {previewState.loading && (
-                      <div className="grid h-full place-items-center rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-600">
+                      <div className="grid h-full place-items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold text-slate-600 dark:text-slate-400">
                         Đang tải nội dung file...
                       </div>
                     )}
 
                     {!previewState.loading && previewState.error && (
-                      <div className="grid h-full place-items-center rounded-xl border border-amber-100 bg-amber-50 text-sm font-semibold text-amber-800">
+                      <div className="grid h-full place-items-center rounded-xl border border-amber-100 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/20 text-sm font-semibold text-amber-800 dark:text-amber-500">
                         {previewState.error}
                       </div>
                     )}
@@ -1675,12 +1677,12 @@ const MyDocuments = () => {
                       <iframe
                         title="PDF Preview"
                         src={previewState.objectUrl}
-                        className="h-full w-full rounded-xl border border-slate-200 bg-white"
+                        className="h-full w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                       />
                     )}
 
                     {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.IMAGE && previewState.objectUrl && (
-                      <div className="grid h-full place-items-center rounded-xl border border-slate-200 bg-white p-3">
+                      <div className="grid h-full place-items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
                         <img
                           src={previewState.objectUrl}
                           alt={previewState.name}
@@ -1690,17 +1692,17 @@ const MyDocuments = () => {
                     )}
 
                     {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.TEXT && (
-                      <pre className="h-full overflow-auto rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-700">
+                      <pre className="h-full overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-xs text-slate-700 dark:text-slate-300">
                         {previewState.textContent}
                       </pre>
                     )}
 
                     {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.OFFICE && previewState.objectUrl && (
-                      <div className="h-full rounded-xl border border-slate-200 bg-white p-2">
+                      <div className="h-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
                         <iframe
                           title="Office Preview"
                           src={previewState.objectUrl}
-                          className="h-full w-full rounded-lg"
+                          className="h-full w-full rounded-lg bg-white"
                         />
                       </div>
                     )}
@@ -1708,9 +1710,9 @@ const MyDocuments = () => {
 
                   {/* Summary Panel (content only — no separate header) */}
                   <aside
-                    className={`overflow-hidden rounded-2xl border bg-white shadow-xl transition-all duration-300 ${
+                    className={`overflow-hidden rounded-2xl border bg-white dark:bg-slate-800 shadow-xl transition-all duration-300 ${
                       summaryState.open
-                        ? "translate-x-0 border-slate-200 opacity-100"
+                        ? "translate-x-0 border-slate-200 dark:border-slate-700 opacity-100"
                         : "pointer-events-none w-0 translate-x-4 border-transparent opacity-0"
                     } ${
                       summaryState.open
@@ -1721,16 +1723,16 @@ const MyDocuments = () => {
                     } absolute right-0 top-0 z-10 h-full w-[88%] max-w-sm lg:static lg:h-auto lg:max-w-none`}
                   >
                     {/* Summary panel sub-header (lightweight — file context only) */}
-                    <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3">
+                    <div className="flex shrink-0 items-center justify-between border-b border-slate-200 dark:border-slate-700 px-4 py-3">
                       <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold text-slate-800">Kết quả tóm tắt AI</div>
-                        <div className="truncate text-xs text-slate-500">{previewState.name}</div>
+                        <div className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">Kết quả tóm tắt AI</div>
+                        <div className="truncate text-xs text-slate-500 dark:text-slate-400">{previewState.name}</div>
                       </div>
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
                           onClick={handleSummaryToggleMaximize}
-                          className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100"
+                          className="rounded-md p-1 text-slate-500 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-200"
                           title={summaryPanelState.maximized ? "Thu nhỏ panel" : "Mở rộng panel"}
                         >
                           {summaryPanelState.maximized ? (
@@ -1742,7 +1744,7 @@ const MyDocuments = () => {
                         <button
                           type="button"
                           onClick={closeSummaryPanel}
-                          className="rounded-md p-1 text-slate-500 transition hover:bg-red-100 hover:text-red-600"
+                          className="rounded-md p-1 text-slate-500 dark:text-slate-400 transition hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400"
                           title="Đóng panel"
                         >
                           <CloseOutlinedIcon fontSize="small" />
@@ -1753,17 +1755,17 @@ const MyDocuments = () => {
                     {/* Summary content */}
                     <div className="flex h-[calc(100%-3.25rem)] flex-col gap-3 overflow-hidden p-4">
                       {(summaryState.status === "connecting" || summaryState.status === "processing") && (
-                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">
+                        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">
                           {summaryState.status === "connecting"
                             ? "AI đang kết nối..."
                             : "AI đang phân tích tài liệu..."}
                           {summaryState.status === "processing" && summaryState.progress.total > 0 && (
                             <div className="mt-3">
-                              <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
+                              <div className="mb-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                                 <span>Tiến trình</span>
                                 <span>{Math.round((summaryState.progress.current / summaryState.progress.total) * 100)}%</span>
                               </div>
-                              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
                                 <div
                                   className="h-full bg-gradient-to-r from-blue-500 to-sky-500 transition-all"
                                   style={{ width: `${(summaryState.progress.current / summaryState.progress.total) * 100}%` }}
@@ -1775,12 +1777,12 @@ const MyDocuments = () => {
                       )}
 
                       {summaryState.status === "error" && (
-                        <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+                        <div className="rounded-2xl border border-amber-100 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/20 p-4 text-sm font-semibold text-amber-800 dark:text-amber-500">
                           Không thể tạo tóm tắt. Vui lòng thử lại.
                         </div>
                       )}
 
-                      <div className="flex-1 overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                      <div className="flex-1 overflow-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-4 text-sm text-slate-700 dark:text-slate-300">
                         {summaryState.summaries.length > 0 ? (
                           summaryState.summaries.map((text, idx) => (
                             <div
@@ -1791,24 +1793,24 @@ const MyDocuments = () => {
                             </div>
                           ))
                         ) : (
-                          <div className="text-sm text-slate-500">Chưa có kết quả tóm tắt.</div>
+                          <div className="text-sm text-slate-500 dark:text-slate-400">Chưa có kết quả tóm tắt.</div>
                         )}
                         <div ref={summaryEndRef} />
                       </div>
 
-                      <div className="shrink-0 rounded-2xl border border-slate-200 bg-white p-3">
+                      <div className="shrink-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
                         <div className="flex flex-wrap items-center gap-2">
                           <button
                             type="button"
                             onClick={handleSummaryCopy}
-                            className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                            className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700"
                           >
                             Copy
                           </button>
                           <button
                             type="button"
                             onClick={handleSummaryDownload}
-                            className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                            className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700"
                           >
                             Tải xuống
                           </button>

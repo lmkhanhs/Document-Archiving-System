@@ -204,18 +204,18 @@ const Summarize = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white p-3 md:p-5">
-      <div className="mx-auto flex min-h-[calc(100vh-24px)] max-w-[1500px] overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_20px_65px_rgba(27,78,163,0.12)]">
-        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 bg-slate-50/70 p-4 md:w-20 md:border-b-0 md:border-r lg:w-64">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white p-3 md:p-5 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors">
+      <div className="mx-auto flex min-h-[calc(100vh-24px)] max-w-[1500px] overflow-hidden rounded-3xl border border-blue-100 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-[0_20px_65px_rgba(27,78,163,0.12)] dark:shadow-none transition-colors">
+        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50/70 dark:bg-slate-800/40 p-4 md:w-20 md:border-b-0 md:border-r lg:w-64 transition-colors">
           <div className="flex items-center gap-3 px-1">
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-tr from-blue-700 to-sky-500 text-lg font-extrabold text-white">
               D
             </div>
             <div className="hidden lg:block">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700 dark:text-blue-400">
                 Workspace
               </div>
-              <div className="text-sm font-bold text-slate-700">Document Management System</div>
+              <div className="text-sm font-bold text-slate-700 dark:text-slate-200">Document Management System</div>
             </div>
           </div>
 
@@ -231,8 +231,8 @@ const Summarize = () => {
                   onClick={() => handleSidebarClick(item.key)}
                   className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition ${
                     isActive
-                      ? "bg-blue-100 text-blue-700 ring-1 ring-blue-200"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      ? "bg-blue-100 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200"
                   }`}
                 >
                   <MenuIcon fontSize="small" />
@@ -242,8 +242,8 @@ const Summarize = () => {
             })}
           </nav>
 
-          <div className="mt-auto rounded-2xl border border-blue-100 bg-white p-3">
-            <div className="text-xs font-semibold uppercase tracking-wide text-blue-700">Quick Actions</div>
+          <div className="mt-auto rounded-2xl border border-blue-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">Quick Actions</div>
             <div className="mt-2 space-y-2">
               <button
                 type="button"
@@ -258,7 +258,7 @@ const Summarize = () => {
                 type="button"
                 onClick={handleStartSummarize}
                 disabled={!file || status === "processing" || status === "connecting"}
-                className="flex w-full items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                className="flex w-full items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700/50 disabled:opacity-60"
               >
                 <AutoAwesomeOutlinedIcon fontSize="small" />
                 <span className="md:hidden lg:inline">Bắt đầu tóm tắt</span>
@@ -267,21 +267,21 @@ const Summarize = () => {
           </div>
         </aside>
 
-        <main className="flex-1 p-4 md:p-6">
-          <header className="flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-center lg:justify-between">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+          <header className="flex flex-col gap-4 border-b border-slate-100 dark:border-slate-700/50 pb-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">Tóm Tắt Văn Bản AI</h1>
-              <p className="mt-1 text-sm text-slate-500">
+              <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Tóm Tắt Văn Bản AI</h1>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 Phân tích và tóm tắt tài liệu.
               </p>
             </div>
           </header>
 
-          <section className="mt-5 rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
+          <section className="mt-5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 p-4">
             <div
               onClick={openUploadDialog}
               className={`group relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-all ${
-                file ? "border-blue-300 bg-blue-50/70" : "border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/60"
+                file ? "border-blue-300 dark:border-blue-700 bg-blue-50/70 dark:bg-blue-900/20" : "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 hover:border-blue-200 dark:hover:border-blue-700 hover:bg-blue-50/60 dark:hover:bg-blue-900/20"
               }`}
             >
               <input
@@ -292,19 +292,19 @@ const Summarize = () => {
                 onChange={handleFileChange}
               />
 
-              <div className={`mb-4 grid h-14 w-14 place-items-center rounded-2xl ${file ? "bg-blue-600 text-white shadow-lg shadow-blue-200" : "bg-white text-blue-500 shadow-sm"} transition-all group-hover:scale-110`}>
+              <div className={`mb-4 grid h-14 w-14 place-items-center rounded-2xl ${file ? "bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-none" : "bg-white dark:bg-slate-800 text-blue-500 shadow-sm border border-slate-100 dark:border-slate-700"} transition-all group-hover:scale-110`}>
                 <CloudUploadOutlinedIcon fontSize="large" />
               </div>
 
               {file ? (
                 <div>
-                  <h3 className="text-base font-bold text-slate-800">{file.name}</h3>
-                  <p className="mt-1 text-sm text-slate-500">{(file.size / 1024).toFixed(2)} KB</p>
+                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">{file.name}</h3>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{(file.size / 1024).toFixed(2)} KB</p>
                 </div>
               ) : (
                 <div>
-                  <h3 className="text-base font-bold text-slate-800">Nhấn để chọn file</h3>
-                  <p className="mt-1 text-sm text-slate-500">Hỗ trợ định dạng: .txt, .pdf, .docx</p>
+                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">Nhấn để chọn file</h3>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Hỗ trợ định dạng: .txt, .pdf, .docx</p>
                 </div>
               )}
             </div>
@@ -313,23 +313,23 @@ const Summarize = () => {
               <button
                 onClick={handleStartSummarize}
                 disabled={!file || status === "connecting" || status === "processing"}
-                className="group inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:pointer-events-none disabled:opacity-60"
+                className="group inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-200 dark:shadow-none transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:pointer-events-none disabled:opacity-60"
               >
                 <AutoAwesomeOutlinedIcon className={status === "processing" ? "animate-spin" : ""} fontSize="small" />
                 {status === "processing" ? "Đang tóm tắt..." : status === "connecting" ? "Đang kết nối..." : "Bắt đầu tóm tắt AI"}
               </button>
               {status === "processing" && progress.total > 0 && (
-                <span className="text-sm font-semibold text-blue-700">{progress.current} / {progress.total} đoạn</span>
+                <span className="text-sm font-semibold text-blue-700 dark:text-blue-400">{progress.current} / {progress.total} đoạn</span>
               )}
             </div>
 
             {status === "processing" && progress.total > 0 && (
               <div className="mt-4">
-                <div className="mb-2 flex items-center justify-between text-xs font-semibold text-slate-600">
+                <div className="mb-2 flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-400">
                   <span>Tiến trình xử lý</span>
-                  <span className="text-blue-600">{Math.round((progress.current / progress.total) * 100)}%</span>
+                  <span className="text-blue-600 dark:text-blue-400">{Math.round((progress.current / progress.total) * 100)}%</span>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
                   <div
                     className="h-full bg-gradient-to-r from-blue-500 to-sky-500 transition-all duration-300 ease-out"
                     style={{ width: `${(progress.current / progress.total) * 100}%` }}
@@ -339,7 +339,7 @@ const Summarize = () => {
             )}
 
             {status === "error" && (
-              <div className="mt-4 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              <div className="mt-4 flex items-center gap-3 rounded-2xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-700 dark:text-red-400">
                 <ErrorOutlineOutlinedIcon fontSize="small" />
                 <p className="font-semibold">{errorMessage}</p>
               </div>
@@ -347,8 +347,8 @@ const Summarize = () => {
           </section>
 
           {(summaries.length > 0 || status === "done") && (
-            <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-slate-800">
+            <section className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-slate-800 dark:text-slate-100">
                 <AutoAwesomeOutlinedIcon className="text-amber-500" fontSize="small" />
                 Kết quả tóm tắt
               </h3>
@@ -357,13 +357,13 @@ const Summarize = () => {
                   summaries.map((text, idx) => (
                     <div
                       key={idx}
-                      className="animate-fade-in-up relative pl-5 text-sm text-slate-700 leading-relaxed before:absolute before:left-0 before:top-2 before:h-2 before:w-2 before:rounded-full before:bg-blue-500"
+                      className="animate-fade-in-up relative pl-5 text-sm text-slate-700 dark:text-slate-300 leading-relaxed before:absolute before:left-0 before:top-2 before:h-2 before:w-2 before:rounded-full before:bg-blue-500"
                     >
                       {text}
                     </div>
                   ))
                 ) : (
-                  <div className="text-sm text-slate-500">
+                  <div className="text-sm text-slate-500 dark:text-slate-400">
                     Chưa có ý tóm tắt nào được tạo.
                   </div>
                 )}
@@ -371,7 +371,7 @@ const Summarize = () => {
               </div>
 
               {status === "done" && (
-                <div className="mt-6 flex items-center justify-center gap-2 rounded-2xl bg-emerald-50 py-3 text-emerald-600">
+                <div className="mt-6 flex items-center justify-center gap-2 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 py-3 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50">
                   <CheckCircleOutlineOutlinedIcon fontSize="small" />
                   <span className="text-sm font-bold">Đã tóm tắt hoàn tất!</span>
                 </div>

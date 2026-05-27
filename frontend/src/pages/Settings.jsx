@@ -87,20 +87,20 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white p-3 md:p-5 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <div className="mx-auto flex min-h-[calc(100vh-24px)] max-w-[1500px] overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_20px_65px_rgba(27,78,163,0.12)]">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white p-3 md:p-5 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors">
+      <div className="mx-auto flex min-h-[calc(100vh-24px)] max-w-[1500px] overflow-hidden rounded-3xl border border-blue-100 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-[0_20px_65px_rgba(27,78,163,0.12)] dark:shadow-none transition-colors">
         
         {/* Main Sidebar (App Navigation) */}
-        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 bg-slate-50/70 p-4 md:w-20 md:border-b-0 md:border-r lg:w-64">
+        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50/70 dark:bg-slate-800/40 p-4 md:w-20 md:border-b-0 md:border-r lg:w-64 transition-colors">
           <div className="flex items-center gap-3 px-1">
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-tr from-blue-700 to-sky-500 text-lg font-extrabold text-white">
               D
             </div>
             <div className="hidden lg:block">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700 dark:text-blue-400">
                 Workspace
               </div>
-              <div className="text-sm font-bold text-slate-700">Document Management System</div>
+              <div className="text-sm font-bold text-slate-700 dark:text-slate-200">Document Management System</div>
             </div>
           </div>
 
@@ -115,8 +115,8 @@ const Settings = () => {
                   onClick={() => handleSidebarClick(item.key)}
                   className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition ${
                     isActive
-                      ? "bg-blue-100 text-blue-700 ring-1 ring-blue-200"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      ? "bg-blue-100 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200"
                   }`}
                 >
                   <MenuIcon fontSize="small" />
@@ -132,7 +132,7 @@ const Settings = () => {
             <button
               type="button"
               onClick={handleLogout}
-              className="flex w-full items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-red-50 hover:text-red-600"
+              className="flex w-full items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
             >
               <LogoutOutlinedIcon fontSize="small" />
               Đăng xuất
@@ -141,11 +141,11 @@ const Settings = () => {
         </aside>
 
         {/* Settings 2-Column Layout */}
-        <div className="flex flex-1 flex-col md:flex-row overflow-hidden bg-slate-50/30">
+        <div className="flex flex-1 flex-col md:flex-row overflow-hidden bg-slate-50/30 dark:bg-transparent">
           
           {/* Settings Menu Column */}
-          <div className="w-full border-b border-slate-200 p-4 md:w-64 md:border-b-0 md:border-r lg:w-72 md:p-6 bg-white/50">
-            <h2 className="mb-4 text-xl font-bold text-slate-800">Cài đặt</h2>
+          <div className="w-full border-b border-slate-200 dark:border-slate-700/50 p-4 md:w-64 md:border-b-0 md:border-r lg:w-72 md:p-6 bg-white/50 dark:bg-slate-800/20 transition-colors">
+            <h2 className="mb-4 text-xl font-bold text-slate-800 dark:text-slate-100">Cài đặt</h2>
             <nav className="flex flex-row md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0">
               {settingTabs.map((tab) => {
                 const isActive = activeTab === tab.key;
@@ -156,11 +156,11 @@ const Settings = () => {
                     onClick={() => setActiveTab(tab.key)}
                     className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition whitespace-nowrap md:whitespace-normal flex-shrink-0 md:flex-shrink-1 ${
                       isActive
-                        ? "bg-blue-50 text-blue-700 shadow-sm"
-                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                        ? "bg-blue-50 text-blue-700 shadow-sm dark:bg-blue-900/20 dark:text-blue-400"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/40 dark:hover:text-slate-200"
                     }`}
                   >
-                    <TabIcon fontSize="small" className={isActive ? "text-blue-600" : "text-slate-400"} />
+                    <TabIcon fontSize="small" className={isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-400 dark:text-slate-500"} />
                     {tab.label}
                   </button>
                 );
@@ -181,8 +181,8 @@ const Settings = () => {
         <div
           className={`fixed bottom-5 right-5 z-50 flex items-center gap-2.5 rounded-xl px-5 py-3 text-sm font-semibold shadow-xl transition-all ${
             toast.type === "success"
-              ? "bg-emerald-600 text-white"
-              : "bg-red-600 text-white"
+              ? "bg-emerald-600 text-white dark:bg-emerald-700"
+              : "bg-red-600 text-white dark:bg-red-700"
           }`}
         >
           {toast.type === "success" ? (

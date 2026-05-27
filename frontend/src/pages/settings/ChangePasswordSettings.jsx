@@ -60,36 +60,36 @@ const ChangePasswordSettings = ({ showToast }) => {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">Đổi mật khẩu</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Đổi mật khẩu</h1>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Cập nhật mật khẩu để bảo vệ tài khoản của bạn.
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 md:p-8 max-w-2xl">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 md:p-8 max-w-2xl">
           <div className="space-y-6">
             {/* Mật khẩu hiện tại */}
             <div>
-              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
                 <LockOutlinedIcon style={{ fontSize: 16 }} />
-                Mật khẩu hiện tại <span className="text-red-500">*</span>
+                Mật khẩu hiện tại <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <div className="relative">
                 <input
                   type={showCurrent ? "text" : "password"}
                   {...register("currentPassword")}
-                  className={`w-full rounded-xl border px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:ring-2 pr-12 ${
+                  className={`w-full rounded-xl border px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 dark:bg-slate-900 outline-none transition focus:ring-2 pr-12 ${
                     errors.currentPassword
-                      ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-                      : "border-slate-200 focus:border-blue-300 focus:ring-blue-100"
+                      ? "border-red-300 focus:border-red-400 focus:ring-red-100 dark:border-red-500/50 dark:focus:ring-red-500/20"
+                      : "border-slate-200 focus:border-blue-300 focus:ring-blue-100 dark:border-slate-600 dark:focus:border-blue-500/50 dark:focus:ring-blue-500/20"
                   }`}
                   placeholder="Nhập mật khẩu hiện tại"
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrent(!showCurrent)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition"
                 >
                   {showCurrent ? (
                     <VisibilityOffOutlinedIcon style={{ fontSize: 20 }} />
@@ -99,32 +99,32 @@ const ChangePasswordSettings = ({ showToast }) => {
                 </button>
               </div>
               {errors.currentPassword && (
-                <p className="mt-1 text-xs text-red-500">{errors.currentPassword.message}</p>
+                <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.currentPassword.message}</p>
               )}
             </div>
 
-            <div className="border-t border-slate-100 pt-6">
+            <div className="border-t border-slate-100 dark:border-slate-700 pt-6">
               {/* Mật khẩu mới */}
               <div className="mb-6">
-                <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
+                <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
                   <LockResetOutlinedIcon style={{ fontSize: 16 }} />
-                  Mật khẩu mới <span className="text-red-500">*</span>
+                  Mật khẩu mới <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
                 <div className="relative">
                   <input
                     type={showNew ? "text" : "password"}
                     {...register("newPassword")}
-                    className={`w-full rounded-xl border px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:ring-2 pr-12 ${
+                    className={`w-full rounded-xl border px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 dark:bg-slate-900 outline-none transition focus:ring-2 pr-12 ${
                       errors.newPassword
-                        ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-                        : "border-slate-200 focus:border-blue-300 focus:ring-blue-100"
+                        ? "border-red-300 focus:border-red-400 focus:ring-red-100 dark:border-red-500/50 dark:focus:ring-red-500/20"
+                        : "border-slate-200 focus:border-blue-300 focus:ring-blue-100 dark:border-slate-600 dark:focus:border-blue-500/50 dark:focus:ring-blue-500/20"
                     }`}
                     placeholder="Nhập mật khẩu mới (tối thiểu 8 ký tự)"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNew(!showNew)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition"
                   >
                     {showNew ? (
                       <VisibilityOffOutlinedIcon style={{ fontSize: 20 }} />
@@ -134,31 +134,31 @@ const ChangePasswordSettings = ({ showToast }) => {
                   </button>
                 </div>
                 {errors.newPassword && (
-                  <p className="mt-1 text-xs text-red-500">{errors.newPassword.message}</p>
+                  <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.newPassword.message}</p>
                 )}
               </div>
 
               {/* Xác nhận mật khẩu mới */}
               <div>
-                <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
+                <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
                   <LockResetOutlinedIcon style={{ fontSize: 16 }} />
-                  Xác nhận mật khẩu mới <span className="text-red-500">*</span>
+                  Xác nhận mật khẩu mới <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
                 <div className="relative">
                   <input
                     type={showConfirm ? "text" : "password"}
                     {...register("confirmPassword")}
-                    className={`w-full rounded-xl border px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:ring-2 pr-12 ${
+                    className={`w-full rounded-xl border px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 dark:bg-slate-900 outline-none transition focus:ring-2 pr-12 ${
                       errors.confirmPassword
-                        ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-                        : "border-slate-200 focus:border-blue-300 focus:ring-blue-100"
+                        ? "border-red-300 focus:border-red-400 focus:ring-red-100 dark:border-red-500/50 dark:focus:ring-red-500/20"
+                        : "border-slate-200 focus:border-blue-300 focus:ring-blue-100 dark:border-slate-600 dark:focus:border-blue-500/50 dark:focus:ring-blue-500/20"
                     }`}
                     placeholder="Nhập lại mật khẩu mới"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition"
                   >
                     {showConfirm ? (
                       <VisibilityOffOutlinedIcon style={{ fontSize: 20 }} />
@@ -168,7 +168,7 @@ const ChangePasswordSettings = ({ showToast }) => {
                   </button>
                 </div>
                 {errors.confirmPassword && (
-                  <p className="mt-1 text-xs text-red-500">{errors.confirmPassword.message}</p>
+                  <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.confirmPassword.message}</p>
                 )}
               </div>
             </div>

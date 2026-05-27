@@ -592,18 +592,18 @@ const Home = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white p-3 md:p-5">
-      <div className="mx-auto flex min-h-[calc(100vh-24px)] max-w-[1500px] overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_20px_65px_rgba(27,78,163,0.12)]">
-        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 bg-slate-50/70 p-4 md:w-20 md:border-b-0 md:border-r lg:w-64">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white p-3 md:p-5 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors">
+      <div className="mx-auto flex min-h-[calc(100vh-24px)] max-w-[1500px] overflow-hidden rounded-3xl border border-blue-100 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-[0_20px_65px_rgba(27,78,163,0.12)] dark:shadow-none transition-colors">
+        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50/70 dark:bg-slate-800/40 p-4 md:w-20 md:border-b-0 md:border-r lg:w-64 transition-colors">
           <div className="flex items-center gap-3 px-1">
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-tr from-blue-700 to-sky-500 text-lg font-extrabold text-white">
               D
             </div>
             <div className="hidden lg:block">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700 dark:text-blue-400">
                 Workspace
               </div>
-              <div className="text-sm font-bold text-slate-700">Document Management System</div>
+              <div className="text-sm font-bold text-slate-700 dark:text-slate-200">Document Management System</div>
             </div>
           </div>
 
@@ -639,8 +639,8 @@ const Home = () => {
                   }}
                   className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition ${
                     isActive
-                      ? "bg-blue-100 text-blue-700 ring-1 ring-blue-200"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      ? "bg-blue-100 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200"
                   }`}
                 >
                   <MenuIcon fontSize="small" />
@@ -650,8 +650,8 @@ const Home = () => {
             })}
           </nav>
 
-          <div className="mt-auto rounded-2xl border border-blue-100 bg-white p-3">
-            <div className="text-xs font-semibold uppercase tracking-wide text-blue-700">Quick Actions</div>
+          <div className="mt-auto rounded-2xl border border-blue-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">Quick Actions</div>
             <div className="mt-2 space-y-2">
               <button
                 type="button"
@@ -664,7 +664,7 @@ const Home = () => {
               <button
                 type="button"
                 onClick={handleCreateFolder}
-                className="flex w-full items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="flex w-full items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700/50"
               >
                 <CreateNewFolderOutlinedIcon fontSize="small" />
                 <span className="md:hidden lg:inline">Tạo thư mục</span>
@@ -673,15 +673,15 @@ const Home = () => {
           </div>
         </aside>
 
-        <main className="flex-1 p-4 md:p-6">
-          <header className="flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-center">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+          <header className="flex flex-col gap-4 border-b border-slate-100 dark:border-slate-700/50 pb-4 lg:flex-row lg:items-center">
             <div className="relative flex-1">
               <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Tìm kiếm file theo tên"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
+                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 py-3 pl-11 pr-4 text-sm text-slate-700 dark:text-slate-200 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50 focus:bg-white dark:focus:bg-slate-800"
               />
             </div>
 
@@ -697,22 +697,22 @@ const Home = () => {
               <button
                 type="button"
                 onClick={handleCreateDocument}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800"
               >
                 Tạo tài liệu mới
               </button>
               <button
                 type="button"
-                className="rounded-xl border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50"
+                className="rounded-xl border border-slate-200 dark:border-slate-700 p-2 text-slate-600 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800"
               >
                 <NotificationsNoneOutlinedIcon fontSize="small" />
               </button>
-              <div className="relative flex items-center gap-2 rounded-xl border border-slate-200 px-2 py-1.5">
+              <div className="relative flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 px-2 py-1.5">
                 <button
                   ref={userTriggerRef}
                   type="button"
                   onClick={handleUserMenuToggle}
-                  className="flex items-center gap-2 rounded-lg px-1.5 py-0.5 transition hover:bg-slate-50"
+                  className="flex items-center gap-2 rounded-lg px-1.5 py-0.5 transition hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   {avatarUrl ? (
                     <img
@@ -726,23 +726,23 @@ const Home = () => {
                       {avatarLabel}
                     </div>
                   )}
-                  <span className="max-w-28 truncate text-sm font-semibold text-slate-700">{userName || avatarLabel}</span>
+                  <span className="max-w-28 truncate text-sm font-semibold text-slate-700 dark:text-slate-200">{userName || avatarLabel}</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleLogout}
                   disabled={isLoggingOut}
-                  className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100"
+                  className="rounded-md p-1 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition hover:bg-slate-100 dark:hover:bg-slate-700"
                 >
                   <LogoutOutlinedIcon fontSize="small" />
                 </button>
                 {isUserMenuOpen && (
                   <div
                     ref={userMenuRef}
-                    className="absolute right-0 top-full z-40 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl"
+                    className="absolute right-0 top-full z-40 mt-2 w-64 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1.5 shadow-xl"
                   >
                     {isRoleLoading && (
-                      <div className="px-3 py-2 text-xs font-medium text-slate-500">
+                      <div className="px-3 py-2 text-xs font-medium text-slate-500 dark:text-slate-400">
                         Đang kiểm tra quyền...
                       </div>
                     )}
@@ -766,7 +766,7 @@ const Home = () => {
                         type="button"
                         onClick={item.onClick}
                         disabled={isRoleLoading}
-                        className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200 transition hover:bg-slate-50 dark:hover:bg-slate-700/50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {item.label}
                       </button>
@@ -777,11 +777,11 @@ const Home = () => {
             </div>
           </header>
 
-          <section className="mt-5 grid gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-3 md:grid-cols-2 lg:grid-cols-5">
+          <section className="mt-5 grid gap-3 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 p-3 md:grid-cols-2 lg:grid-cols-5">
             <select
               value={fileType}
               onChange={(event) => setFileType(event.target.value)}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none"
+              className="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none"
             >
               <option value="all">Loại file: Tất cả</option>
               <option value="PDF">PDF</option>
@@ -793,7 +793,7 @@ const Home = () => {
             <select
               value={timeFilter}
               onChange={(event) => setTimeFilter(event.target.value)}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none"
+              className="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none"
             >
               <option value="all">Thời gian: Tất cả</option>
               <option value="today">Hôm nay</option>
@@ -805,13 +805,13 @@ const Home = () => {
               value={owner}
               onChange={(event) => setOwner(event.target.value)}
               placeholder="Lọc theo chủ sở hữu"
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none"
+              className="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
             />
 
             <button
               type="button"
               onClick={() => setSort((prev) => (prev === "desc" ? "asc" : "desc"))}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700"
             >
               <SortOutlinedIcon fontSize="small" />
               Sắp xếp: {sort === "desc" ? "Mới nhất" : "Cũ nhất"}
@@ -826,7 +826,7 @@ const Home = () => {
                 setOwner("");
                 setSort("desc");
               }}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700"
             >
               Đặt lại bộ lọc
             </button>
@@ -834,7 +834,7 @@ const Home = () => {
 
           <section className="mt-7">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-800">Truy cập nhanh</h2>
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Truy cập nhanh</h2>
             </div>
 
             {isLoading ? (
@@ -849,24 +849,24 @@ const Home = () => {
                     <div
                       key={`${item.itemType}-${item.id}`}
                       onContextMenu={(event) => showActionMenu(event, item, "context")}
-                      className="group relative rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-sm"
+                      className="group relative rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 transition hover:-translate-y-0.5 hover:border-blue-200 dark:hover:border-blue-500/50 hover:shadow-sm"
                     >
                       <button
                         type="button"
                         onClick={() => onOpenItem(item)}
                         className="w-full text-left"
                       >
-                        <div className={`mb-3 inline-flex rounded-xl p-2.5 ${iconMeta.className}`}>
+                        <div className={`mb-3 inline-flex rounded-xl p-2.5 ${iconMeta.className} dark:bg-opacity-20`}>
                           <Icon fontSize="small" />
                         </div>
-                        <div className="truncate text-sm font-semibold text-slate-800">{item.name}</div>
-                        <div className="mt-1 text-xs text-slate-500">{formatDateTime(item.lastAccessedAt)}</div>
+                        <div className="truncate text-sm font-semibold text-slate-800 dark:text-slate-200">{item.name}</div>
+                        <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">{formatDateTime(item.lastAccessedAt)}</div>
                       </button>
 
                       <button
                         type="button"
                         onClick={(event) => showActionMenu(event, item, "menu")}
-                        className="absolute right-2 top-2 rounded-lg p-1 text-slate-500 opacity-0 transition hover:bg-slate-100 hover:text-slate-700 group-hover:opacity-100"
+                        className="absolute right-2 top-2 rounded-lg p-1 text-slate-500 opacity-0 transition hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300 group-hover:opacity-100"
                       >
                         <MoreHorizOutlinedIcon fontSize="small" />
                       </button>
@@ -879,16 +879,16 @@ const Home = () => {
 
           <section className="mt-8">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-800">Gần đây</h2>
-              <span className="text-sm text-slate-500">Sắp xếp theo thời gian cập nhật</span>
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Gần đây</h2>
+              <span className="text-sm text-slate-500 dark:text-slate-400">Sắp xếp theo thời gian cập nhật</span>
             </div>
 
             {isLoading ? (
               renderTableSkeleton()
             ) : (
-              <div className="overflow-auto rounded-2xl border border-slate-200 bg-white">
+              <div className="overflow-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <table className="min-w-full text-left">
-                  <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                  <thead className="bg-slate-50 dark:bg-slate-900/50 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700">
                     <tr>
                       <th className="px-4 py-3">Tên file</th>
                       <th className="px-4 py-3">Người chỉnh sửa</th>
@@ -896,7 +896,7 @@ const Home = () => {
                       <th className="px-4 py-3 text-right">Thao tác</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                     {homeData.recent.map((item) => {
                       const normalized = { ...item, itemType: "FILE" };
 
@@ -904,16 +904,16 @@ const Home = () => {
                         <tr
                           key={item.id}
                           onContextMenu={(event) => showActionMenu(event, normalized, "context")}
-                          className="group border-t border-slate-100 transition hover:bg-slate-50"
+                          className="group transition hover:bg-slate-50 dark:hover:bg-slate-700/50"
                         >
-                          <td className="px-4 py-3 text-sm font-semibold text-slate-800">{item.name}</td>
-                          <td className="px-4 py-3 text-sm text-slate-600">{item.editedBy}</td>
-                          <td className="px-4 py-3 text-sm text-slate-500">{formatDateTime(item.updatedAt)}</td>
+                          <td className="px-4 py-3 text-sm font-semibold text-slate-800 dark:text-slate-200">{item.name}</td>
+                          <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">{item.editedBy}</td>
+                          <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{formatDateTime(item.updatedAt)}</td>
                           <td className="px-4 py-3 text-right">
                             <button
                               type="button"
                               onClick={(event) => showActionMenu(event, normalized, "menu")}
-                              className="rounded-lg p-1 text-slate-500 opacity-0 transition hover:bg-slate-100 hover:text-slate-700 group-hover:opacity-100"
+                              className="rounded-lg p-1 text-slate-500 opacity-0 transition hover:bg-slate-100 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-300 group-hover:opacity-100"
                             >
                               <MoreHorizOutlinedIcon fontSize="small" />
                             </button>
@@ -929,7 +929,7 @@ const Home = () => {
 
           <section className="mt-8 grid gap-5 lg:grid-cols-3">
             <div className="lg:col-span-2">
-              <h2 className="mb-3 text-xl font-bold text-slate-800">Đề xuất</h2>
+              <h2 className="mb-3 text-xl font-bold text-slate-800 dark:text-slate-100">Đề xuất</h2>
 
               {isLoading ? (
                 renderSkeletonCards(3)
@@ -944,21 +944,21 @@ const Home = () => {
                       <div
                         key={item.id}
                         onContextMenu={(event) => showActionMenu(event, normalized, "context")}
-                        className="group relative rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-blue-200 hover:shadow-sm"
+                        className="group relative rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 transition hover:border-blue-200 dark:hover:border-blue-500/50 hover:shadow-sm"
                       >
                         <button type="button" onClick={() => onOpenItem(normalized)} className="w-full text-left">
-                          <div className={`mb-3 inline-flex rounded-xl p-2.5 ${iconMeta.className}`}>
+                          <div className={`mb-3 inline-flex rounded-xl p-2.5 ${iconMeta.className} dark:bg-opacity-20`}>
                             <Icon fontSize="small" />
                           </div>
-                          <div className="truncate text-sm font-semibold text-slate-800">{item.name}</div>
-                          <div className="mt-1 text-xs text-slate-500">{item.reason}</div>
-                          <div className="mt-1 text-xs text-slate-400">{formatDateTime(item.updatedAt)}</div>
+                          <div className="truncate text-sm font-semibold text-slate-800 dark:text-slate-200">{item.name}</div>
+                          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">{item.reason}</div>
+                          <div className="mt-1 text-xs text-slate-400 dark:text-slate-500">{formatDateTime(item.updatedAt)}</div>
                         </button>
 
                         <button
                           type="button"
                           onClick={(event) => showActionMenu(event, normalized, "menu")}
-                          className="absolute right-2 top-2 rounded-lg p-1 text-slate-500 opacity-0 transition hover:bg-slate-100 hover:text-slate-700 group-hover:opacity-100"
+                          className="absolute right-2 top-2 rounded-lg p-1 text-slate-500 opacity-0 transition hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300 group-hover:opacity-100"
                         >
                           <MoreHorizOutlinedIcon fontSize="small" />
                         </button>
@@ -970,19 +970,19 @@ const Home = () => {
             </div>
 
             <div>
-              <h2 className="mb-3 text-xl font-bold text-slate-800">Trạng thái hệ thống</h2>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <div className="text-sm font-semibold text-slate-700">Dung lượng đã sử dụng</div>
-                <div className="mt-1 text-sm text-slate-500">
+              <h2 className="mb-3 text-xl font-bold text-slate-800 dark:text-slate-100">Trạng thái hệ thống</h2>
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+                <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">Dung lượng đã sử dụng</div>
+                <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                   {homeData.storage.usedText} / {homeData.storage.totalText}
                 </div>
-                <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-100">
+                <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-blue-500 to-sky-400 transition-all"
                     style={{ width: `${storagePercent}%` }}
                   />
                 </div>
-                <div className="mt-2 text-xs font-semibold text-blue-700">{storagePercent}% đã sử dụng</div>
+                <div className="mt-2 text-xs font-semibold text-blue-700 dark:text-blue-400">{storagePercent}% đã sử dụng</div>
               </div>
             </div>
           </section>
@@ -995,14 +995,14 @@ const Home = () => {
         <div
           ref={menuRef}
           style={{ left: menuState.x, top: menuState.y }}
-          className="fixed z-50 w-44 -translate-x-1/2 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl"
+          className="fixed z-50 w-44 -translate-x-1/2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1.5 shadow-xl"
         >
           {actionItems.map((action) => (
             <button
               key={action.key}
               type="button"
               onClick={() => onAction(action.key, menuState.item)}
-              className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100"
+              className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 transition hover:bg-slate-100 dark:hover:bg-slate-700"
             >
               {action.label}
             </button>

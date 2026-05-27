@@ -220,16 +220,16 @@ const ProfileSettings = ({ showToast }) => {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">Hồ sơ cá nhân</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Hồ sơ cá nhân</h1>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Quản lý thông tin cá nhân và tài khoản của bạn.
         </p>
       </div>
 
-      <div className="mb-6 rounded-2xl border border-slate-200 bg-gradient-to-r from-blue-50/60 to-sky-50/40 p-6 md:p-8">
+      <div className="mb-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-gradient-to-r from-blue-50/60 to-sky-50/40 dark:from-slate-800 dark:to-slate-800/80 p-6 md:p-8">
         <div className="flex flex-col items-center gap-6 sm:flex-row">
           <div className="relative group">
-            <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-white shadow-lg ring-2 ring-blue-100">
+            <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-white dark:border-slate-700 shadow-lg ring-2 ring-blue-100 dark:ring-slate-600">
               {avatarPreview ? (
                 <img
                   src={avatarPreview}
@@ -261,16 +261,18 @@ const ProfileSettings = ({ showToast }) => {
           </div>
 
           <div className="text-center sm:text-left">
-            <h2 className="text-xl font-bold text-slate-800">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
               {user?.fullName || user?.username || "Người dùng"}
             </h2>
-            <p className="mt-0.5 text-sm text-slate-500">{user?.email || user?.username}</p>
+            <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{user?.email || user?.username}</p>
             <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
               {user?.roles?.map((role) => (
                 <span
                   key={role}
                   className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
-                    role === "ADMIN" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
+                    role === "ADMIN" 
+                      ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" 
+                      : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                   }`}
                 >
                   <SecurityOutlinedIcon style={{ fontSize: 12 }} />
@@ -278,7 +280,7 @@ const ProfileSettings = ({ showToast }) => {
                 </span>
               ))}
               {googleFlag && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
                   Google Account
                 </span>
               )}
@@ -293,82 +295,82 @@ const ProfileSettings = ({ showToast }) => {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 md:p-8">
-          <h3 className="mb-6 text-lg font-bold text-slate-800">Thông tin cá nhân</h3>
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 md:p-8">
+          <h3 className="mb-6 text-lg font-bold text-slate-800 dark:text-slate-100">Thông tin cá nhân</h3>
           <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
             <div>
-              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
                 <BadgeOutlinedIcon style={{ fontSize: 16 }} />
-                Họ tên <span className="text-red-500">*</span>
+                Họ tên <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
                 {...register("fullName")}
-                className={`w-full rounded-xl border px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:ring-2 ${
-                  errors.fullName ? "border-red-300 focus:border-red-400 focus:ring-red-100" : "border-slate-200 focus:border-blue-300 focus:ring-blue-100"
+                className={`w-full rounded-xl border px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 dark:bg-slate-900 outline-none transition focus:ring-2 ${
+                  errors.fullName ? "border-red-300 focus:border-red-400 focus:ring-red-100 dark:border-red-500/50 dark:focus:ring-red-500/20" : "border-slate-200 focus:border-blue-300 focus:ring-blue-100 dark:border-slate-600 dark:focus:border-blue-500/50 dark:focus:ring-blue-500/20"
                 }`}
                 placeholder="Nhập họ và tên"
               />
-              {errors.fullName && <p className="mt-1 text-xs text-red-500">{errors.fullName.message}</p>}
+              {errors.fullName && <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.fullName.message}</p>}
             </div>
 
             <div>
-              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
                 <EmailOutlinedIcon style={{ fontSize: 16 }} />
                 Email
-                {user?.email && <span className="ml-1 text-xs font-normal text-slate-400">(Không thể sửa)</span>}
+                {user?.email && <span className="ml-1 text-xs font-normal text-slate-400 dark:text-slate-500">(Không thể sửa)</span>}
               </label>
               <input
                 {...register("email")}
                 disabled={!!user?.email}
                 className={`w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition focus:ring-2 ${
-                  !!user?.email ? "border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed" : errors.email ? "border-red-300 focus:border-red-400 focus:ring-red-100 text-slate-700 bg-white" : "border-slate-200 focus:border-blue-300 focus:ring-blue-100 text-slate-700 bg-white"
+                  !!user?.email ? "border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400" : errors.email ? "border-red-300 focus:border-red-400 focus:ring-red-100 text-slate-700 bg-white dark:border-red-500/50 dark:focus:ring-red-500/20 dark:bg-slate-900 dark:text-slate-200" : "border-slate-200 focus:border-blue-300 focus:ring-blue-100 text-slate-700 bg-white dark:border-slate-600 dark:focus:border-blue-500/50 dark:focus:ring-blue-500/20 dark:bg-slate-900 dark:text-slate-200"
                 }`}
                 placeholder="Nhập địa chỉ email"
               />
-              {errors.email && !user?.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
+              {errors.email && !user?.email && <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.email.message}</p>}
             </div>
 
             <div>
-              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
                 <PhoneOutlinedIcon style={{ fontSize: 16 }} />
                 Số điện thoại
               </label>
               <input
                 {...register("phone")}
-                className={`w-full rounded-xl border px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:ring-2 ${
-                  errors.phone ? "border-red-300 focus:border-red-400 focus:ring-red-100" : "border-slate-200 focus:border-blue-300 focus:ring-blue-100"
+                className={`w-full rounded-xl border px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 dark:bg-slate-900 outline-none transition focus:ring-2 ${
+                  errors.phone ? "border-red-300 focus:border-red-400 focus:ring-red-100 dark:border-red-500/50 dark:focus:ring-red-500/20" : "border-slate-200 focus:border-blue-300 focus:ring-blue-100 dark:border-slate-600 dark:focus:border-blue-500/50 dark:focus:ring-blue-500/20"
                 }`}
                 placeholder="Nhập số điện thoại"
               />
-              {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone.message}</p>}
+              {errors.phone && <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.phone.message}</p>}
             </div>
 
             <div>
-              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
                 <LocationOnOutlinedIcon style={{ fontSize: 16 }} />
                 Địa chỉ
               </label>
               <input
                 {...register("address")}
-                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500/20"
                 placeholder="Nhập địa chỉ"
               />
             </div>
 
             <div>
-              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
                 <LocationCityOutlinedIcon style={{ fontSize: 16 }} />
                 Thành phố
               </label>
               <input
                 {...register("city")}
-                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500/20"
                 placeholder="Nhập thành phố"
               />
             </div>
 
             <div>
-              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
                 <PersonOutlinedIcon style={{ fontSize: 16 }} />
                 Giới tính
               </label>
@@ -386,7 +388,7 @@ const ProfileSettings = ({ showToast }) => {
                     register("genderId").onChange(e);
                     setUser((prev) => ({ ...prev, genderId: e.target.value }));
                   }}
-                  className={`w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100 ${
+                  className={`w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500/20 ${
                     user?.genderId ? "pl-11" : ""
                   }`}
                 >
@@ -401,7 +403,7 @@ const ProfileSettings = ({ showToast }) => {
             </div>
 
             <div className="md:col-span-2">
-              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
                 <PublicOutlinedIcon style={{ fontSize: 16 }} />
                 Quốc gia
               </label>
@@ -419,7 +421,7 @@ const ProfileSettings = ({ showToast }) => {
                     register("countryId").onChange(e);
                     setUser((prev) => ({ ...prev, countryId: e.target.value }));
                   }}
-                  className={`w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100 ${
+                  className={`w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500/20 ${
                     user?.countryId ? "pl-12" : ""
                   }`}
                 >
@@ -434,21 +436,21 @@ const ProfileSettings = ({ showToast }) => {
             </div>
           </div>
 
-          <div className="mt-8 border-t border-slate-100 pt-6">
-            <h3 className="mb-4 text-lg font-bold text-slate-800">Thông tin tài khoản</h3>
+          <div className="mt-8 border-t border-slate-100 dark:border-slate-700 pt-6">
+            <h3 className="mb-4 text-lg font-bold text-slate-800 dark:text-slate-100">Thông tin tài khoản</h3>
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3">
-                <SecurityOutlinedIcon className="text-slate-400" style={{ fontSize: 18 }} />
+              <div className="flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 dark:border dark:border-slate-700 px-4 py-3">
+                <SecurityOutlinedIcon className="text-slate-400 dark:text-slate-500" style={{ fontSize: 18 }} />
                 <div>
-                  <div className="text-xs font-medium text-slate-400">Vai trò</div>
-                  <div className="text-sm font-semibold text-slate-700">{user?.roles?.join(", ") || "—"}</div>
+                  <div className="text-xs font-medium text-slate-400 dark:text-slate-500">Vai trò</div>
+                  <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">{user?.roles?.join(", ") || "—"}</div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3">
-                <CalendarTodayOutlinedIcon className="text-slate-400" style={{ fontSize: 18 }} />
+              <div className="flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 dark:border dark:border-slate-700 px-4 py-3">
+                <CalendarTodayOutlinedIcon className="text-slate-400 dark:text-slate-500" style={{ fontSize: 18 }} />
                 <div>
-                  <div className="text-xs font-medium text-slate-400">Ngày tạo tài khoản</div>
-                  <div className="text-sm font-semibold text-slate-700">{formatDate(user?.createdAt)}</div>
+                  <div className="text-xs font-medium text-slate-400 dark:text-slate-500">Ngày tạo tài khoản</div>
+                  <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">{formatDate(user?.createdAt)}</div>
                 </div>
               </div>
             </div>
