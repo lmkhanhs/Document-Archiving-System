@@ -11,5 +11,7 @@ import com.datn.dms.entities.FileEntity;
 public abstract class FileMapper {
     @Mapping(target = "folderId", source = "folder.id")
     @Mapping(target = "colorCode", source = "color.hexCode")
+    @Mapping(target = "ownerName", source = "owner.username")
+    @Mapping(target = "ownerAvatar", source = "owner.thumbnailUrl")
     public abstract FileResponse toFileResponse(FileEntity fileEntity);
 }

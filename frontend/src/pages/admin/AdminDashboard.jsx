@@ -17,6 +17,17 @@ import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlin
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import RestoreFromTrashOutlinedIcon from "@mui/icons-material/RestoreFromTrashOutlined";
+import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
+import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import TableChartOutlinedIcon from "@mui/icons-material/TableChartOutlined";
+import SlideshowOutlinedIcon from "@mui/icons-material/SlideshowOutlined";
+import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import { API_ORIGIN } from "../../services/api";
 import { getInfoUser, getRoles, logout } from "../../services/authService";
 import {
@@ -30,6 +41,15 @@ import {
   updateUserRole,
   updateUserStatus,
 } from "../../services/userService";
+import {
+  downloadAdminFile,
+  getAdminFiles,
+  hardDeleteAdminFile,
+  previewAdminFile,
+  restoreAdminFile,
+  searchAdminFiles,
+  softDeleteAdminFile,
+} from "../../services/adminDocumentService";
 import DeletedUsersPage from "./components/DeletedUsersPage";
 import RestoreUserDialog from "./components/RestoreUserDialog";
 import HardDeleteDialog from "./components/HardDeleteDialog";
@@ -115,6 +135,200 @@ const formatDate = (value) => {
   return date.toLocaleDateString("vi-VN");
 };
 
+const formatDateTime = (value) => {
+  if (!value) {
+    return "—";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
+  return date.toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const formatFileSize = (bytes) => {
+  if (bytes === null || bytes === undefined) {
+    return "—";
+  }
+
+  if (bytes === 0) {
+    return "0 B";
+  }
+
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const size = bytes / (1024 ** index);
+
+  return `${size.toFixed(size >= 10 || index === 0 ? 0 : 1)} ${units[index]}`;
+};
+
+const PREVIEW_KIND = {
+  PDF: "pdf",
+  IMAGE: "image",
+  TEXT: "text",
+  OFFICE: "office",
+  UNSUPPORTED: "unsupported",
+};
+
+const TEXT_EXTENSIONS = new Set([
+  "txt", "md", "json", "js", "jsx", "ts", "tsx", "html", "css", "scss", "less",
+  "xml", "yml", "yaml", "java", "py", "go", "c", "cpp", "h", "hpp", "sql", "log", "csv",
+]);
+
+const OFFICE_EXTENSIONS = new Set(["doc", "docx", "xls", "xlsx", "ppt", "pptx"]);
+const WORD_EXTENSIONS = new Set(["doc", "docx"]);
+const EXCEL_EXTENSIONS = new Set(["xls", "xlsx", "csv"]);
+const POWERPOINT_EXTENSIONS = new Set(["ppt", "pptx"]);
+const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"]);
+
+const getFileExtension = (fileName = "") => {
+  const normalized = String(fileName).trim();
+  const index = normalized.lastIndexOf(".");
+  if (index < 0 || index === normalized.length - 1) {
+    return "";
+  }
+
+  return normalized.slice(index + 1).toLowerCase();
+};
+
+const detectPreviewKind = ({ name = "", mimeType = "" }) => {
+  const extension = getFileExtension(name);
+  const mime = String(mimeType).toLowerCase();
+
+  if (mime.includes("pdf") || extension === "pdf") {
+    return PREVIEW_KIND.PDF;
+  }
+
+  if (mime.startsWith("image/") || IMAGE_EXTENSIONS.has(extension)) {
+    return PREVIEW_KIND.IMAGE;
+  }
+
+  if (mime.startsWith("text/") || mime.includes("json") || TEXT_EXTENSIONS.has(extension)) {
+    return PREVIEW_KIND.TEXT;
+  }
+
+  if (
+    mime.includes("word")
+    || mime.includes("excel")
+    || mime.includes("spreadsheet")
+    || mime.includes("powerpoint")
+    || mime.includes("presentation")
+    || OFFICE_EXTENSIONS.has(extension)
+  ) {
+    return PREVIEW_KIND.OFFICE;
+  }
+
+  return PREVIEW_KIND.UNSUPPORTED;
+};
+
+const getFileIconMeta = ({ name = "", mimeType = "" }) => {
+  const extension = getFileExtension(name);
+  const mime = String(mimeType).toLowerCase();
+
+  if (mime.includes("pdf") || extension === "pdf") {
+    return { Icon: PictureAsPdfOutlinedIcon, className: "text-red-600" };
+  }
+
+  if (WORD_EXTENSIONS.has(extension) || mime.includes("word")) {
+    return { Icon: ArticleOutlinedIcon, className: "text-blue-600" };
+  }
+
+  if (EXCEL_EXTENSIONS.has(extension) || mime.includes("excel") || mime.includes("spreadsheet")) {
+    return { Icon: TableChartOutlinedIcon, className: "text-emerald-600" };
+  }
+
+  if (POWERPOINT_EXTENSIONS.has(extension) || mime.includes("powerpoint") || mime.includes("presentation")) {
+    return { Icon: SlideshowOutlinedIcon, className: "text-orange-600" };
+  }
+
+  if (IMAGE_EXTENSIONS.has(extension) || mime.startsWith("image/")) {
+    return { Icon: ImageOutlinedIcon, className: "text-violet-600" };
+  }
+
+  if (TEXT_EXTENSIONS.has(extension) || mime.startsWith("text/") || mime.includes("json")) {
+    return { Icon: CodeOutlinedIcon, className: "text-slate-600" };
+  }
+
+  return { Icon: DescriptionOutlinedIcon, className: "text-blue-600" };
+};
+
+const resolveFileUrl = (fileUrl) => {
+  if (!fileUrl) {
+    return "";
+  }
+
+  if (fileUrl.startsWith("http://") || fileUrl.startsWith("https://")) {
+    return fileUrl;
+  }
+
+  if (fileUrl.startsWith("/")) {
+    return `${API_ORIGIN}${fileUrl}`;
+  }
+
+  return `${API_ORIGIN}/${fileUrl}`;
+};
+
+const getReadableFileType = (mimeType = "", name = "") => {
+  const extension = getFileExtension(name);
+  if (extension) {
+    return extension.toUpperCase();
+  }
+
+  if (mimeType) {
+    const parts = String(mimeType).split("/");
+    return parts[1] ? parts[1].toUpperCase() : parts[0].toUpperCase();
+  }
+
+  return "—";
+};
+
+const getOwnerLabel = (file) => {
+  const owner = file?.ownerName || file?.owner || file?.username || file?.userName || file?.createdBy;
+  if (owner) {
+    return owner;
+  }
+
+  const url = String(file?.url || "");
+  const match = url.match(/\/uploads\/users\/(\d+)\//);
+  if (match?.[1]) {
+    return `User ${match[1]}`;
+  }
+
+  return "—";
+};
+
+const extractDocumentCollection = (payload) => {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+
+  if (Array.isArray(payload?.content)) {
+    return payload.content;
+  }
+
+  if (Array.isArray(payload?.files)) {
+    return payload.files;
+  }
+
+  if (Array.isArray(payload?.data)) {
+    return payload.data;
+  }
+
+  return [];
+};
+
 const statusBadgeMap = {
   ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-200",
   LOCKED: "bg-rose-50 text-rose-700 border-rose-200",
@@ -123,6 +337,11 @@ const statusBadgeMap = {
 const roleBadgeMap = {
   ADMIN: "bg-blue-50 text-blue-700 border-blue-200",
   USER: "bg-slate-50 text-slate-700 border-slate-200",
+};
+
+const documentStatusBadgeMap = {
+  ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  DELETED: "bg-amber-50 text-amber-700 border-amber-200",
 };
 
 const sidebarItems = [
@@ -190,6 +409,34 @@ const AdminDashboard = () => {
   const [deletedError, setDeletedError] = useState("");
   const [deletedReloadKey, setDeletedReloadKey] = useState(0);
   const [detailUser, setDetailUser] = useState(null);
+  const [documents, setDocuments] = useState([]);
+  const [isDocLoading, setIsDocLoading] = useState(false);
+  const [docError, setDocError] = useState("");
+  const [docReloadKey, setDocReloadKey] = useState(0);
+  const [fileTypeFilter, setFileTypeFilter] = useState("all");
+  const [ownerFilter, setOwnerFilter] = useState("");
+  const [docStatusFilter, setDocStatusFilter] = useState("all");
+  const [docDetail, setDocDetail] = useState(null);
+  const [docPreviewState, setDocPreviewState] = useState({
+    open: false,
+    loading: false,
+    error: "",
+    file: null,
+    kind: PREVIEW_KIND.UNSUPPORTED,
+    objectUrl: "",
+    textContent: "",
+  });
+  const [docSummaryState, setDocSummaryState] = useState({
+    open: false,
+    file: null,
+    summary: "",
+  });
+  const [docDeleteDialog, setDocDeleteDialog] = useState({
+    open: false,
+    file: null,
+    mode: "soft",
+    submitting: false,
+  });
   const [roleDialog, setRoleDialog] = useState({
     open: false,
     user: null,
@@ -214,6 +461,7 @@ const AdminDashboard = () => {
   const [toast, setToast] = useState("");
   const userMenuRef = useRef(null);
   const userTriggerRef = useRef(null);
+  const previewUrlRef = useRef("");
 
   useEffect(() => {
     let isMounted = true;
@@ -311,6 +559,20 @@ const AdminDashboard = () => {
   }, [toast]);
 
   useEffect(() => {
+    if (previewUrlRef.current && previewUrlRef.current !== docPreviewState.objectUrl) {
+      URL.revokeObjectURL(previewUrlRef.current);
+    }
+
+    previewUrlRef.current = docPreviewState.objectUrl;
+
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+    };
+  }, [docPreviewState.objectUrl]);
+
+  useEffect(() => {
     if (activeMenu !== "users") {
       return undefined;
     }
@@ -401,6 +663,48 @@ const AdminDashboard = () => {
     };
   }, [activeMenu, deletedReloadKey, usersView]);
 
+  useEffect(() => {
+    if (activeMenu !== "documents") {
+      return undefined;
+    }
+
+    let isMounted = true;
+    const keyword = search.trim();
+    const uploader = ownerFilter.trim();
+    const shouldSearch = keyword.length > 0 || uploader.length > 0;
+
+    const debounceTimer = setTimeout(() => {
+      const loadDocuments = async () => {
+        setIsDocLoading(true);
+        setDocError("");
+
+        try {
+          const payload = shouldSearch
+            ? await searchAdminFiles({ fileName: keyword, uploader })
+            : await getAdminFiles();
+          const data = extractDocumentCollection(payload);
+          if (isMounted) {
+            setDocuments(data);
+          }
+        } catch (error) {
+          if (isMounted) {
+            setDocError(error.message || "Khong the tai danh sach tai lieu");
+          }
+        } finally {
+          if (isMounted) {
+            setIsDocLoading(false);
+          }
+        }
+      };
+
+      loadDocuments();
+    }, 350);
+    return () => {
+      isMounted = false;
+      clearTimeout(debounceTimer);
+    };
+  }, [activeMenu, docReloadKey, ownerFilter, search]);
+
   const handleLogout = async () => {
     if (isLoggingOut) {
       return;
@@ -458,7 +762,7 @@ const AdminDashboard = () => {
       return;
     }
 
-    if (item.key === "users" || item.key === "dashboard") {
+    if (item.key === "users" || item.key === "dashboard" || item.key === "documents") {
       return;
     }
 
@@ -483,6 +787,77 @@ const AdminDashboard = () => {
       thumbnailUrl: resolveThumbnailUrl(user?.thumbnailUrl || user?.avatar || ""),
     }))
   ), [deletedUsers]);
+
+  const normalizedDocuments = useMemo(() => (
+    documents.map((file) => {
+      const sizeValue = Number(file.size ?? file.fileSize ?? file.sizeBytes ?? null);
+      const name = file.name || file.fileName || "Tai lieu chua dat ten";
+      const mimeType = file.type || file.mimeType || file.fileType || "";
+      const createdAt = file.createdAt || file.uploadedAt || file.createdDate || file.created_at || null;
+      const deletedAt = file.deletedAt || file.removedAt || file.trashedAt || null;
+      const summary = file.summary || file.summaryText || file.summaryContent || "";
+      const summaryUrl = file.summaryUrl || file.summaryURL || file.summary_path || "";
+      const ownerName = file.ownerName || getOwnerLabel(file);
+      const ownerAvatar = resolveThumbnailUrl(
+        file.ownerAvatar
+          || file.owner?.avatar
+          || file.owner?.thumbnailUrl
+          || file.owner?.photoURL
+          || ""
+      );
+
+      return {
+        ...file,
+        name,
+        mimeType,
+        size: Number.isFinite(sizeValue) ? sizeValue : null,
+        createdAt,
+        deletedAt,
+        ownerLabel: ownerName,
+        ownerAvatar,
+        status: deletedAt ? "DELETED" : "ACTIVE",
+        typeLabel: getReadableFileType(mimeType, name),
+        summary,
+        summaryUrl,
+        resolvedUrl: resolveFileUrl(file.url || file.fileUrl || ""),
+      };
+    })
+  ), [documents]);
+
+  const filteredDocuments = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    const ownerKeyword = ownerFilter.trim().toLowerCase();
+
+    return normalizedDocuments.filter((file) => {
+      if (keyword && !String(file.name || "").toLowerCase().includes(keyword)) {
+        return false;
+      }
+
+      if (ownerKeyword && !String(file.ownerLabel || "").toLowerCase().includes(ownerKeyword)) {
+        return false;
+      }
+
+      if (fileTypeFilter !== "all" && file.typeLabel !== fileTypeFilter) {
+        return false;
+      }
+
+      if (docStatusFilter !== "all" && file.status !== docStatusFilter) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [docStatusFilter, fileTypeFilter, normalizedDocuments, ownerFilter, search]);
+
+  const fileTypeOptions = useMemo(() => {
+    const types = new Set(
+      normalizedDocuments
+        .map((file) => file.typeLabel)
+        .filter((value) => value && value !== "—")
+    );
+
+    return ["all", ...Array.from(types).sort()];
+  }, [normalizedDocuments]);
 
   const filteredUsers = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -650,6 +1025,182 @@ const AdminDashboard = () => {
     }
   };
 
+  const downloadBlob = (blob, fileName) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName || "download";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDocPreview = async (file) => {
+    if (!file?.id) {
+      setToast("Khong tim thay tai lieu");
+      return;
+    }
+
+    setDocPreviewState({
+      open: true,
+      loading: true,
+      error: "",
+      file,
+      kind: PREVIEW_KIND.UNSUPPORTED,
+      objectUrl: "",
+      textContent: "",
+    });
+
+    try {
+      const preview = await previewAdminFile(file.id);
+      const kind = detectPreviewKind({ name: file.name, mimeType: preview.contentType || file.mimeType });
+
+      if (kind === PREVIEW_KIND.TEXT) {
+        const text = await preview.blob.text();
+        setDocPreviewState((prev) => ({
+          ...prev,
+          loading: false,
+          kind,
+          textContent: text,
+        }));
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(preview.blob);
+      setDocPreviewState((prev) => ({
+        ...prev,
+        loading: false,
+        kind,
+        objectUrl,
+      }));
+    } catch (error) {
+      setDocPreviewState((prev) => ({
+        ...prev,
+        loading: false,
+        error: error.message || "Khong the xem truoc tai lieu",
+      }));
+    }
+  };
+
+  const handleDocPreviewClose = () => {
+    setDocPreviewState({
+      open: false,
+      loading: false,
+      error: "",
+      file: null,
+      kind: PREVIEW_KIND.UNSUPPORTED,
+      objectUrl: "",
+      textContent: "",
+    });
+  };
+
+  const handleDocSummaryOpen = (file) => {
+    setDocSummaryState({
+      open: true,
+      file,
+      summary: file.summary || "",
+    });
+  };
+
+  const handleDocSummaryClose = () => {
+    setDocSummaryState({ open: false, file: null, summary: "" });
+  };
+
+  const handleDocDownload = async (file) => {
+    if (!file?.id) {
+      setToast("Khong tim thay tai lieu");
+      return;
+    }
+
+    try {
+      const blob = await downloadAdminFile(file.id);
+      downloadBlob(blob, file.name || "tai-lieu");
+      setToast("Da tai tai lieu");
+    } catch (error) {
+      setToast(error.message || "Khong the tai tai lieu");
+    }
+  };
+
+  const handleDocDownloadSummary = async (file) => {
+    if (!file) {
+      setToast("Khong tim thay tai lieu");
+      return;
+    }
+
+    if (file.summaryUrl) {
+      window.open(resolveFileUrl(file.summaryUrl), "_blank", "noopener");
+      return;
+    }
+
+    if (file.summary) {
+      const blob = new Blob([file.summary], { type: "text/plain;charset=utf-8" });
+      downloadBlob(blob, `${file.name || "summary"}.txt`);
+      return;
+    }
+
+    setToast("Chua co ket qua tom tat");
+  };
+
+  const handleDocRestore = async (file) => {
+    if (!file?.id) {
+      setToast("Khong tim thay tai lieu");
+      return;
+    }
+
+    try {
+      await restoreAdminFile(file.id);
+      setDocuments((prev) => prev.map((item) => (
+        item.id === file.id ? { ...item, deletedAt: null } : item
+      )));
+      setToast("Da khoi phuc tai lieu");
+    } catch (error) {
+      setToast(error.message || "Khong the khoi phuc tai lieu");
+    }
+  };
+
+  const openDocDeleteDialog = (file, mode) => {
+    if (!file?.id) {
+      setToast("Khong tim thay tai lieu");
+      return;
+    }
+
+    setDocDeleteDialog({ open: true, file, mode, submitting: false });
+  };
+
+  const closeDocDeleteDialog = () => {
+    setDocDeleteDialog({ open: false, file: null, mode: "soft", submitting: false });
+  };
+
+  const handleDocDeleteConfirm = async () => {
+    if (!docDeleteDialog.file) {
+      return;
+    }
+
+    setDocDeleteDialog((prev) => ({ ...prev, submitting: true }));
+
+    try {
+      if (docDeleteDialog.mode === "hard") {
+        await hardDeleteAdminFile(docDeleteDialog.file.id);
+        setDocuments((prev) => prev.filter((item) => item.id !== docDeleteDialog.file.id));
+        setToast("Da xoa vinh vien tai lieu");
+      } else {
+        await softDeleteAdminFile(docDeleteDialog.file.id);
+        setDocuments((prev) => prev.map((item) => (
+          item.id === docDeleteDialog.file.id
+            ? { ...item, deletedAt: new Date().toISOString() }
+            : item
+        )));
+        setToast("Da xoa mem tai lieu");
+      }
+
+      closeDocDeleteDialog();
+    } catch (error) {
+      setToast(error.message || "Khong the xoa tai lieu");
+      setDocDeleteDialog((prev) => ({ ...prev, submitting: false }));
+    }
+  };
+
   const summaryHighlight = useMemo(
     () => [
       { label: "Ty le hoan thanh", value: "92%", detail: "Vuot muc quy" },
@@ -731,7 +1282,9 @@ const AdminDashboard = () => {
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder={activeMenu === "users"
                     ? "Tim theo username hoặc email..."
-                    : "Tim kiem nguoi dung, tai lieu..."}
+                    : activeMenu === "documents"
+                      ? "Tim theo ten tai lieu..."
+                      : "Tim kiem nguoi dung, tai lieu..."}
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
                 />
               </div>
@@ -1026,6 +1579,371 @@ const AdminDashboard = () => {
                 />
               )}
             </section>
+          ) : activeMenu === "documents" ? (
+            <section className="mt-6 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    Quan ly tai lieu
+                  </div>
+                  <div className="text-lg font-bold text-slate-900">Danh sach tai lieu</div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    value={ownerFilter}
+                    onChange={(event) => setOwnerFilter(event.target.value)}
+                    placeholder="Tim theo username"
+                    className="min-w-[200px] rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+                  />
+                  <select
+                    value={fileTypeFilter}
+                    onChange={(event) => setFileTypeFilter(event.target.value)}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+                  >
+                    <option value="all">Tat ca loai file</option>
+                    {fileTypeOptions.map((type) => (
+                      type === "all" ? null : (
+                        <option key={type} value={type}>{type}</option>
+                      )
+                    ))}
+                  </select>
+                  <select
+                    value={docStatusFilter}
+                    onChange={(event) => setDocStatusFilter(event.target.value)}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+                  >
+                    <option value="all">Tat ca trang thai</option>
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="DELETED">DELETED</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setDocReloadKey((prev) => prev + 1)}
+                    className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                  >
+                    Lam moi
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-sm text-slate-600">
+                    {filteredDocuments.length} tai lieu
+                  </div>
+                </div>
+
+                {isDocLoading && (
+                  <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm font-semibold text-slate-500">
+                    Dang tai danh sach tai lieu...
+                  </div>
+                )}
+
+                {!isDocLoading && docError && (
+                  <div className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-6 text-center text-sm font-semibold text-rose-700">
+                    {docError}
+                  </div>
+                )}
+
+                {!isDocLoading && !docError && filteredDocuments.length === 0 && (
+                  <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm font-semibold text-slate-500">
+                    Khong co tai lieu phu hop.
+                  </div>
+                )}
+
+                {!isDocLoading && !docError && filteredDocuments.length > 0 && (
+                  <>
+                    <div className="mt-4 hidden md:block overflow-hidden rounded-2xl border border-slate-200">
+                      <div className="overflow-auto">
+                        <table className="min-w-[1180px] w-full text-left">
+                          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                            <tr>
+                              <th className="px-4 py-3">File</th>
+                              <th className="px-4 py-3">Ten tai lieu</th>
+                              <th className="px-4 py-3">Chu so huu</th>
+                              <th className="px-4 py-3">Loai file</th>
+                              <th className="px-4 py-3">Kich thuoc</th>
+                              <th className="px-4 py-3">Ngay upload</th>
+                              <th className="px-4 py-3">Trang thai</th>
+                              <th className="px-4 py-3 text-right">Hanh dong</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredDocuments.map((file) => {
+                              const iconMeta = getFileIconMeta({ name: file.name, mimeType: file.mimeType });
+                              const FileIcon = iconMeta.Icon;
+
+                              return (
+                                <tr
+                                  key={file.id}
+                                  className="border-t border-slate-100 text-sm text-slate-700 transition hover:bg-blue-50/40"
+                                >
+                                  <td className="px-4 py-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white">
+                                      <FileIcon className={iconMeta.className} fontSize="small" />
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <div className="font-semibold text-slate-800">{file.name}</div>
+                                    <div className="text-xs text-slate-400">ID: {file.id}</div>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <div className="flex items-center gap-2">
+                                      {file.ownerAvatar ? (
+                                        <img
+                                          src={file.ownerAvatar}
+                                          alt={file.ownerLabel}
+                                          onError={(event) => {
+                                            event.currentTarget.src = "";
+                                          }}
+                                          className="h-8 w-8 rounded-full border border-slate-200 object-cover"
+                                        />
+                                      ) : (
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-600">
+                                          {getAvatarLabel(file.ownerLabel)}
+                                        </div>
+                                      )}
+                                      <span className="text-sm font-semibold text-slate-700">
+                                        {file.ownerLabel}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-3 text-slate-600">{file.typeLabel}</td>
+                                  <td className="px-4 py-3 text-slate-600">{formatFileSize(file.size)}</td>
+                                  <td className="px-4 py-3 text-slate-600">{formatDateTime(file.createdAt)}</td>
+                                  <td className="px-4 py-3">
+                                    <span
+                                      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                                        documentStatusBadgeMap[file.status] || documentStatusBadgeMap.ACTIVE
+                                      }`}
+                                    >
+                                      {file.status}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <div className="flex items-center justify-end gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => setDocDetail(file)}
+                                        className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
+                                        title="Xem chi tiet"
+                                        aria-label="Xem chi tiet"
+                                      >
+                                        <VisibilityOutlinedIcon fontSize="small" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDocPreview(file)}
+                                        className="rounded-lg border border-slate-200 p-2 text-blue-600 transition hover:bg-blue-50"
+                                        title="Xem noi dung"
+                                        aria-label="Xem noi dung"
+                                      >
+                                        <DescriptionOutlinedIcon fontSize="small" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDocSummaryOpen(file)}
+                                        className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
+                                        title="Xem tom tat"
+                                        aria-label="Xem tom tat"
+                                      >
+                                        <AutoAwesomeOutlinedIcon fontSize="small" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDocDownload(file)}
+                                        className="rounded-lg border border-slate-200 p-2 text-emerald-600 transition hover:bg-emerald-50"
+                                        title="Tai file goc"
+                                        aria-label="Tai file goc"
+                                      >
+                                        <DownloadOutlinedIcon fontSize="small" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDocDownloadSummary(file)}
+                                        className="rounded-lg border border-slate-200 p-2 text-violet-600 transition hover:bg-violet-50"
+                                        title="Tai summary"
+                                        aria-label="Tai summary"
+                                      >
+                                        <DownloadOutlinedIcon fontSize="small" />
+                                      </button>
+                                      {file.status === "DELETED" ? (
+                                        <>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDocRestore(file)}
+                                            className="rounded-lg border border-slate-200 p-2 text-emerald-600 transition hover:bg-emerald-50"
+                                            title="Khoi phuc"
+                                            aria-label="Khoi phuc"
+                                          >
+                                            <RestoreFromTrashOutlinedIcon fontSize="small" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => openDocDeleteDialog(file, "hard")}
+                                            className="rounded-lg border border-slate-200 p-2 text-rose-600 transition hover:bg-rose-50"
+                                            title="Xoa vinh vien"
+                                            aria-label="Xoa vinh vien"
+                                          >
+                                            <DeleteForeverOutlinedIcon fontSize="small" />
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          onClick={() => openDocDeleteDialog(file, "soft")}
+                                          className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
+                                          title="Xoa mem"
+                                          aria-label="Xoa mem"
+                                        >
+                                          <DeleteOutlineOutlinedIcon fontSize="small" />
+                                        </button>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 md:hidden">
+                      {filteredDocuments.map((file) => {
+                        const iconMeta = getFileIconMeta({ name: file.name, mimeType: file.mimeType });
+                        const FileIcon = iconMeta.Icon;
+
+                        return (
+                          <div key={file.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white">
+                                  <FileIcon className={iconMeta.className} fontSize="small" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-semibold text-slate-800">{file.name}</div>
+                                  <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
+                                    {file.ownerAvatar ? (
+                                      <img
+                                        src={file.ownerAvatar}
+                                        alt={file.ownerLabel}
+                                        onError={(event) => {
+                                          event.currentTarget.src = "";
+                                        }}
+                                        className="h-6 w-6 rounded-full border border-slate-200 object-cover"
+                                      />
+                                    ) : (
+                                      <div className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-[10px] font-semibold text-slate-600">
+                                        {getAvatarLabel(file.ownerLabel)}
+                                      </div>
+                                    )}
+                                    <span>{file.ownerLabel}</span>
+                                    <span>•</span>
+                                    <span>{file.typeLabel}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <span
+                                className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                                  documentStatusBadgeMap[file.status] || documentStatusBadgeMap.ACTIVE
+                                }`}
+                              >
+                                {file.status}
+                              </span>
+                            </div>
+
+                            <div className="mt-3 text-xs text-slate-500">
+                              {formatFileSize(file.size)} • {formatDateTime(file.createdAt)}
+                            </div>
+
+                            <div className="mt-4 flex flex-wrap items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setDocDetail(file)}
+                                className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
+                                title="Xem chi tiet"
+                                aria-label="Xem chi tiet"
+                              >
+                                <VisibilityOutlinedIcon fontSize="small" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDocPreview(file)}
+                                className="rounded-lg border border-slate-200 p-2 text-blue-600 transition hover:bg-blue-50"
+                                title="Xem noi dung"
+                                aria-label="Xem noi dung"
+                              >
+                                <DescriptionOutlinedIcon fontSize="small" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDocSummaryOpen(file)}
+                                className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
+                                title="Xem tom tat"
+                                aria-label="Xem tom tat"
+                              >
+                                <AutoAwesomeOutlinedIcon fontSize="small" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDocDownload(file)}
+                                className="rounded-lg border border-slate-200 p-2 text-emerald-600 transition hover:bg-emerald-50"
+                                title="Tai file goc"
+                                aria-label="Tai file goc"
+                              >
+                                <DownloadOutlinedIcon fontSize="small" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDocDownloadSummary(file)}
+                                className="rounded-lg border border-slate-200 p-2 text-violet-600 transition hover:bg-violet-50"
+                                title="Tai summary"
+                                aria-label="Tai summary"
+                              >
+                                <DownloadOutlinedIcon fontSize="small" />
+                              </button>
+                              {file.status === "DELETED" ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDocRestore(file)}
+                                    className="rounded-lg border border-slate-200 p-2 text-emerald-600 transition hover:bg-emerald-50"
+                                    title="Khoi phuc"
+                                    aria-label="Khoi phuc"
+                                  >
+                                    <RestoreFromTrashOutlinedIcon fontSize="small" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => openDocDeleteDialog(file, "hard")}
+                                    className="rounded-lg border border-slate-200 p-2 text-rose-600 transition hover:bg-rose-50"
+                                    title="Xoa vinh vien"
+                                    aria-label="Xoa vinh vien"
+                                  >
+                                    <DeleteForeverOutlinedIcon fontSize="small" />
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => openDocDeleteDialog(file, "soft")}
+                                  className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
+                                  title="Xoa mem"
+                                  aria-label="Xoa mem"
+                                >
+                                  <DeleteOutlineOutlinedIcon fontSize="small" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+            </section>
           ) : (
             <>
               <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -1171,6 +2089,212 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {docDetail && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3">
+          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-lg font-semibold text-slate-800">Chi tiet tai lieu</div>
+                <div className="mt-1 text-sm text-slate-500">Thong tin file</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDocDetail(null)}
+                className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50"
+                aria-label="Dong"
+              >
+                <CloseOutlinedIcon fontSize="small" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3 text-sm text-slate-700">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                <div className="text-xs text-slate-500">Ten tai lieu</div>
+                <div className="font-semibold text-slate-800">{docDetail.name}</div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <div className="text-xs text-slate-500">Chu so huu</div>
+                  <div className="font-semibold text-slate-700">{docDetail.ownerLabel}</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <div className="text-xs text-slate-500">Loai file</div>
+                  <div className="font-semibold text-slate-700">{docDetail.typeLabel}</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <div className="text-xs text-slate-500">Kich thuoc</div>
+                  <div className="font-semibold text-slate-700">{formatFileSize(docDetail.size)}</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <div className="text-xs text-slate-500">Ngay upload</div>
+                  <div className="font-semibold text-slate-700">{formatDateTime(docDetail.createdAt)}</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 sm:col-span-2">
+                  <div className="text-xs text-slate-500">Trang thai</div>
+                  <div className="font-semibold text-slate-700">{docDetail.status}</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 sm:col-span-2">
+                  <div className="text-xs text-slate-500">Duong dan</div>
+                  <div className="break-all font-semibold text-slate-700">{docDetail.resolvedUrl || "—"}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {docPreviewState.open && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 p-3">
+          <div className="w-full max-w-4xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-lg font-semibold text-slate-800">Xem noi dung</div>
+                <div className="mt-1 text-sm text-slate-500">{docPreviewState.file?.name}</div>
+              </div>
+              <button
+                type="button"
+                onClick={handleDocPreviewClose}
+                className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50"
+                aria-label="Dong"
+              >
+                <CloseOutlinedIcon fontSize="small" />
+              </button>
+            </div>
+
+            <div className="mt-4">
+              {docPreviewState.loading && (
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm font-semibold text-slate-500">
+                  Dang tai noi dung...
+                </div>
+              )}
+
+              {!docPreviewState.loading && docPreviewState.error && (
+                <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-6 text-center text-sm font-semibold text-rose-700">
+                  {docPreviewState.error}
+                </div>
+              )}
+
+              {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.TEXT && (
+                <pre className="max-h-[65vh] overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700">
+                  {docPreviewState.textContent || "Khong co noi dung"}
+                </pre>
+              )}
+
+              {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.IMAGE && (
+                <div className="flex justify-center">
+                  <img
+                    src={docPreviewState.objectUrl}
+                    alt={docPreviewState.file?.name || "preview"}
+                    className="max-h-[65vh] rounded-2xl border border-slate-200 object-contain"
+                  />
+                </div>
+              )}
+
+              {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.PDF && (
+                <iframe
+                  title="preview"
+                  src={docPreviewState.objectUrl}
+                  className="h-[65vh] w-full rounded-2xl border border-slate-200"
+                />
+              )}
+
+              {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.OFFICE && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-600">
+                  File office khong the preview truc tiep. Hay tai ve de xem.
+                </div>
+              )}
+
+              {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.UNSUPPORTED && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-600">
+                  Dinh dang khong ho tro preview.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {docSummaryState.open && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 p-3">
+          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-lg font-semibold text-slate-800">Ket qua tom tat</div>
+                <div className="mt-1 text-sm text-slate-500">{docSummaryState.file?.name}</div>
+              </div>
+              <button
+                type="button"
+                onClick={handleDocSummaryClose}
+                className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50"
+                aria-label="Dong"
+              >
+                <CloseOutlinedIcon fontSize="small" />
+              </button>
+            </div>
+
+            <div className="mt-4 max-h-[60vh] overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+              {docSummaryState.summary || "Chua co ket qua tom tat."}
+            </div>
+
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => handleDocDownloadSummary(docSummaryState.file)}
+                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                Tai summary
+              </button>
+              <button
+                type="button"
+                onClick={handleDocSummaryClose}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                Dong
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {docDeleteDialog.open && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 p-3">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <div className="text-lg font-semibold text-slate-800">
+              {docDeleteDialog.mode === "hard" ? "Xoa vinh vien" : "Xoa mem tai lieu"}
+            </div>
+            <div className="mt-2 text-sm text-slate-600">
+              {docDeleteDialog.mode === "hard"
+                ? "Hanh dong nay se xoa vinh vien tai lieu va khong the khoi phuc."
+                : "Ban co chac muon xoa mem tai lieu nay khong?"}
+            </div>
+
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeDocDeleteDialog}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                Huy
+              </button>
+              <button
+                type="button"
+                onClick={handleDocDeleteConfirm}
+                disabled={docDeleteDialog.submitting}
+                className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-60 ${
+                  docDeleteDialog.mode === "hard" ? "bg-rose-600 hover:bg-rose-700" : "bg-amber-600 hover:bg-amber-700"
+                }`}
+              >
+                {docDeleteDialog.submitting
+                  ? "Dang xu ly..."
+                  : docDeleteDialog.mode === "hard"
+                    ? "Xoa vinh vien"
+                    : "Xoa mem"}
+              </button>
             </div>
           </div>
         </div>

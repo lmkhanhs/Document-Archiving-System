@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.datn.dms.entities.FileEntity;
@@ -21,4 +23,12 @@ public interface FileRepository extends JpaRepository<FileEntity, Long> {
 	List<FileEntity> findAllByOwner_IdAndIsDeletedTrueOrderByCreatedAtDesc(Long ownerId);
 
 	Optional<FileEntity> findByIdAndOwner_IdAndIsDeletedTrue(Long id, Long ownerId);
+
+	List<FileEntity> findAllByIsDeletedFalseOrderByCreatedAtDesc();
+
+	@Query("SELECT f FROM FileEntity f WHERE f.isDeleted = false " +
+		   "AND (:fileName IS NULL OR LOWER(f.name) LIKE LOWER(CONCAT('%', :fileName, '%'))) " +
+		   "AND (:uploader IS NULL OR LOWER(f.owner.username) LIKE LOWER(CONCAT('%', :uploader, '%'))) " +
+		   "ORDER BY f.createdAt DESC")
+	List<FileEntity> searchFilesAdmin(@Param("fileName") String fileName, @Param("uploader") String uploader);
 }

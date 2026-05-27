@@ -410,6 +410,23 @@ public class FileService {
                 .toList();
     }
 
+    public List<FileResponse> getFileAdmin() {
+        return fileRepository.findAllByIsDeletedFalseOrderByCreatedAtDesc()
+                .stream()
+                .map(fileMapper::toFileResponse)
+                .toList();
+    }
+
+    public List<FileResponse> searchFilesAdmin(String fileName, String uploader) {
+        String nameQuery = (fileName != null && !fileName.isBlank()) ? fileName.trim() : null;
+        String uploaderQuery = (uploader != null && !uploader.isBlank()) ? uploader.trim() : null;
+        
+        return fileRepository.searchFilesAdmin(nameQuery, uploaderQuery)
+                .stream()
+                .map(fileMapper::toFileResponse)
+                .toList();
+    }
+
     private UserEntity getCurrentUser() {
         String username = authenticationUtills.getUserName();
         return userRepository.findByUsername(username)

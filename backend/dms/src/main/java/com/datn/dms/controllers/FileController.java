@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.datn.dms.dtos.ApiResponse;
 import com.datn.dms.dtos.files.request.CreateFileRequest;
@@ -141,4 +142,25 @@ public class FileController {
                 .build();
     }
     
+    @GetMapping("/admin")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<List<FileResponse>> getFileAdmin() {
+        return ApiResponse.<List<FileResponse>>builder()
+                .code(HttpStatus.OK.value())
+                .message("Get all files successfully")
+                .data(fileService.getFileAdmin())
+                .build();
+    }
+
+    @GetMapping("/admin/search")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<List<FileResponse>> searchFilesAdmin(
+            @RequestParam(required = false) String fileName,
+            @RequestParam(required = false) String uploader) {
+        return ApiResponse.<List<FileResponse>>builder()
+                .code(HttpStatus.OK.value())
+                .message("Search files successfully")
+                .data(fileService.searchFilesAdmin(fileName, uploader))
+                .build();
+    }
 }

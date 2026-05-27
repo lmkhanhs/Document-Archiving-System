@@ -20,4 +20,6 @@ public class FileResponse {
     String colorCode;
     LocalDateTime createdAt;
     LocalDateTime deletedAt;
+    String ownerName;
+    String ownerAvatar;
 }
