@@ -31,7 +31,7 @@ import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import RemoveOutlinedIcon from "@mui/icons-material/RemoveOutlined";
 import CropSquareOutlinedIcon from "@mui/icons-material/CropSquareOutlined";
 import FilterNoneOutlinedIcon from "@mui/icons-material/FilterNoneOutlined";
-import { API_ORIGIN } from "../../services/api";
+import { AI_URL, API_ORIGIN } from "../../services/api";
 import { getInfoUser, getRoles, logout } from "../../services/authService";
 import {
   filterUsers,
@@ -438,7 +438,10 @@ const AdminDashboard = () => {
   const [docSummaryState, setDocSummaryState] = useState({
     open: false,
     file: null,
-    summary: "",
+    status: "idle",
+    errorMessage: "",
+    summaries: [],
+    progress: { current: 0, total: 0 },
   });
   const [docDeleteDialog, setDocDeleteDialog] = useState({
     open: false,
@@ -476,6 +479,10 @@ const AdminDashboard = () => {
   const userMenuRef = useRef(null);
   const userTriggerRef = useRef(null);
   const previewUrlRef = useRef("");
+  const docSummarySocketRef = useRef(null);
+  const docSummaryStatusRef = useRef("idle");
+  const docSummaryReceivedDoneRef = useRef(false);
+  const docSummaryEndRef = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -571,6 +578,18 @@ const AdminDashboard = () => {
     const timer = setTimeout(() => setToast(""), 2400);
     return () => clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    docSummaryStatusRef.current = docSummaryState.status;
+  }, [docSummaryState.status]);
+
+  useEffect(() => {
+    if (!docSummaryState.open) {
+      return;
+    }
+
+    docSummaryEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [docSummaryState.open, docSummaryState.summaries]);
 
   useEffect(() => {
     if (previewUrlRef.current && previewUrlRef.current !== docPreviewState.objectUrl) {
@@ -1139,15 +1158,152 @@ const AdminDashboard = () => {
   };
 
   const handleDocSummaryOpen = (file) => {
+    if (!file?.id) {
+      setToast("Khong tim thay tai lieu");
+      return;
+    }
+
+    if (docSummarySocketRef.current) {
+      docSummarySocketRef.current.close();
+      docSummarySocketRef.current = null;
+    }
+
+    docSummaryReceivedDoneRef.current = false;
+
     setDocSummaryState({
       open: true,
       file,
-      summary: file.summary || "",
+      status: "connecting",
+      errorMessage: "",
+      summaries: [],
+      progress: { current: 0, total: 0 },
     });
+
+    downloadAdminFile(file.id)
+      .then((blob) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("Khong the doc file"));
+        reader.readAsDataURL(blob);
+      }))
+      .then((base64Content) => {
+        const wsUrl = import.meta.env.VITE_SUMMARY_WS_URL || `${AI_URL}/ws/summarize`;
+        const ws = new WebSocket(wsUrl);
+        docSummarySocketRef.current = ws;
+
+        ws.onopen = () => {
+          setDocSummaryState((prev) => ({
+            ...prev,
+            status: "processing",
+          }));
+          ws.send(JSON.stringify({
+            filename: file.name || "file",
+            content: base64Content,
+          }));
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+
+            if (data.type === "start") {
+              setDocSummaryState((prev) => ({
+                ...prev,
+                progress: { current: 0, total: data.total_chunks || 0 },
+              }));
+            } else if (data.type === "progress") {
+              setDocSummaryState((prev) => ({
+                ...prev,
+                progress: {
+                  current: data.chunk_index || prev.progress.current,
+                  total: data.total_chunks || prev.progress.total,
+                },
+              }));
+            } else if (data.type === "chunk") {
+              if (data.summary) {
+                setDocSummaryState((prev) => ({
+                  ...prev,
+                  summaries: [...prev.summaries, data.summary],
+                }));
+              }
+            } else if (data.type === "done") {
+              docSummaryReceivedDoneRef.current = true;
+              setDocSummaryState((prev) => ({
+                ...prev,
+                status: "done",
+              }));
+              ws.close();
+            } else if (data.type === "error") {
+              setDocSummaryState((prev) => ({
+                ...prev,
+                status: "error",
+                errorMessage: data.message || "Da xay ra loi",
+              }));
+              ws.close();
+            }
+          } catch {
+            setDocSummaryState((prev) => ({
+              ...prev,
+              status: "error",
+              errorMessage: "Khong the doc du lieu tu server",
+            }));
+          }
+        };
+
+        ws.onerror = () => {
+          setDocSummaryState((prev) => ({
+            ...prev,
+            status: "error",
+            errorMessage: "Loi ket noi WebSocket",
+          }));
+        };
+
+        ws.onclose = (event) => {
+          if (docSummaryStatusRef.current === "done" || docSummaryStatusRef.current === "error") {
+            return;
+          }
+
+          if (docSummaryStatusRef.current !== "idle" && !docSummaryReceivedDoneRef.current) {
+            setDocSummaryState((prev) => ({
+              ...prev,
+              status: "error",
+              errorMessage: "Ket noi bi dong truoc khi hoan tat",
+            }));
+            return;
+          }
+
+          if (!event.wasClean && docSummaryStatusRef.current !== "idle") {
+            setDocSummaryState((prev) => ({
+              ...prev,
+              status: "error",
+              errorMessage: "Mat ket noi khi dang xu ly",
+            }));
+          }
+        };
+      })
+      .catch((error) => {
+        setDocSummaryState((prev) => ({
+          ...prev,
+          status: "error",
+          errorMessage: error.message || "Khong the tai file de tom tat",
+        }));
+      });
   };
 
   const handleDocSummaryClose = () => {
-    setDocSummaryState({ open: false, file: null, summary: "" });
+    if (docSummarySocketRef.current) {
+      docSummarySocketRef.current.close();
+      docSummarySocketRef.current = null;
+    }
+
+    setDocSummaryState({
+      open: false,
+      file: null,
+      status: "idle",
+      errorMessage: "",
+      summaries: [],
+      progress: { current: 0, total: 0 },
+    });
   };
 
   const handleDocDownload = async (file) => {
@@ -1183,6 +1339,18 @@ const AdminDashboard = () => {
     }
 
     setToast("Chua co ket qua tom tat");
+  };
+
+  const handleDocDownloadCurrentSummary = () => {
+    if (docSummaryState.summaries.length === 0) {
+      setToast("Chua co ket qua tom tat");
+      return;
+    }
+
+    const content = docSummaryState.summaries.join("\n\n");
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const fileName = docSummaryState.file?.name || "summary";
+    downloadBlob(blob, `${fileName}.txt`);
   };
 
   const handleDocRestore = async (file) => {
@@ -1869,15 +2037,6 @@ const AdminDashboard = () => {
                                           </button>
                                           <button
                                             type="button"
-                                            onClick={() => handleDocDownloadSummary(file)}
-                                            className="rounded-lg border border-slate-200 p-2 text-violet-600 transition hover:bg-violet-50"
-                                            title="Tai summary"
-                                            aria-label="Tai summary"
-                                          >
-                                            <DownloadOutlinedIcon fontSize="small" />
-                                          </button>
-                                          <button
-                                            type="button"
                                             onClick={() => openDocDeleteDialog(file, "soft")}
                                             className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
                                             title="Xoa mem"
@@ -2005,15 +2164,6 @@ const AdminDashboard = () => {
                                     className="rounded-lg border border-slate-200 p-2 text-emerald-600 transition hover:bg-emerald-50"
                                     title="Tai file goc"
                                     aria-label="Tai file goc"
-                                  >
-                                    <DownloadOutlinedIcon fontSize="small" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDocDownloadSummary(file)}
-                                    className="rounded-lg border border-slate-200 p-2 text-violet-600 transition hover:bg-violet-50"
-                                    title="Tai summary"
-                                    aria-label="Tai summary"
                                   >
                                     <DownloadOutlinedIcon fontSize="small" />
                                   </button>
@@ -2406,14 +2556,64 @@ const AdminDashboard = () => {
               </button>
             </div>
 
-            <div className="mt-4 max-h-[60vh] overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-              {docSummaryState.summary || "Chua co ket qua tom tat."}
+            <div className="mt-4 space-y-3">
+              {(docSummaryState.status === "connecting" || docSummaryState.status === "processing") && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-600">
+                  {docSummaryState.status === "connecting" ? "Dang ket noi AI..." : "Dang tom tat..."}
+                </div>
+              )}
+
+              {docSummaryState.status === "processing" && docSummaryState.progress.total > 0 && (
+                <div>
+                  <div className="mb-2 flex items-center justify-between text-xs font-semibold text-slate-600">
+                    <span>Tien trinh xu ly</span>
+                    <span className="text-blue-600">
+                      {Math.round((docSummaryState.progress.current / docSummaryState.progress.total) * 100)}%
+                    </span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 to-sky-500 transition-all duration-300 ease-out"
+                      style={{ width: `${(docSummaryState.progress.current / docSummaryState.progress.total) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {docSummaryState.status === "error" && (
+                <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-4 text-sm font-semibold text-rose-700">
+                  {docSummaryState.errorMessage}
+                </div>
+              )}
+
+              <div className="max-h-[60vh] overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                {docSummaryState.summaries.length > 0 ? (
+                  docSummaryState.summaries.map((text, idx) => (
+                    <div
+                      key={`${text.slice(0, 12)}-${idx}`}
+                      className="relative mb-3 pl-5 leading-relaxed text-slate-700 before:absolute before:left-0 before:top-2 before:h-2 before:w-2 before:rounded-full before:bg-blue-500"
+                    >
+                      {text}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-slate-500">Chua co ket qua tom tat.</div>
+                )}
+                <div ref={docSummaryEndRef} />
+              </div>
+
+              {docSummaryState.status === "done" && (
+                <div className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-50 py-3 text-emerald-600">
+                  <AutoAwesomeOutlinedIcon fontSize="small" />
+                  <span className="text-sm font-bold">Da tom tat hoan tat!</span>
+                </div>
+              )}
             </div>
 
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
                 type="button"
-                onClick={() => handleDocDownloadSummary(docSummaryState.file)}
+                onClick={handleDocDownloadCurrentSummary}
                 className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
               >
                 Tai summary
