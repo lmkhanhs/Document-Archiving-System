@@ -26,6 +26,7 @@ public class GenderEntity extends BaseEntity {
     Long id;
 
     String name;
+    String thumbnailUrl;
 
     @Builder.Default
     @OneToMany(mappedBy = "gender")

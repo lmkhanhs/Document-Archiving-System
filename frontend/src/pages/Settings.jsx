@@ -526,17 +526,32 @@ const Settings = () => {
                         <PersonOutlinedIcon style={{ fontSize: 16 }} />
                         Giới tính
                       </label>
-                      <select
-                        {...register("genderId")}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
-                      >
-                        <option value="">-- Chọn giới tính --</option>
-                        {genders.map((g) => (
-                          <option key={g.id} value={g.id}>
-                            {g.name}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        {user?.genderId && (
+                          <img
+                            src={genders.find((g) => g.id == user?.genderId)?.thumbnailUrl || ""}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 h-6 w-6 object-contain"
+                            alt=""
+                          />
+                        )}
+                        <select
+                          {...register("genderId")}
+                          onChange={(e) => {
+                            register("genderId").onChange(e);
+                            setUser((prev) => ({ ...prev, genderId: e.target.value }));
+                          }}
+                          className={`w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100 ${
+                            user?.genderId ? "pl-11" : ""
+                          }`}
+                        >
+                          <option value="">-- Chọn giới tính --</option>
+                          {genders.map((g) => (
+                            <option key={g.id} value={g.id}>
+                              {g.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
 
                     {/* Quốc gia */}
@@ -545,17 +560,32 @@ const Settings = () => {
                         <PublicOutlinedIcon style={{ fontSize: 16 }} />
                         Quốc gia
                       </label>
-                      <select
-                        {...register("countryId")}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
-                      >
-                        <option value="">-- Chọn quốc gia --</option>
-                        {countries.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        {user?.countryId && (
+                          <img
+                            src={resolveThumbnailUrl(countries.find((c) => c.id == user?.countryId)?.thumbnailUrl)}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-7 object-cover shadow-sm rounded-sm"
+                            alt=""
+                          />
+                        )}
+                        <select
+                          {...register("countryId")}
+                          onChange={(e) => {
+                            register("countryId").onChange(e);
+                            setUser((prev) => ({ ...prev, countryId: e.target.value }));
+                          }}
+                          className={`w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100 ${
+                            user?.countryId ? "pl-12" : ""
+                          }`}
+                        >
+                          <option value="">-- Chọn quốc gia --</option>
+                          {countries.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </div>
 

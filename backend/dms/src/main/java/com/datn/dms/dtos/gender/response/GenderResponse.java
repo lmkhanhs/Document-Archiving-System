@@ -11,4 +11,5 @@ import lombok.experimental.FieldDefaults;
 public class GenderResponse {
     Long id;
     String name;
+    String thumbnailUrl;
 }

@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -94,11 +95,14 @@ public class AppInitConfig {
             }
 
             for (GenderEnums genderEnum : GenderEnums.values()) {
-                if (genderRepository.findByName(genderEnum.getName()).isEmpty()) {
-                    GenderEntity gender = new GenderEntity();
-                    gender.setName(genderEnum.getName());
-                    genderRepository.save(gender);
-                }
+                Optional<GenderEntity> existingGenderOpt = genderRepository.findByName(genderEnum.getName());
+                GenderEntity gender = existingGenderOpt.orElseGet(() -> {
+                    GenderEntity g = new GenderEntity();
+                    g.setName(genderEnum.getName());
+                    return g;
+                });
+                gender.setThumbnailUrl(genderEnum.getThumbnailUrl());
+                genderRepository.save(gender);
             }
 
             // Init countries with flag images

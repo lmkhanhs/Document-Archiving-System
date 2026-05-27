@@ -35,6 +35,8 @@ public class SecurityConfig {
     @PostConstruct
     void init() {
         PUBLIC_URLS = new String[] {
+                PREFIX_API + "/genders",
+                PREFIX_API + "/countries",
                 PREFIX_API + "/colors",
                 PREFIX_API + "/colors/{id}",
         };
