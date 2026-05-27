@@ -27,6 +27,7 @@ import FilterNoneOutlinedIcon from "@mui/icons-material/FilterNoneOutlined";
 import {
   createMyFolder,
   deleteFolder,
+  downloadDocument,
   getFilesByFolderId,
   getFoldersByParentId,
   previewDocument,
@@ -36,6 +37,7 @@ import {
   uploadDocument,
 } from "../../services/documentService";
 import { deleteDocument, renameDocument } from "../../services/fileActionService";
+import { AI_URL } from "../../services/api";
 
 const sidebarItems = [
   { key: "home", label: "Trang chủ", icon: HomeOutlinedIcon },
@@ -322,6 +324,7 @@ const MyDocuments = () => {
     open: false,
     loading: false,
     error: "",
+    fileId: null,
     name: "",
     kind: PREVIEW_KIND.UNSUPPORTED,
     objectUrl: "",
@@ -332,6 +335,22 @@ const MyDocuments = () => {
     minimized: false,
     maximized: false,
   });
+  const [summaryState, setSummaryState] = useState({
+    open: false,
+    status: "idle",
+    errorMessage: "",
+    summaries: [],
+    progress: { current: 0, total: 0 },
+    mode: "medium",
+  });
+  const [summaryPanelState, setSummaryPanelState] = useState({
+    maximized: false,
+  });
+  const summarySocketRef = useRef(null);
+  const summaryStatusRef = useRef("idle");
+  const summaryReceivedDoneRef = useRef(false);
+  const summaryEndRef = useRef(null);
+  const summaryCacheRef = useRef(new Map());
   const [menuState, setMenuState] = useState(null);
   const [quickMenuState, setQuickMenuState] = useState({
     open: false,
@@ -408,6 +427,18 @@ const MyDocuments = () => {
     const timer = setTimeout(() => setToast(""), 2500);
     return () => clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    summaryStatusRef.current = summaryState.status;
+  }, [summaryState.status]);
+
+  useEffect(() => {
+    if (!summaryState.open) {
+      return;
+    }
+
+    summaryEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [summaryState.open, summaryState.summaries]);
 
   useEffect(() => {
     if (!menuState) {
@@ -639,6 +670,18 @@ const MyDocuments = () => {
       minimized: false,
       maximized: false,
     });
+    if (summarySocketRef.current) {
+      summarySocketRef.current.close();
+      summarySocketRef.current = null;
+    }
+    setSummaryState({
+      open: false,
+      status: "idle",
+      errorMessage: "",
+      summaries: [],
+      progress: { current: 0, total: 0 },
+      mode: "medium",
+    });
 
     setPreviewState((prev) => {
       if (prev.objectUrl) {
@@ -649,6 +692,7 @@ const MyDocuments = () => {
         open: false,
         loading: false,
         error: "",
+        fileId: null,
         name: "",
         kind: PREVIEW_KIND.UNSUPPORTED,
         objectUrl: "",
@@ -667,6 +711,7 @@ const MyDocuments = () => {
       open: true,
       loading: true,
       error: "",
+      fileId: file.id,
       name: file.name || "File",
       kind: PREVIEW_KIND.UNSUPPORTED,
       objectUrl: "",
@@ -721,6 +766,211 @@ const MyDocuments = () => {
         error: previewError.message || "Không thể xem trước file",
       }));
     }
+  };
+
+  const startSummary = async ({ force = false } = {}) => {
+    if (!previewState.fileId) {
+      setToast("Khong the tom tat file nay");
+      return;
+    }
+
+    if (!force) {
+      const cached = summaryCacheRef.current.get(previewState.fileId);
+      if (cached) {
+        setSummaryState((prev) => ({
+          ...prev,
+          open: true,
+          status: "done",
+          errorMessage: "",
+          summaries: cached.summaries,
+          progress: cached.progress || { current: cached.summaries.length, total: cached.summaries.length },
+        }));
+        return;
+      }
+    }
+
+    if (summarySocketRef.current) {
+      summarySocketRef.current.close();
+      summarySocketRef.current = null;
+    }
+
+    summaryReceivedDoneRef.current = false;
+    setSummaryState((prev) => ({
+      ...prev,
+      open: true,
+      status: "connecting",
+      errorMessage: "",
+      summaries: [],
+      progress: { current: 0, total: 0 },
+    }));
+
+    try {
+      const blob = await downloadDocument(previewState.fileId);
+      const base64Content = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("Khong the doc file"));
+        reader.readAsDataURL(blob);
+      });
+
+      const wsUrl = import.meta.env.VITE_SUMMARY_WS_URL || `${AI_URL}/ws/summarize`;
+      const ws = new WebSocket(wsUrl);
+      summarySocketRef.current = ws;
+
+      ws.onopen = () => {
+        setSummaryState((prev) => ({
+          ...prev,
+          status: "processing",
+        }));
+        ws.send(JSON.stringify({
+          filename: previewState.name || "file",
+          content: base64Content,
+        }));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+
+          if (data.type === "start") {
+            setSummaryState((prev) => ({
+              ...prev,
+              progress: { current: 0, total: data.total_chunks || 0 },
+            }));
+          } else if (data.type === "progress") {
+            setSummaryState((prev) => ({
+              ...prev,
+              progress: {
+                current: data.chunk_index || prev.progress.current,
+                total: data.total_chunks || prev.progress.total,
+              },
+            }));
+          } else if (data.type === "chunk") {
+            if (data.summary) {
+              setSummaryState((prev) => ({
+                ...prev,
+                summaries: [...prev.summaries, data.summary],
+              }));
+            }
+          } else if (data.type === "done") {
+            summaryReceivedDoneRef.current = true;
+            setSummaryState((prev) => {
+              const nextState = { ...prev, status: "done" };
+              summaryCacheRef.current.set(previewState.fileId, {
+                summaries: nextState.summaries,
+                progress: nextState.progress,
+              });
+              return nextState;
+            });
+            ws.close();
+          } else if (data.type === "error") {
+            setSummaryState((prev) => ({
+              ...prev,
+              status: "error",
+              errorMessage: data.message || "Da xay ra loi",
+            }));
+            ws.close();
+          }
+        } catch {
+          setSummaryState((prev) => ({
+            ...prev,
+            status: "error",
+            errorMessage: "Khong the doc du lieu tu server",
+          }));
+        }
+      };
+
+      ws.onerror = () => {
+        setSummaryState((prev) => ({
+          ...prev,
+          status: "error",
+          errorMessage: "Loi ket noi WebSocket",
+        }));
+      };
+
+      ws.onclose = (event) => {
+        if (summaryStatusRef.current === "done" || summaryStatusRef.current === "error") {
+          return;
+        }
+
+        if (summaryStatusRef.current !== "idle" && !summaryReceivedDoneRef.current) {
+          setSummaryState((prev) => ({
+            ...prev,
+            status: "error",
+            errorMessage: "Ket noi bi dong truoc khi hoan tat",
+          }));
+          return;
+        }
+
+        if (!event.wasClean && summaryStatusRef.current !== "idle") {
+          setSummaryState((prev) => ({
+            ...prev,
+            status: "error",
+            errorMessage: "Mat ket noi khi dang xu ly",
+          }));
+        }
+      };
+    } catch (error) {
+      setSummaryState((prev) => ({
+        ...prev,
+        status: "error",
+        errorMessage: error.message || "Khong the tai file de tom tat",
+      }));
+    }
+  };
+
+  const openSummaryPanel = () => {
+    setSummaryState((prev) => ({ ...prev, open: true }));
+    setSummaryPanelState((prev) => ({ ...prev, maximized: false }));
+    if (summaryState.status === "processing" || summaryState.status === "connecting") {
+      return;
+    }
+    startSummary();
+  };
+
+  const closeSummaryPanel = () => {
+    setSummaryState((prev) => ({ ...prev, open: false }));
+  };
+
+  const handleSummaryMinimize = () => {
+    setSummaryState((prev) => ({ ...prev, open: false }));
+  };
+
+  const handleSummaryToggleMaximize = () => {
+    setSummaryPanelState((prev) => ({ ...prev, maximized: !prev.maximized }));
+  };
+
+  const handleSummaryCopy = async () => {
+    if (!summaryState.summaries.length) {
+      setToast("Chua co ket qua tom tat");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(summaryState.summaries.join("\n\n"));
+      setToast("Da sao chep tom tat");
+    } catch {
+      setToast("Khong the sao chep tom tat");
+    }
+  };
+
+  const handleSummaryDownload = () => {
+    if (!summaryState.summaries.length) {
+      setToast("Chua co ket qua tom tat");
+      return;
+    }
+
+    const content = summaryState.summaries.join("\n\n");
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const fileName = previewState.name || "summary";
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${fileName}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   };
 
   const openContextMenu = (event, item) => {
@@ -1331,6 +1581,15 @@ const MyDocuments = () => {
               >
                 <button
                   type="button"
+                  onClick={openSummaryPanel}
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-blue-600 transition hover:bg-blue-50"
+                  title="Tom tat AI"
+                >
+                  <AutoAwesomeOutlinedIcon fontSize="small" />
+                  <span className="hidden sm:inline">Tom tat AI</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => setPreviewWindowState((prev) => ({ ...prev, minimized: true, hovered: false }))}
                   className="rounded-md p-1 text-slate-600 transition hover:bg-slate-100"
                   aria-label="Minimize preview"
@@ -1373,52 +1632,186 @@ const MyDocuments = () => {
                     previewWindowState.hovered ? "opacity-100" : "opacity-0"
                   }`}
                 />
+                <div className="relative flex h-full gap-3">
+                  <div
+                    className={`min-w-0 flex-1 rounded-xl transition-all duration-300 ${
+                      summaryState.open
+                        ? summaryPanelState.maximized
+                          ? "lg:w-[58%]"
+                          : "lg:w-[68%]"
+                        : "w-full"
+                    }`}
+                  >
+                    {previewState.loading && (
+                      <div className="grid h-full place-items-center rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-600">
+                        Đang tải nội dung file...
+                      </div>
+                    )}
 
-              {previewState.loading && (
-                <div className="grid h-full place-items-center rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-600">
-                  Đang tải nội dung file...
+                    {!previewState.loading && previewState.error && (
+                      <div className="grid h-full place-items-center rounded-xl border border-amber-100 bg-amber-50 text-sm font-semibold text-amber-800">
+                        {previewState.error}
+                      </div>
+                    )}
+
+                    {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.PDF && previewState.objectUrl && (
+                      <iframe
+                        title="PDF Preview"
+                        src={previewState.objectUrl}
+                        className="h-full w-full rounded-xl border border-slate-200 bg-white"
+                      />
+                    )}
+
+                    {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.IMAGE && previewState.objectUrl && (
+                      <div className="grid h-full place-items-center rounded-xl border border-slate-200 bg-white p-3">
+                        <img
+                          src={previewState.objectUrl}
+                          alt={previewState.name}
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                    )}
+
+                    {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.TEXT && (
+                      <pre className="h-full overflow-auto rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-700">
+                        {previewState.textContent}
+                      </pre>
+                    )}
+
+                    {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.OFFICE && previewState.objectUrl && (
+                      <div className="h-full rounded-xl border border-slate-200 bg-white p-2">
+                        <iframe
+                          title="Office Preview"
+                          src={previewState.objectUrl}
+                          className="h-full w-full rounded-lg"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <aside
+                    className={`absolute right-0 top-0 z-10 h-full rounded-2xl border border-slate-200 bg-white shadow-xl transition-all duration-300 ${
+                      summaryState.open
+                        ? "translate-x-0 opacity-100"
+                        : "pointer-events-none translate-x-full opacity-0"
+                    } ${summaryPanelState.maximized ? "w-full max-w-none" : "w-[88%] max-w-sm"} lg:static lg:h-auto lg:max-w-none ${
+                      summaryState.open
+                        ? summaryPanelState.maximized
+                          ? "lg:w-[42%] lg:translate-x-0 lg:opacity-100"
+                          : "lg:w-[32%] lg:translate-x-0 lg:opacity-100"
+                        : "lg:w-0 lg:translate-x-full lg:opacity-0 lg:pointer-events-none lg:border-transparent lg:shadow-none"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+                      <div>
+                        <div className="text-sm font-semibold text-slate-800">Ket qua tom tat AI</div>
+                        <div className="text-xs text-slate-500">{previewState.name}</div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={handleSummaryMinimize}
+                          className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100"
+                          title="Thu nho"
+                        >
+                          <RemoveOutlinedIcon fontSize="small" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSummaryToggleMaximize}
+                          className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100"
+                          title={summaryPanelState.maximized ? "Khoi phuc" : "Mo rong"}
+                        >
+                          {summaryPanelState.maximized ? (
+                            <FilterNoneOutlinedIcon fontSize="small" />
+                          ) : (
+                            <CropSquareOutlinedIcon fontSize="small" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={closeSummaryPanel}
+                          className="rounded-md p-1 text-slate-500 transition hover:bg-red-100 hover:text-red-600"
+                          title="Dong"
+                        >
+                          <CloseOutlinedIcon fontSize="small" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex h-full flex-col gap-3 p-4">
+                      {(summaryState.status === "connecting" || summaryState.status === "processing") && (
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">
+                          {summaryState.status === "connecting"
+                            ? "AI dang ket noi..."
+                            : "AI dang phan tich tai lieu..."}
+                          {summaryState.status === "processing" && summaryState.progress.total > 0 && (
+                            <div className="mt-3">
+                              <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
+                                <span>Tien trinh</span>
+                                <span>{Math.round((summaryState.progress.current / summaryState.progress.total) * 100)}%</span>
+                              </div>
+                              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                                <div
+                                  className="h-full bg-gradient-to-r from-blue-500 to-sky-500 transition-all"
+                                  style={{ width: `${(summaryState.progress.current / summaryState.progress.total) * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {summaryState.status === "error" && (
+                        <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+                          Khong the tao tom tat. Vui long thu lai.
+                        </div>
+                      )}
+
+                      <div className="flex-1 overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                        {summaryState.summaries.length > 0 ? (
+                          summaryState.summaries.map((text, idx) => (
+                            <div
+                              key={`${text.slice(0, 12)}-${idx}`}
+                              className="relative mb-3 pl-5 leading-relaxed before:absolute before:left-0 before:top-2 before:h-2 before:w-2 before:rounded-full before:bg-blue-500"
+                            >
+                              {text}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm text-slate-500">Chua co ket qua tom tat.</div>
+                        )}
+                        <div ref={summaryEndRef} />
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleSummaryCopy}
+                            className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                          >
+                            Copy
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSummaryDownload}
+                            className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                          >
+                            Tai xuong
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => startSummary({ force: true })}
+                          className="mt-3 w-full rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
+                        >
+                          Tom tat lai
+                        </button>
+                      </div>
+                    </div>
+                  </aside>
                 </div>
-              )}
-
-              {!previewState.loading && previewState.error && (
-                <div className="grid h-full place-items-center rounded-xl border border-amber-100 bg-amber-50 text-sm font-semibold text-amber-800">
-                  {previewState.error}
-                </div>
-              )}
-
-              {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.PDF && previewState.objectUrl && (
-                <iframe
-                  title="PDF Preview"
-                  src={previewState.objectUrl}
-                  className="h-full w-full rounded-xl border border-slate-200 bg-white"
-                />
-              )}
-
-              {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.IMAGE && previewState.objectUrl && (
-                <div className="grid h-full place-items-center rounded-xl border border-slate-200 bg-white p-3">
-                  <img
-                    src={previewState.objectUrl}
-                    alt={previewState.name}
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </div>
-              )}
-
-              {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.TEXT && (
-                <pre className="h-full overflow-auto rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-700">
-                  {previewState.textContent}
-                </pre>
-              )}
-
-              {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.OFFICE && previewState.objectUrl && (
-                <div className="h-full rounded-xl border border-slate-200 bg-white p-2">
-                  <iframe
-                    title="Office Preview"
-                    src={previewState.objectUrl}
-                    className="h-full w-full rounded-lg"
-                  />
-                </div>
-              )}
               </div>
             )}
 
