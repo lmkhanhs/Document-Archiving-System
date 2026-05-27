@@ -1557,62 +1557,81 @@ const MyDocuments = () => {
       {previewState.open && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-3">
           <div
-            onMouseEnter={() => setPreviewWindowState((prev) => ({ ...prev, hovered: true }))}
-            onMouseLeave={() => setPreviewWindowState((prev) => ({ ...prev, hovered: false }))}
-            className={`relative flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl transition-all ${
+            className={`relative flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl transition-all duration-300 ${
               previewWindowState.minimized
                 ? "h-16 max-w-xl self-end"
                 : previewWindowState.maximized
                   ? "h-[95vh] max-w-none"
                   : "h-[90vh] max-w-6xl"
-            } ${previewWindowState.hovered ? "ring-2 ring-slate-300/80" : ""}`}
+            }`}
           >
-            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-              <div>
-                <div className="text-sm font-semibold text-slate-800">Xem trước file</div>
-                <div className="text-xs text-slate-500">{previewState.name}</div>
+            {/* ── Fixed Header ── always visible ── */}
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3">
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold text-slate-800">
+                  {previewWindowState.minimized ? previewState.name : "Xem trước file"}
+                </div>
+                {!previewWindowState.minimized && (
+                  <div className="truncate text-xs text-slate-500">{previewState.name}</div>
+                )}
               </div>
-              <div
-                className={`flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 transition-all duration-200 ${
-                  previewWindowState.hovered
-                    ? "translate-y-0 opacity-100"
-                    : "pointer-events-none -translate-y-1 opacity-0"
-                }`}
-              >
+              <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
+                {/* Tóm tắt AI */}
+                {!previewWindowState.minimized && (
+                  <button
+                    type="button"
+                    onClick={summaryState.open ? closeSummaryPanel : openSummaryPanel}
+                    className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold transition ${
+                      summaryState.open
+                        ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                        : "text-blue-600 hover:bg-blue-50"
+                    }`}
+                    title={summaryState.open ? "Đóng tóm tắt AI" : "Tóm tắt AI"}
+                  >
+                    <AutoAwesomeOutlinedIcon fontSize="small" />
+                    <span className="hidden sm:inline">Tóm tắt AI</span>
+                  </button>
+                )}
+                {/* Minimize */}
                 <button
                   type="button"
-                  onClick={openSummaryPanel}
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-blue-600 transition hover:bg-blue-50"
-                  title="Tom tat AI"
-                >
-                  <AutoAwesomeOutlinedIcon fontSize="small" />
-                  <span className="hidden sm:inline">Tom tat AI</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPreviewWindowState((prev) => ({ ...prev, minimized: true, hovered: false }))}
+                  onClick={() =>
+                    previewWindowState.minimized
+                      ? setPreviewWindowState((prev) => ({ ...prev, minimized: false }))
+                      : setPreviewWindowState((prev) => ({ ...prev, minimized: true }))
+                  }
                   className="rounded-md p-1 text-slate-600 transition hover:bg-slate-100"
-                  aria-label="Minimize preview"
-                  title="Thu nhỏ"
+                  aria-label={previewWindowState.minimized ? "Restore preview" : "Minimize preview"}
+                  title={previewWindowState.minimized ? "Mở lại" : "Thu nhỏ"}
                 >
-                  <RemoveOutlinedIcon fontSize="small" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPreviewWindowState((prev) => ({
-                    ...prev,
-                    maximized: !prev.maximized,
-                  }))}
-                  className="rounded-md p-1 text-slate-600 transition hover:bg-slate-100"
-                  aria-label="Toggle maximize preview"
-                  title={previewWindowState.maximized ? "Khôi phục" : "Phóng to"}
-                >
-                  {previewWindowState.maximized ? (
-                    <FilterNoneOutlinedIcon fontSize="small" />
-                  ) : (
+                  {previewWindowState.minimized ? (
                     <CropSquareOutlinedIcon fontSize="small" />
+                  ) : (
+                    <RemoveOutlinedIcon fontSize="small" />
                   )}
                 </button>
+                {/* Maximize / Restore */}
+                {!previewWindowState.minimized && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPreviewWindowState((prev) => ({
+                        ...prev,
+                        maximized: !prev.maximized,
+                      }))
+                    }
+                    className="rounded-md p-1 text-slate-600 transition hover:bg-slate-100"
+                    aria-label="Toggle maximize preview"
+                    title={previewWindowState.maximized ? "Khôi phục" : "Phóng to"}
+                  >
+                    {previewWindowState.maximized ? (
+                      <FilterNoneOutlinedIcon fontSize="small" />
+                    ) : (
+                      <CropSquareOutlinedIcon fontSize="small" />
+                    )}
+                  </button>
+                )}
+                {/* Close */}
                 <button
                   type="button"
                   onClick={closePreview}
@@ -1625,22 +1644,19 @@ const MyDocuments = () => {
               </div>
             </div>
 
+            {/* ── Content Area ── viewer + optional summary panel ── */}
             {!previewWindowState.minimized && (
               <div className="relative min-h-0 flex-1 bg-slate-50 p-3">
-                <div
-                  className={`pointer-events-none absolute inset-0 bg-slate-500/10 transition-opacity duration-200 ${
-                    previewWindowState.hovered ? "opacity-100" : "opacity-0"
-                  }`}
-                />
                 <div className="relative flex h-full gap-3">
+                  {/* PDF / Image / Text / Office Viewer */}
                   <div
-                    className={`min-w-0 flex-1 rounded-xl transition-all duration-300 ${
+                    className={`min-w-0 rounded-xl transition-all duration-300 ${
                       summaryState.open
                         ? summaryPanelState.maximized
                           ? "lg:w-[58%]"
                           : "lg:w-[68%]"
                         : "w-full"
-                    }`}
+                    } ${summaryState.open ? "flex-shrink-0" : "flex-1"}`}
                   >
                     {previewState.loading && (
                       <div className="grid h-full place-items-center rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-600">
@@ -1689,38 +1705,32 @@ const MyDocuments = () => {
                     )}
                   </div>
 
+                  {/* Summary Panel (content only — no separate header) */}
                   <aside
-                    className={`absolute right-0 top-0 z-10 h-full rounded-2xl border border-slate-200 bg-white shadow-xl transition-all duration-300 ${
+                    className={`overflow-hidden rounded-2xl border bg-white shadow-xl transition-all duration-300 ${
                       summaryState.open
-                        ? "translate-x-0 opacity-100"
-                        : "pointer-events-none translate-x-full opacity-0"
-                    } ${summaryPanelState.maximized ? "w-full max-w-none" : "w-[88%] max-w-sm"} lg:static lg:h-auto lg:max-w-none ${
+                        ? "translate-x-0 border-slate-200 opacity-100"
+                        : "pointer-events-none w-0 translate-x-4 border-transparent opacity-0"
+                    } ${
                       summaryState.open
                         ? summaryPanelState.maximized
-                          ? "lg:w-[42%] lg:translate-x-0 lg:opacity-100"
-                          : "lg:w-[32%] lg:translate-x-0 lg:opacity-100"
-                        : "lg:w-0 lg:translate-x-full lg:opacity-0 lg:pointer-events-none lg:border-transparent lg:shadow-none"
-                    }`}
+                          ? "lg:w-[42%]"
+                          : "lg:w-[32%]"
+                        : ""
+                    } absolute right-0 top-0 z-10 h-full w-[88%] max-w-sm lg:static lg:h-auto lg:max-w-none`}
                   >
-                    <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-                      <div>
-                        <div className="text-sm font-semibold text-slate-800">Ket qua tom tat AI</div>
-                        <div className="text-xs text-slate-500">{previewState.name}</div>
+                    {/* Summary panel sub-header (lightweight — file context only) */}
+                    <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-slate-800">Kết quả tóm tắt AI</div>
+                        <div className="truncate text-xs text-slate-500">{previewState.name}</div>
                       </div>
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
-                          onClick={handleSummaryMinimize}
-                          className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100"
-                          title="Thu nho"
-                        >
-                          <RemoveOutlinedIcon fontSize="small" />
-                        </button>
-                        <button
-                          type="button"
                           onClick={handleSummaryToggleMaximize}
                           className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100"
-                          title={summaryPanelState.maximized ? "Khoi phuc" : "Mo rong"}
+                          title={summaryPanelState.maximized ? "Thu nhỏ panel" : "Mở rộng panel"}
                         >
                           {summaryPanelState.maximized ? (
                             <FilterNoneOutlinedIcon fontSize="small" />
@@ -1732,23 +1742,24 @@ const MyDocuments = () => {
                           type="button"
                           onClick={closeSummaryPanel}
                           className="rounded-md p-1 text-slate-500 transition hover:bg-red-100 hover:text-red-600"
-                          title="Dong"
+                          title="Đóng panel"
                         >
                           <CloseOutlinedIcon fontSize="small" />
                         </button>
                       </div>
                     </div>
 
-                    <div className="flex h-full flex-col gap-3 p-4">
+                    {/* Summary content */}
+                    <div className="flex h-[calc(100%-3.25rem)] flex-col gap-3 overflow-hidden p-4">
                       {(summaryState.status === "connecting" || summaryState.status === "processing") && (
                         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">
                           {summaryState.status === "connecting"
-                            ? "AI dang ket noi..."
-                            : "AI dang phan tich tai lieu..."}
+                            ? "AI đang kết nối..."
+                            : "AI đang phân tích tài liệu..."}
                           {summaryState.status === "processing" && summaryState.progress.total > 0 && (
                             <div className="mt-3">
                               <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
-                                <span>Tien trinh</span>
+                                <span>Tiến trình</span>
                                 <span>{Math.round((summaryState.progress.current / summaryState.progress.total) * 100)}%</span>
                               </div>
                               <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
@@ -1764,7 +1775,7 @@ const MyDocuments = () => {
 
                       {summaryState.status === "error" && (
                         <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
-                          Khong the tao tom tat. Vui long thu lai.
+                          Không thể tạo tóm tắt. Vui lòng thử lại.
                         </div>
                       )}
 
@@ -1779,12 +1790,12 @@ const MyDocuments = () => {
                             </div>
                           ))
                         ) : (
-                          <div className="text-sm text-slate-500">Chua co ket qua tom tat.</div>
+                          <div className="text-sm text-slate-500">Chưa có kết quả tóm tắt.</div>
                         )}
                         <div ref={summaryEndRef} />
                       </div>
 
-                      <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                      <div className="shrink-0 rounded-2xl border border-slate-200 bg-white p-3">
                         <div className="flex flex-wrap items-center gap-2">
                           <button
                             type="button"
@@ -1798,7 +1809,7 @@ const MyDocuments = () => {
                             onClick={handleSummaryDownload}
                             className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
                           >
-                            Tai xuong
+                            Tải xuống
                           </button>
                         </div>
                         <button
@@ -1806,35 +1817,11 @@ const MyDocuments = () => {
                           onClick={() => startSummary({ force: true })}
                           className="mt-3 w-full rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
                         >
-                          Tom tat lai
+                          Tóm tắt lại
                         </button>
                       </div>
                     </div>
                   </aside>
-                </div>
-              </div>
-            )}
-
-            {previewWindowState.minimized && (
-              <div className="flex items-center justify-between px-4 py-2.5">
-                <div className="truncate text-sm font-semibold text-slate-700">{previewState.name}</div>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewWindowState((prev) => ({ ...prev, minimized: false }))}
-                    className="rounded-md p-1 text-slate-600 transition hover:bg-slate-100"
-                    title="Mở lại"
-                  >
-                    <CropSquareOutlinedIcon fontSize="small" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={closePreview}
-                    className="rounded-md p-1 text-slate-600 transition hover:bg-red-100 hover:text-red-700"
-                    title="Đóng"
-                  >
-                    <CloseOutlinedIcon fontSize="small" />
-                  </button>
                 </div>
               </div>
             )}
