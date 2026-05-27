@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.datn.dms.dtos.ApiResponse;
 import com.datn.dms.dtos.users.request.CreateUserRequest;
+import com.datn.dms.dtos.users.request.UpdateProfileRequest;
 import com.datn.dms.dtos.users.response.CreateUserResponse;
+import com.datn.dms.dtos.users.response.DetailUserResponse;
 import com.datn.dms.dtos.users.response.InfoUserResponse;
 import com.datn.dms.services.UserService;
 
@@ -16,18 +18,20 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
-
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("${app.prefix}/users")
@@ -45,7 +49,33 @@ public class UserController {
                 .build();
     }
 
-    
+    @GetMapping("/detail")
+    public ApiResponse<DetailUserResponse> getDetailUser() {
+        return ApiResponse.<DetailUserResponse>builder()
+                .code(200)
+                .message("User detail retrieved successfully")
+                .data(userService.getDetailUser())
+                .build();
+    }
+
+    @PutMapping("/profile")
+    public ApiResponse<DetailUserResponse> updateProfile(@RequestBody UpdateProfileRequest request) {
+        return ApiResponse.<DetailUserResponse>builder()
+                .code(200)
+                .message("Profile updated successfully")
+                .data(userService.updateProfile(request))
+                .build();
+    }
+
+    @PutMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<DetailUserResponse> updateAvatar(@RequestPart("file") MultipartFile file) throws IOException {
+        return ApiResponse.<DetailUserResponse>builder()
+                .code(200)
+                .message("Avatar updated successfully")
+                .data(userService.updateAvatar(file))
+                .build();
+    }
+
     @GetMapping("")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<List<InfoUserResponse>> getAllUsers(Pageable pageable) {

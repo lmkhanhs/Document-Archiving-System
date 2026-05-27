@@ -1,16 +1,28 @@
 package com.datn.dms.services;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.datn.dms.dtos.users.request.CreateUserRequest;
-import com.datn.dms.dtos.users.response.CreateUserResponse;
+import com.datn.dms.dtos.users.request.UpdateProfileRequest;
+import com.datn.dms.dtos.users.response.DetailUserResponse;
 import com.datn.dms.dtos.users.response.InfoUserResponse;
+import com.datn.dms.entities.CountryEntity;
+import com.datn.dms.entities.GenderEntity;
 import com.datn.dms.entities.RoleEntity;
 import com.datn.dms.entities.UserEntity;
 import com.datn.dms.mapper.UserMapper;
+import com.datn.dms.repositories.CountryRepository;
+import com.datn.dms.repositories.GenderRepository;
 import com.datn.dms.repositories.UserRepository;
 import com.datn.dms.utils.AuthenticationUtills;
 import com.datn.dms.exception.AppException;
@@ -19,6 +31,7 @@ import com.datn.dms.exception.ErrorCode;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 
 @Service
 @RequiredArgsConstructor
@@ -28,15 +41,12 @@ public class UserService {
     UserRepository userRepository;
     AuthenticationUtills authenticationUtills;
     com.datn.dms.repositories.RoleRepository roleRepository;
+    GenderRepository genderRepository;
+    CountryRepository countryRepository;
 
-    // public CreateUserResponse createUser(CreateUserRequest request) {
-    //     UserEntity userEntity = this.userMapper.toUserEntity(request);
-    //     userEntity.setEmail("123@gmail.com");
-    //     userEntity.setPhone("123456789");
-    //     userEntity.setAddress("123 Main St");
-    //     userEntity = this.userRepository.save(userEntity);
-    //     return this.userMapper.toCreateUserResponse(userEntity);
-    // }
+    @NonFinal
+    @Value("${app.storage.upload-dir:uploads}")
+    String uploadDir;
 
     public InfoUserResponse getInfoUser() { 
         String username = this.authenticationUtills.getUserName();
@@ -44,6 +54,75 @@ public class UserService {
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
                     
         return this.userMapper.toInfoUserResponse(userEntity);
+    }
+
+    public DetailUserResponse getDetailUser() {
+        String username = this.authenticationUtills.getUserName();
+        UserEntity userEntity = this.userRepository.findByUsername(username)
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        return this.userMapper.toDetailUserResponse(userEntity);
+    }
+
+    public DetailUserResponse updateProfile(UpdateProfileRequest request) {
+        String username = this.authenticationUtills.getUserName();
+        UserEntity userEntity = this.userRepository.findByUsername(username)
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (request.getFullName() != null) {
+            userEntity.setFullName(request.getFullName());
+        }
+        if (request.getPhone() != null) {
+            userEntity.setPhone(request.getPhone());
+        }
+        if (request.getAddress() != null) {
+            userEntity.setAddress(request.getAddress());
+        }
+        if (request.getCity() != null) {
+            userEntity.setCity(request.getCity());
+        }
+        if (request.getGenderId() != null) {
+            GenderEntity gender = genderRepository.findById(request.getGenderId())
+                    .orElseThrow(() -> new AppException(ErrorCode.GENDER_NOT_FOUND));
+            userEntity.setGender(gender);
+        }
+        if (request.getCountryId() != null) {
+            CountryEntity country = countryRepository.findById(request.getCountryId())
+                    .orElseThrow(() -> new AppException(ErrorCode.COUNTRY_NOT_FOUND));
+            userEntity.setCountry(country);
+        }
+
+        userEntity = this.userRepository.save(userEntity);
+        return this.userMapper.toDetailUserResponse(userEntity);
+    }
+
+    public DetailUserResponse updateAvatar(MultipartFile file) throws IOException {
+        String username = this.authenticationUtills.getUserName();
+        UserEntity userEntity = this.userRepository.findByUsername(username)
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        // Create avatars directory
+        Path avatarsDir = Paths.get(uploadDir, "public", "avatars").toAbsolutePath().normalize();
+        Files.createDirectories(avatarsDir);
+
+        // Generate unique filename
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        String newFileName = "avatar_" + userEntity.getId() + "_" + UUID.randomUUID().toString().substring(0, 8) + extension;
+
+        // Save file
+        Path targetPath = avatarsDir.resolve(newFileName);
+        Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+
+        // Update thumbnailUrl
+        String thumbnailUrl = "/uploads/public/avatars/" + newFileName;
+        userEntity.setThumbnailUrl(thumbnailUrl);
+        userEntity = this.userRepository.save(userEntity);
+
+        return this.userMapper.toDetailUserResponse(userEntity);
     }
 
     public List<InfoUserResponse> getAllUsers(org.springframework.data.domain.Pageable pageable) {

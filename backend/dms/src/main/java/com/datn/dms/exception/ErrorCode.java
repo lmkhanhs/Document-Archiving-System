@@ -29,7 +29,13 @@ public enum ErrorCode {
     FILE_STORE_FAILED(1012, "Cannot store file", HttpStatus.INTERNAL_SERVER_ERROR),
     FILE_NAME_INVALID(1013, "File name is invalid", HttpStatus.BAD_REQUEST),
     FILE_NOT_FOUND(1014, "File not found", HttpStatus.NOT_FOUND),
-    FILE_PATH_INVALID(1015, "File path is invalid", HttpStatus.BAD_REQUEST);
+    FILE_PATH_INVALID(1015, "File path is invalid", HttpStatus.BAD_REQUEST),
+
+    // Gender
+    GENDER_NOT_FOUND(1016, "Gender not found", HttpStatus.NOT_FOUND),
+
+    // Country
+    COUNTRY_NOT_FOUND(1017, "Country not found", HttpStatus.NOT_FOUND);
    
     private final int code;
     private final String message;

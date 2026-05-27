@@ -10,6 +10,7 @@ import org.mapstruct.Named;
 
 import com.datn.dms.dtos.users.request.CreateUserRequest;
 import com.datn.dms.dtos.users.response.CreateUserResponse;
+import com.datn.dms.dtos.users.response.DetailUserResponse;
 import com.datn.dms.dtos.users.response.InfoUserResponse;
 import com.datn.dms.entities.RoleEntity;
 import com.datn.dms.entities.UserEntity;
@@ -23,6 +24,16 @@ public abstract class UserMapper {
         @Mapping(target = "roles", source = "roles", qualifiedByName = "mapRolesToName")
     })
     public abstract InfoUserResponse toInfoUserResponse(UserEntity userEntity);
+
+    @Mappings({
+        @Mapping(target = "roles", source = "roles", qualifiedByName = "mapRolesToName"),
+        @Mapping(target = "genderId", source = "gender.id"),
+        @Mapping(target = "genderName", source = "gender.name"),
+        @Mapping(target = "countryId", source = "country.id"),
+        @Mapping(target = "countryName", source = "country.name"),
+        @Mapping(target = "countryThumbnailUrl", source = "country.thumbnailUrl")
+    })
+    public abstract DetailUserResponse toDetailUserResponse(UserEntity userEntity);
 
     @Named("mapRolesToName")
     protected List<String> mapRolesToName(Set<RoleEntity> roles) {
