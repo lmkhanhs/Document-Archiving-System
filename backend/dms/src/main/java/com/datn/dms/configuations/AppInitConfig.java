@@ -16,6 +16,12 @@ import com.datn.dms.repositories.UserRepository;
 import com.datn.dms.entities.ColorEntity;
 import com.datn.dms.emuns.ColorDefaultEnums;
 import com.datn.dms.repositories.ColorRepository;
+import com.datn.dms.entities.GenderEntity;
+import com.datn.dms.emuns.GenderEnums;
+import com.datn.dms.repositories.GenderRepository;
+import com.datn.dms.entities.CountryEntity;
+import com.datn.dms.emuns.CountryDefaultEnums;
+import com.datn.dms.repositories.CountryRepository;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +37,8 @@ public class AppInitConfig {
     UserRepository userRepository;
     PasswordEncoder passwordEncoder;
     ColorRepository colorRepository;
+    GenderRepository genderRepository;
+    CountryRepository countryRepository;
     @Bean
     ApplicationRunner init() {
         return args -> {
@@ -67,6 +75,22 @@ public class AppInitConfig {
                     color.setName(colorEnum.getName());
                     color.setHexCode(colorEnum.getHexCode());
                     colorRepository.save(color);
+                }
+            }
+
+            for (GenderEnums genderEnum : GenderEnums.values()) {
+                if (genderRepository.findByName(genderEnum.getName()).isEmpty()) {
+                    GenderEntity gender = new GenderEntity();
+                    gender.setName(genderEnum.getName());
+                    genderRepository.save(gender);
+                }
+            }
+
+            for (CountryDefaultEnums countryEnum : CountryDefaultEnums.values()) {
+                if (countryRepository.findByName(countryEnum.getName()).isEmpty()) {
+                    CountryEntity country = new CountryEntity();
+                    country.setName(countryEnum.getName());
+                    countryRepository.save(country);
                 }
             }
         };

@@ -25,4 +25,5 @@ public class InfoUserResponse {
     String thumbnailUrl;
     LocalDateTime createdAt;
     List<String> roles;
+    
 }

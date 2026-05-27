@@ -141,4 +141,5 @@ public class UserController {
                 .data(userService.getSoftDeletedUsers())
                 .build();
     }
+    
 }
