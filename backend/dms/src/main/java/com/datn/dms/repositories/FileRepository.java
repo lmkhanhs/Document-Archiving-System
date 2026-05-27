@@ -26,6 +26,8 @@ public interface FileRepository extends JpaRepository<FileEntity, Long> {
 
 	List<FileEntity> findAllByIsDeletedFalseOrderByCreatedAtDesc();
 
+	List<FileEntity> findAllByIsDeletedTrueOrderByCreatedAtDesc();
+
 	Optional<FileEntity> findByIdAndIsDeletedFalse(Long id);
 	
 	Optional<FileEntity> findByIdAndIsDeletedTrue(Long id);

@@ -266,6 +266,17 @@ public class FileService {
         FileEntity fileEntity = fileRepository.findByIdAndOwner_IdAndIsDeletedFalse(fileId, owner.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
 
+        return buildPreviewResponse(fileEntity);
+    }
+
+    public ResponseEntity<Resource> previewFileAdmin(Long fileId) {
+        FileEntity fileEntity = fileRepository.findById(fileId)
+                .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
+
+        return buildPreviewResponse(fileEntity);
+    }
+
+    private ResponseEntity<Resource> buildPreviewResponse(FileEntity fileEntity) {
         String fileUrl = fileEntity.getUrl();
         String uploadPrefix = "/uploads/";
         if (fileUrl == null || !fileUrl.startsWith(uploadPrefix)) {
@@ -412,6 +423,13 @@ public class FileService {
 
     public List<FileResponse> getFileAdmin() {
         return fileRepository.findAllByIsDeletedFalseOrderByCreatedAtDesc()
+                .stream()
+                .map(fileMapper::toFileResponse)
+                .toList();
+    }
+
+    public List<FileResponse> getTrashFilesAdmin() {
+        return fileRepository.findAllByIsDeletedTrueOrderByCreatedAtDesc()
                 .stream()
                 .map(fileMapper::toFileResponse)
                 .toList();

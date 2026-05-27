@@ -152,6 +152,16 @@ public class FileController {
                 .build();
     }
 
+    @GetMapping("/admin/trash")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<List<FileResponse>> getTrashFilesAdmin() {
+        return ApiResponse.<List<FileResponse>>builder()
+                .code(HttpStatus.OK.value())
+                .message("Get all trash files successfully")
+                .data(fileService.getTrashFilesAdmin())
+                .build();
+    }
+
     @GetMapping("/admin/search")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<List<FileResponse>> searchFilesAdmin(
@@ -192,5 +202,11 @@ public class FileController {
                 .message("Restore file successfully")
                 .data(fileService.restoreFileAdmin(fileId))
                 .build();
+    }
+
+    @GetMapping("/admin/{fileId}/preview")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Resource> previewFileAdmin(@PathVariable Long fileId) {
+        return fileService.previewFileAdmin(fileId);
     }
 }

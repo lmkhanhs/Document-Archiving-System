@@ -44,6 +44,7 @@ import {
 import {
   downloadAdminFile,
   getAdminFiles,
+  getAdminTrashFiles,
   hardDeleteAdminFile,
   previewAdminFile,
   restoreAdminFile,
@@ -413,9 +414,9 @@ const AdminDashboard = () => {
   const [isDocLoading, setIsDocLoading] = useState(false);
   const [docError, setDocError] = useState("");
   const [docReloadKey, setDocReloadKey] = useState(0);
+  const [documentsView, setDocumentsView] = useState("all");
   const [fileTypeFilter, setFileTypeFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("");
-  const [docStatusFilter, setDocStatusFilter] = useState("all");
   const [docDetail, setDocDetail] = useState(null);
   const [docPreviewState, setDocPreviewState] = useState({
     open: false,
@@ -435,6 +436,11 @@ const AdminDashboard = () => {
     open: false,
     file: null,
     mode: "soft",
+    submitting: false,
+  });
+  const [docRestoreDialog, setDocRestoreDialog] = useState({
+    open: false,
+    file: null,
     submitting: false,
   });
   const [roleDialog, setRoleDialog] = useState({
@@ -672,6 +678,7 @@ const AdminDashboard = () => {
     const keyword = search.trim();
     const uploader = ownerFilter.trim();
     const shouldSearch = keyword.length > 0 || uploader.length > 0;
+    const isTrashView = documentsView === "trash";
 
     const debounceTimer = setTimeout(() => {
       const loadDocuments = async () => {
@@ -681,7 +688,9 @@ const AdminDashboard = () => {
         try {
           const payload = shouldSearch
             ? await searchAdminFiles({ fileName: keyword, uploader })
-            : await getAdminFiles();
+            : isTrashView
+              ? await getAdminTrashFiles()
+              : await getAdminFiles();
           const data = extractDocumentCollection(payload);
           if (isMounted) {
             setDocuments(data);
@@ -703,7 +712,7 @@ const AdminDashboard = () => {
       isMounted = false;
       clearTimeout(debounceTimer);
     };
-  }, [activeMenu, docReloadKey, ownerFilter, search]);
+  }, [activeMenu, docReloadKey, documentsView, ownerFilter, search]);
 
   const handleLogout = async () => {
     if (isLoggingOut) {
@@ -795,6 +804,7 @@ const AdminDashboard = () => {
       const mimeType = file.type || file.mimeType || file.fileType || "";
       const createdAt = file.createdAt || file.uploadedAt || file.createdDate || file.created_at || null;
       const deletedAt = file.deletedAt || file.removedAt || file.trashedAt || null;
+      const isDeleted = Boolean(file.isDeleted ?? deletedAt);
       const summary = file.summary || file.summaryText || file.summaryContent || "";
       const summaryUrl = file.summaryUrl || file.summaryURL || file.summary_path || "";
       const ownerName = file.ownerName || getOwnerLabel(file);
@@ -813,9 +823,10 @@ const AdminDashboard = () => {
         size: Number.isFinite(sizeValue) ? sizeValue : null,
         createdAt,
         deletedAt,
+        isDeleted,
         ownerLabel: ownerName,
         ownerAvatar,
-        status: deletedAt ? "DELETED" : "ACTIVE",
+        status: isDeleted ? "DELETED" : "ACTIVE",
         typeLabel: getReadableFileType(mimeType, name),
         summary,
         summaryUrl,
@@ -829,6 +840,14 @@ const AdminDashboard = () => {
     const ownerKeyword = ownerFilter.trim().toLowerCase();
 
     return normalizedDocuments.filter((file) => {
+      if (documentsView === "all" && file.isDeleted) {
+        return false;
+      }
+
+      if (documentsView === "trash" && !file.isDeleted) {
+        return false;
+      }
+
       if (keyword && !String(file.name || "").toLowerCase().includes(keyword)) {
         return false;
       }
@@ -841,13 +860,9 @@ const AdminDashboard = () => {
         return false;
       }
 
-      if (docStatusFilter !== "all" && file.status !== docStatusFilter) {
-        return false;
-      }
-
       return true;
     });
-  }, [docStatusFilter, fileTypeFilter, normalizedDocuments, ownerFilter, search]);
+  }, [documentsView, fileTypeFilter, normalizedDocuments, ownerFilter, search]);
 
   const fileTypeOptions = useMemo(() => {
     const types = new Set(
@@ -1148,15 +1163,7 @@ const AdminDashboard = () => {
       return;
     }
 
-    try {
-      await restoreAdminFile(file.id);
-      setDocuments((prev) => prev.map((item) => (
-        item.id === file.id ? { ...item, deletedAt: null } : item
-      )));
-      setToast("Da khoi phuc tai lieu");
-    } catch (error) {
-      setToast(error.message || "Khong the khoi phuc tai lieu");
-    }
+    setDocRestoreDialog({ open: true, file, submitting: false });
   };
 
   const openDocDeleteDialog = (file, mode) => {
@@ -1188,16 +1195,44 @@ const AdminDashboard = () => {
         await softDeleteAdminFile(docDeleteDialog.file.id);
         setDocuments((prev) => prev.map((item) => (
           item.id === docDeleteDialog.file.id
-            ? { ...item, deletedAt: new Date().toISOString() }
+            ? { ...item, deletedAt: new Date().toISOString(), isDeleted: true }
             : item
         )));
         setToast("Da xoa mem tai lieu");
       }
 
       closeDocDeleteDialog();
+      setDocReloadKey((prev) => prev + 1);
     } catch (error) {
       setToast(error.message || "Khong the xoa tai lieu");
       setDocDeleteDialog((prev) => ({ ...prev, submitting: false }));
+    }
+  };
+
+  const closeDocRestoreDialog = () => {
+    setDocRestoreDialog({ open: false, file: null, submitting: false });
+  };
+
+  const handleDocRestoreConfirm = async () => {
+    if (!docRestoreDialog.file) {
+      return;
+    }
+
+    setDocRestoreDialog((prev) => ({ ...prev, submitting: true }));
+
+    try {
+      await restoreAdminFile(docRestoreDialog.file.id);
+      setDocuments((prev) => prev.map((item) => (
+        item.id === docRestoreDialog.file.id
+          ? { ...item, deletedAt: null, isDeleted: false }
+          : item
+      )));
+      setToast("Da khoi phuc tai lieu");
+      closeDocRestoreDialog();
+      setDocReloadKey((prev) => prev + 1);
+    } catch (error) {
+      setToast(error.message || "Khong the khoi phuc tai lieu");
+      setDocRestoreDialog((prev) => ({ ...prev, submitting: false }));
     }
   };
 
@@ -1589,6 +1624,30 @@ const AdminDashboard = () => {
                   <div className="text-lg font-bold text-slate-900">Danh sach tai lieu</div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
+                  <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-1">
+                    <button
+                      type="button"
+                      onClick={() => setDocumentsView("all")}
+                      className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+                        documentsView === "all"
+                          ? "bg-blue-600 text-white"
+                          : "text-slate-600 hover:bg-slate-100"
+                      }`}
+                    >
+                      Tất cả tài liệu
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDocumentsView("trash")}
+                      className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+                        documentsView === "trash"
+                          ? "bg-slate-900 text-white"
+                          : "text-slate-600 hover:bg-slate-100"
+                      }`}
+                    >
+                      Thùng rác
+                    </button>
+                  </div>
                   <input
                     value={ownerFilter}
                     onChange={(event) => setOwnerFilter(event.target.value)}
@@ -1600,28 +1659,19 @@ const AdminDashboard = () => {
                     onChange={(event) => setFileTypeFilter(event.target.value)}
                     className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
                   >
-                    <option value="all">Tat ca loai file</option>
+                    <option value="all">Tất cả các loại file</option>
                     {fileTypeOptions.map((type) => (
                       type === "all" ? null : (
                         <option key={type} value={type}>{type}</option>
                       )
                     ))}
                   </select>
-                  <select
-                    value={docStatusFilter}
-                    onChange={(event) => setDocStatusFilter(event.target.value)}
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
-                  >
-                    <option value="all">Tat ca trang thai</option>
-                    <option value="ACTIVE">ACTIVE</option>
-                    <option value="DELETED">DELETED</option>
-                  </select>
                   <button
                     type="button"
                     onClick={() => setDocReloadKey((prev) => prev + 1)}
                     className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
                   >
-                    Lam moi
+                    Làm mới
                   </button>
                 </div>
               </div>
@@ -1629,7 +1679,7 @@ const AdminDashboard = () => {
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="text-sm text-slate-600">
-                    {filteredDocuments.length} tai lieu
+                    {filteredDocuments.length} {documentsView === "trash" ? "tai lieu trong thung rac" : "tai lieu"}
                   </div>
                 </div>
 
@@ -1647,7 +1697,7 @@ const AdminDashboard = () => {
 
                 {!isDocLoading && !docError && filteredDocuments.length === 0 && (
                   <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm font-semibold text-slate-500">
-                    Khong co tai lieu phu hop.
+                    {documentsView === "trash" ? "Thùng rác đang trống" : "Chưa có tài liệu nào"}
                   </div>
                 )}
 
@@ -1665,6 +1715,9 @@ const AdminDashboard = () => {
                               <th className="px-4 py-3">Kich thuoc</th>
                               <th className="px-4 py-3">Ngay upload</th>
                               <th className="px-4 py-3">Trang thai</th>
+                              {documentsView === "trash" && (
+                                <th className="px-4 py-3">Ngay xoa</th>
+                              )}
                               <th className="px-4 py-3 text-right">Hanh dong</th>
                             </tr>
                           </thead>
@@ -1720,54 +1773,14 @@ const AdminDashboard = () => {
                                       {file.status}
                                     </span>
                                   </td>
+                                  {documentsView === "trash" && (
+                                    <td className="px-4 py-3 text-slate-600">
+                                      {formatDateTime(file.deletedAt)}
+                                    </td>
+                                  )}
                                   <td className="px-4 py-3">
                                     <div className="flex items-center justify-end gap-2">
-                                      <button
-                                        type="button"
-                                        onClick={() => setDocDetail(file)}
-                                        className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
-                                        title="Xem chi tiet"
-                                        aria-label="Xem chi tiet"
-                                      >
-                                        <VisibilityOutlinedIcon fontSize="small" />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleDocPreview(file)}
-                                        className="rounded-lg border border-slate-200 p-2 text-blue-600 transition hover:bg-blue-50"
-                                        title="Xem noi dung"
-                                        aria-label="Xem noi dung"
-                                      >
-                                        <DescriptionOutlinedIcon fontSize="small" />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleDocSummaryOpen(file)}
-                                        className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
-                                        title="Xem tom tat"
-                                        aria-label="Xem tom tat"
-                                      >
-                                        <AutoAwesomeOutlinedIcon fontSize="small" />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleDocDownload(file)}
-                                        className="rounded-lg border border-slate-200 p-2 text-emerald-600 transition hover:bg-emerald-50"
-                                        title="Tai file goc"
-                                        aria-label="Tai file goc"
-                                      >
-                                        <DownloadOutlinedIcon fontSize="small" />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleDocDownloadSummary(file)}
-                                        className="rounded-lg border border-slate-200 p-2 text-violet-600 transition hover:bg-violet-50"
-                                        title="Tai summary"
-                                        aria-label="Tai summary"
-                                      >
-                                        <DownloadOutlinedIcon fontSize="small" />
-                                      </button>
-                                      {file.status === "DELETED" ? (
+                                      {documentsView === "trash" ? (
                                         <>
                                           <button
                                             type="button"
@@ -1781,7 +1794,7 @@ const AdminDashboard = () => {
                                           <button
                                             type="button"
                                             onClick={() => openDocDeleteDialog(file, "hard")}
-                                            className="rounded-lg border border-slate-200 p-2 text-rose-600 transition hover:bg-rose-50"
+                                            className="rounded-lg border border-slate-200 p-2 text-rose-700 transition hover:bg-rose-50"
                                             title="Xoa vinh vien"
                                             aria-label="Xoa vinh vien"
                                           >
@@ -1789,15 +1802,62 @@ const AdminDashboard = () => {
                                           </button>
                                         </>
                                       ) : (
-                                        <button
-                                          type="button"
-                                          onClick={() => openDocDeleteDialog(file, "soft")}
-                                          className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
-                                          title="Xoa mem"
-                                          aria-label="Xoa mem"
-                                        >
-                                          <DeleteOutlineOutlinedIcon fontSize="small" />
-                                        </button>
+                                        <>
+                                          <button
+                                            type="button"
+                                            onClick={() => setDocDetail(file)}
+                                            className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
+                                            title="Xem chi tiet"
+                                            aria-label="Xem chi tiet"
+                                          >
+                                            <VisibilityOutlinedIcon fontSize="small" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDocPreview(file)}
+                                            className="rounded-lg border border-slate-200 p-2 text-blue-600 transition hover:bg-blue-50"
+                                            title="Xem noi dung"
+                                            aria-label="Xem noi dung"
+                                          >
+                                            <DescriptionOutlinedIcon fontSize="small" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDocSummaryOpen(file)}
+                                            className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
+                                            title="Xem tom tat"
+                                            aria-label="Xem tom tat"
+                                          >
+                                            <AutoAwesomeOutlinedIcon fontSize="small" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDocDownload(file)}
+                                            className="rounded-lg border border-slate-200 p-2 text-emerald-600 transition hover:bg-emerald-50"
+                                            title="Tai file goc"
+                                            aria-label="Tai file goc"
+                                          >
+                                            <DownloadOutlinedIcon fontSize="small" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDocDownloadSummary(file)}
+                                            className="rounded-lg border border-slate-200 p-2 text-violet-600 transition hover:bg-violet-50"
+                                            title="Tai summary"
+                                            aria-label="Tai summary"
+                                          >
+                                            <DownloadOutlinedIcon fontSize="small" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => openDocDeleteDialog(file, "soft")}
+                                            className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
+                                            title="Xoa mem"
+                                            aria-label="Xoa mem"
+                                          >
+                                            <DeleteOutlineOutlinedIcon fontSize="small" />
+                                          </button>
+                                        </>
                                       )}
                                     </div>
                                   </td>
@@ -1855,55 +1915,13 @@ const AdminDashboard = () => {
 
                             <div className="mt-3 text-xs text-slate-500">
                               {formatFileSize(file.size)} • {formatDateTime(file.createdAt)}
+                              {documentsView === "trash" && (
+                                <span> • Xoa luc {formatDateTime(file.deletedAt)}</span>
+                              )}
                             </div>
 
                             <div className="mt-4 flex flex-wrap items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => setDocDetail(file)}
-                                className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
-                                title="Xem chi tiet"
-                                aria-label="Xem chi tiet"
-                              >
-                                <VisibilityOutlinedIcon fontSize="small" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDocPreview(file)}
-                                className="rounded-lg border border-slate-200 p-2 text-blue-600 transition hover:bg-blue-50"
-                                title="Xem noi dung"
-                                aria-label="Xem noi dung"
-                              >
-                                <DescriptionOutlinedIcon fontSize="small" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDocSummaryOpen(file)}
-                                className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
-                                title="Xem tom tat"
-                                aria-label="Xem tom tat"
-                              >
-                                <AutoAwesomeOutlinedIcon fontSize="small" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDocDownload(file)}
-                                className="rounded-lg border border-slate-200 p-2 text-emerald-600 transition hover:bg-emerald-50"
-                                title="Tai file goc"
-                                aria-label="Tai file goc"
-                              >
-                                <DownloadOutlinedIcon fontSize="small" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDocDownloadSummary(file)}
-                                className="rounded-lg border border-slate-200 p-2 text-violet-600 transition hover:bg-violet-50"
-                                title="Tai summary"
-                                aria-label="Tai summary"
-                              >
-                                <DownloadOutlinedIcon fontSize="small" />
-                              </button>
-                              {file.status === "DELETED" ? (
+                              {documentsView === "trash" ? (
                                 <>
                                   <button
                                     type="button"
@@ -1917,7 +1935,7 @@ const AdminDashboard = () => {
                                   <button
                                     type="button"
                                     onClick={() => openDocDeleteDialog(file, "hard")}
-                                    className="rounded-lg border border-slate-200 p-2 text-rose-600 transition hover:bg-rose-50"
+                                    className="rounded-lg border border-slate-200 p-2 text-rose-700 transition hover:bg-rose-50"
                                     title="Xoa vinh vien"
                                     aria-label="Xoa vinh vien"
                                   >
@@ -1925,15 +1943,62 @@ const AdminDashboard = () => {
                                   </button>
                                 </>
                               ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => openDocDeleteDialog(file, "soft")}
-                                  className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
-                                  title="Xoa mem"
-                                  aria-label="Xoa mem"
-                                >
-                                  <DeleteOutlineOutlinedIcon fontSize="small" />
-                                </button>
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => setDocDetail(file)}
+                                    className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
+                                    title="Xem chi tiet"
+                                    aria-label="Xem chi tiet"
+                                  >
+                                    <VisibilityOutlinedIcon fontSize="small" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDocPreview(file)}
+                                    className="rounded-lg border border-slate-200 p-2 text-blue-600 transition hover:bg-blue-50"
+                                    title="Xem noi dung"
+                                    aria-label="Xem noi dung"
+                                  >
+                                    <DescriptionOutlinedIcon fontSize="small" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDocSummaryOpen(file)}
+                                    className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
+                                    title="Xem tom tat"
+                                    aria-label="Xem tom tat"
+                                  >
+                                    <AutoAwesomeOutlinedIcon fontSize="small" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDocDownload(file)}
+                                    className="rounded-lg border border-slate-200 p-2 text-emerald-600 transition hover:bg-emerald-50"
+                                    title="Tai file goc"
+                                    aria-label="Tai file goc"
+                                  >
+                                    <DownloadOutlinedIcon fontSize="small" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDocDownloadSummary(file)}
+                                    className="rounded-lg border border-slate-200 p-2 text-violet-600 transition hover:bg-violet-50"
+                                    title="Tai summary"
+                                    aria-label="Tai summary"
+                                  >
+                                    <DownloadOutlinedIcon fontSize="small" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => openDocDeleteDialog(file, "soft")}
+                                    className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
+                                    title="Xoa mem"
+                                    aria-label="Xoa mem"
+                                  >
+                                    <DeleteOutlineOutlinedIcon fontSize="small" />
+                                  </button>
+                                </>
                               )}
                             </div>
                           </div>
@@ -2261,6 +2326,35 @@ const AdminDashboard = () => {
         </div>
       )}
 
+      {docRestoreDialog.open && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 p-3">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <div className="text-lg font-semibold text-slate-800">Khoi phuc tai lieu</div>
+            <div className="mt-2 text-sm text-slate-600">
+              Ban co muon khoi phuc tai lieu nay khong?
+            </div>
+
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeDocRestoreDialog}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                Huy
+              </button>
+              <button
+                type="button"
+                onClick={handleDocRestoreConfirm}
+                disabled={docRestoreDialog.submitting}
+                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+              >
+                {docRestoreDialog.submitting ? "Dang khoi phuc..." : "Khoi phuc"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {docDeleteDialog.open && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 p-3">
           <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
@@ -2269,8 +2363,8 @@ const AdminDashboard = () => {
             </div>
             <div className="mt-2 text-sm text-slate-600">
               {docDeleteDialog.mode === "hard"
-                ? "Hanh dong nay se xoa vinh vien tai lieu va khong the khoi phuc."
-                : "Ban co chac muon xoa mem tai lieu nay khong?"}
+                ? "Canh bao: Hanh dong nay se xoa vinh vien tai lieu khoi he thong va khong the khoi phuc."
+                : "Ban co chac muon dua tai lieu nay vao thung rac khong?"}
             </div>
 
             <div className="mt-4 flex items-center justify-end gap-2">

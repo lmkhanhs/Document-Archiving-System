@@ -23,6 +23,15 @@ export const getAdminFiles = async () => {
   }
 };
 
+export const getAdminTrashFiles = async () => {
+  try {
+    const response = await api.get("/files/admin/trash");
+    return parseApiResponse(response, "Khong the tai danh sach tai lieu da xoa");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Khong the tai danh sach tai lieu da xoa");
+  }
+};
+
 export const searchAdminFiles = async ({ fileName = "", uploader = "" } = {}) => {
   try {
     const response = await api.get("/files/admin/search", {
