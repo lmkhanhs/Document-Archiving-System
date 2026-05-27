@@ -90,7 +90,7 @@ export const previewAdminFile = async (fileId) => {
 
 export const downloadAdminFile = async (fileId) => {
   try {
-    const response = await api.get(`/files/${fileId}/download`, {
+    const response = await api.get(`/files/admin/${fileId}/download`, {
       responseType: "blob",
     });
 
