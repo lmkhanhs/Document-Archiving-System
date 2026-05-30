@@ -10,6 +10,10 @@ import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import ErrorOutlineOutlinedIcon from "@mui/icons-material/ErrorOutlineOutlined";
 import { AI_URL } from "../../services/api";
+import TextSummarizer from "../../components/TextSummarizer";
+import TextFieldsOutlinedIcon from "@mui/icons-material/TextFieldsOutlined";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+
 
 const sidebarItems = [
   { key: "home", label: "Trang chủ", icon: HomeOutlinedIcon },
@@ -34,6 +38,8 @@ const Summarize = () => {
   const receivedDoneRef = useRef(false);
   const [activeMenu, setActiveMenu] = useState("summarize");
   const [toast, setToast] = useState("");
+  const [activeTab, setActiveTab] = useState("file"); // "file" | "text"
+
 
   const SUMMARY_WS_URL =
     import.meta.env.VITE_SUMMARY_WS_URL || `${AI_URL}/ws/summarize`;
@@ -245,24 +251,48 @@ const Summarize = () => {
           <div className="mt-auto rounded-2xl border border-blue-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
             <div className="text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">Quick Actions</div>
             <div className="mt-2 space-y-2">
-              <button
-                type="button"
-                onClick={openUploadDialog}
-                disabled={status === "processing" || status === "connecting"}
-                className="flex w-full items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
-              >
-                <CloudUploadOutlinedIcon fontSize="small" />
-                <span className="md:hidden lg:inline">Chọn file</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleStartSummarize}
-                disabled={!file || status === "processing" || status === "connecting"}
-                className="flex w-full items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700/50 disabled:opacity-60"
-              >
-                <AutoAwesomeOutlinedIcon fontSize="small" />
-                <span className="md:hidden lg:inline">Bắt đầu tóm tắt</span>
-              </button>
+              {activeTab === "file" ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={openUploadDialog}
+                    disabled={status === "processing" || status === "connecting"}
+                    className="flex w-full items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+                  >
+                    <CloudUploadOutlinedIcon fontSize="small" />
+                    <span className="md:hidden lg:inline">Chọn file</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleStartSummarize}
+                    disabled={!file || status === "processing" || status === "connecting"}
+                    className="flex w-full items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700/50 disabled:opacity-60"
+                  >
+                    <AutoAwesomeOutlinedIcon fontSize="small" />
+                    <span className="md:hidden lg:inline"> Tóm tắt file</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('text-summarizer-textarea')?.focus()}
+                    className="flex w-full items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+                  >
+                    <TextFieldsOutlinedIcon fontSize="small" />
+                    <span className="md:hidden lg:inline">Nhập văn bản</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('text-summarizer-submit')?.click()}
+                    disabled={status === "processing"}
+                    className="flex w-full items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700/50 disabled:opacity-60"
+                  >
+                    <AutoAwesomeOutlinedIcon fontSize="small" />
+                    <span className="md:hidden lg:inline">Tóm tắt văn bản</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </aside>
@@ -277,72 +307,114 @@ const Summarize = () => {
             </div>
           </header>
 
-          <section className="mt-5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 p-4">
-            <div
-              onClick={openUploadDialog}
-              className={`group relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-all ${
-                file ? "border-blue-300 dark:border-blue-700 bg-blue-50/70 dark:bg-blue-900/20" : "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 hover:border-blue-200 dark:hover:border-blue-700 hover:bg-blue-50/60 dark:hover:bg-blue-900/20"
+          {/* ── Tab Bar ── */}
+          <div className="mt-5 mb-0 flex overflow-hidden rounded-t-2xl border border-b-0 border-slate-200 dark:border-slate-700">
+            <button
+              type="button"
+              onClick={() => { setActiveTab("file"); setSummaries([]); setStatus("idle"); setErrorMessage(""); }}
+              className={`flex flex-1 items-center justify-center gap-2 py-3 text-sm font-semibold transition ${
+                activeTab === "file"
+                  ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                  : "bg-white text-slate-500 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
               }`}
             >
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept=".txt,.pdf,.docx"
-                onChange={handleFileChange}
+              <InsertDriveFileOutlinedIcon fontSize="small" />
+              Tóm tắt từ file
+            </button>
+            <button
+              type="button"
+              onClick={() => { setActiveTab("text"); setSummaries([]); setStatus("idle"); setErrorMessage(""); }}
+              className={`flex flex-1 items-center justify-center gap-2 py-3 text-sm font-semibold transition ${
+                activeTab === "text"
+                  ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                  : "bg-white text-slate-500 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
+              }`}
+            >
+              <TextFieldsOutlinedIcon fontSize="small" />
+              Tóm tắt từ văn bản
+            </button>
+          </div>
+
+          <section className="rounded-b-2xl rounded-t-none border border-t-0 border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 p-4">
+            {activeTab === "file" ? (
+              /* ── File Summarizer (original) ── */
+              <div>
+                <div
+                  onClick={openUploadDialog}
+                  className={`group relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-all ${
+                    file ? "border-blue-300 dark:border-blue-700 bg-blue-50/70 dark:bg-blue-900/20" : "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 hover:border-blue-200 dark:hover:border-blue-700 hover:bg-blue-50/60 dark:hover:bg-blue-900/20"
+                  }`}
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept=".txt,.pdf,.docx"
+                    onChange={handleFileChange}
+                  />
+
+                  <div className={`mb-4 grid h-14 w-14 place-items-center rounded-2xl ${file ? "bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-none" : "bg-white dark:bg-slate-800 text-blue-500 shadow-sm border border-slate-100 dark:border-slate-700"} transition-all group-hover:scale-110`}>
+                    <CloudUploadOutlinedIcon fontSize="large" />
+                  </div>
+
+                  {file ? (
+                    <div>
+                      <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">{file.name}</h3>
+                      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{(file.size / 1024).toFixed(2)} KB</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">Nhấn để chọn file</h3>
+                      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Hỗ trợ định dạng: .txt, .pdf, .docx</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={handleStartSummarize}
+                    disabled={!file || status === "connecting" || status === "processing"}
+                    className="group inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-200 dark:shadow-none transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:pointer-events-none disabled:opacity-60"
+                  >
+                    <AutoAwesomeOutlinedIcon className={status === "processing" ? "animate-spin" : ""} fontSize="small" />
+                    {status === "processing" ? "Đang tóm tắt..." : status === "connecting" ? "Đang kết nối..." : "Bắt đầu tóm tắt AI"}
+                  </button>
+                  {status === "processing" && progress.total > 0 && (
+                    <span className="text-sm font-semibold text-blue-700 dark:text-blue-400">{progress.current} / {progress.total} đoạn</span>
+                  )}
+                </div>
+
+                {status === "processing" && progress.total > 0 && (
+                  <div className="mt-4">
+                    <div className="mb-2 flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-400">
+                      <span>Tiến trình xử lý</span>
+                      <span className="text-blue-600 dark:text-blue-400">{Math.round((progress.current / progress.total) * 100)}%</span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                      <div
+                        className="h-full bg-gradient-to-r from-blue-500 to-sky-500 transition-all duration-300 ease-out"
+                        style={{ width: `${(progress.current / progress.total) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+
+                {status === "error" && (
+                  <div className="mt-4 flex items-center gap-3 rounded-2xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-700 dark:text-red-400">
+                    <ErrorOutlineOutlinedIcon fontSize="small" />
+                    <p className="font-semibold">{errorMessage}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ── Text Summarizer ── */
+              <TextSummarizer
+                status={status}
+                setStatus={setStatus}
+                setErrorMessage={setErrorMessage}
+                setSummaries={setSummaries}
+                setToast={setToast}
               />
-
-              <div className={`mb-4 grid h-14 w-14 place-items-center rounded-2xl ${file ? "bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-none" : "bg-white dark:bg-slate-800 text-blue-500 shadow-sm border border-slate-100 dark:border-slate-700"} transition-all group-hover:scale-110`}>
-                <CloudUploadOutlinedIcon fontSize="large" />
-              </div>
-
-              {file ? (
-                <div>
-                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">{file.name}</h3>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{(file.size / 1024).toFixed(2)} KB</p>
-                </div>
-              ) : (
-                <div>
-                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">Nhấn để chọn file</h3>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Hỗ trợ định dạng: .txt, .pdf, .docx</p>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <button
-                onClick={handleStartSummarize}
-                disabled={!file || status === "connecting" || status === "processing"}
-                className="group inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-200 dark:shadow-none transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:pointer-events-none disabled:opacity-60"
-              >
-                <AutoAwesomeOutlinedIcon className={status === "processing" ? "animate-spin" : ""} fontSize="small" />
-                {status === "processing" ? "Đang tóm tắt..." : status === "connecting" ? "Đang kết nối..." : "Bắt đầu tóm tắt AI"}
-              </button>
-              {status === "processing" && progress.total > 0 && (
-                <span className="text-sm font-semibold text-blue-700 dark:text-blue-400">{progress.current} / {progress.total} đoạn</span>
-              )}
-            </div>
-
-            {status === "processing" && progress.total > 0 && (
-              <div className="mt-4">
-                <div className="mb-2 flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-400">
-                  <span>Tiến trình xử lý</span>
-                  <span className="text-blue-600 dark:text-blue-400">{Math.round((progress.current / progress.total) * 100)}%</span>
-                </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
-                  <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-sky-500 transition-all duration-300 ease-out"
-                    style={{ width: `${(progress.current / progress.total) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
-
-            {status === "error" && (
-              <div className="mt-4 flex items-center gap-3 rounded-2xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-700 dark:text-red-400">
-                <ErrorOutlineOutlinedIcon fontSize="small" />
-                <p className="font-semibold">{errorMessage}</p>
-              </div>
             )}
           </section>
 
