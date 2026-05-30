@@ -106,6 +106,16 @@
 			<artifactId>convertapi</artifactId>
 			<version>2.13</version>
 		</dependency>
+		<!-- WebSocket support for proxying summarize WS -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+		<!-- WebClient for proxying REST calls to Python AI server -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>

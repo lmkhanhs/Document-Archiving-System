@@ -31,7 +31,7 @@ import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import RemoveOutlinedIcon from "@mui/icons-material/RemoveOutlined";
 import CropSquareOutlinedIcon from "@mui/icons-material/CropSquareOutlined";
 import FilterNoneOutlinedIcon from "@mui/icons-material/FilterNoneOutlined";
-import { AI_URL, API_ORIGIN } from "../../services/api";
+import { WS_BASE_URL, API_ORIGIN } from "../../services/api";
 import { getInfoUser, getRoles, logout } from "../../services/authService";
 import {
   filterUsers,
@@ -1187,7 +1187,7 @@ const AdminDashboard = () => {
         reader.readAsDataURL(blob);
       }))
       .then((base64Content) => {
-        const wsUrl = import.meta.env.VITE_SUMMARY_WS_URL || `${AI_URL}/ws/summarize`;
+        const wsUrl = import.meta.env.VITE_SUMMARY_WS_URL || `${WS_BASE_URL}/ws/summarize`;
         const ws = new WebSocket(wsUrl);
         docSummarySocketRef.current = ws;
 

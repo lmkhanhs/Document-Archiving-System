@@ -9,7 +9,7 @@ import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import ErrorOutlineOutlinedIcon from "@mui/icons-material/ErrorOutlineOutlined";
-import { AI_URL } from "../../services/api";
+import { WS_BASE_URL } from "../../services/api";
 import TextSummarizer from "../../components/TextSummarizer";
 import TextFieldsOutlinedIcon from "@mui/icons-material/TextFieldsOutlined";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
@@ -23,6 +23,8 @@ const sidebarItems = [
   { key: "trash", label: "Thùng rác", icon: DeleteOutlineOutlinedIcon },
   { key: "settings", label: "Cài đặt", icon: SettingsOutlinedIcon },
 ];
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB - khớp với server config
+
 const Summarize = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -42,7 +44,7 @@ const Summarize = () => {
 
 
   const SUMMARY_WS_URL =
-    import.meta.env.VITE_SUMMARY_WS_URL || `${AI_URL}/ws/summarize`;
+    import.meta.env.VITE_SUMMARY_WS_URL || `${WS_BASE_URL}/ws/summarize`;
 
   // Auto scroll to bottom when new summaries arrive
   const scrollToBottom = () => {
@@ -78,6 +80,15 @@ const Summarize = () => {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        setStatus("error");
+        setErrorMessage(
+          `File quá lớn (${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB). Giới hạn tối đa là ${MAX_FILE_SIZE / (1024 * 1024)} MB.`
+        );
+        setFile(null);
+        e.target.value = "";
+        return;
+      }
       setFile(selectedFile);
       setSummaries([]);
       setStatus("idle");
@@ -379,9 +390,6 @@ const Summarize = () => {
                     <AutoAwesomeOutlinedIcon className={status === "processing" ? "animate-spin" : ""} fontSize="small" />
                     {status === "processing" ? "Đang tóm tắt..." : status === "connecting" ? "Đang kết nối..." : "Bắt đầu tóm tắt AI"}
                   </button>
-                  {status === "processing" && progress.total > 0 && (
-                    <span className="text-sm font-semibold text-blue-700 dark:text-blue-400">{progress.current} / {progress.total} đoạn</span>
-                  )}
                 </div>
 
                 {status === "processing" && progress.total > 0 && (

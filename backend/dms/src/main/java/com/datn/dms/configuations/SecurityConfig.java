@@ -51,6 +51,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/uploads/public/**").permitAll()
+                        .requestMatchers("/ws/summarize").permitAll()
+                        .requestMatchers("/ws/summarize-text").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_URLS).permitAll()
                         .anyRequest().authenticated());

@@ -37,7 +37,7 @@ import {
   uploadDocument,
 } from "../../services/documentService";
 import { deleteDocument, renameDocument } from "../../services/fileActionService";
-import { AI_URL } from "../../services/api";
+import { WS_BASE_URL } from "../../services/api";
 
 const sidebarItems = [
   { key: "home", label: "Trang chủ", icon: HomeOutlinedIcon },
@@ -813,7 +813,7 @@ const MyDocuments = () => {
         reader.readAsDataURL(blob);
       });
 
-      const wsUrl = import.meta.env.VITE_SUMMARY_WS_URL || `${AI_URL}/ws/summarize`;
+      const wsUrl = import.meta.env.VITE_SUMMARY_WS_URL || `${WS_BASE_URL}/ws/summarize`;
       const ws = new WebSocket(wsUrl);
       summarySocketRef.current = ws;
 
