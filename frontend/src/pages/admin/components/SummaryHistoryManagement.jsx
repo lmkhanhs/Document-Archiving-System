@@ -1,18 +1,8 @@
 import { useMemo, useState } from "react";
-import {
-  Button,
-  Card,
-  DatePicker,
-  Drawer,
-  Input,
-  Pagination,
-  Select,
-  Space,
-  Table,
-  Tag,
-  Typography,
-} from "antd";
-import { EyeOutlined, DownloadOutlined, FileSearchOutlined } from "@ant-design/icons";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import {
   CartesianGrid,
   Cell,
@@ -27,13 +17,16 @@ import {
   YAxis,
 } from "recharts";
 
-const { RangePicker } = DatePicker;
-const { Title, Text } = Typography;
+const summaryStatusBadgeMap = {
+  SUCCESS: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  FAILED: "bg-rose-50 text-rose-700 border-rose-200",
+  PROCESSING: "bg-amber-50 text-amber-700 border-amber-200",
+};
 
-const statusColors = {
-  SUCCESS: "green",
-  FAILED: "red",
-  PROCESSING: "gold",
+const summaryStatusLabel = {
+  SUCCESS: "Thành công",
+  FAILED: "Thất bại",
+  PROCESSING: "Đang xử lý",
 };
 
 const mockRows = Array.from({ length: 28 }).map((_, idx) => {
@@ -68,7 +61,10 @@ const lineDataMap = {
     { label: "T7", value: 132 },
     { label: "CN", value: 118 },
   ],
-  "30d": Array.from({ length: 30 }).map((_, i) => ({ label: `${i + 1}`, value: 80 + ((i * 13) % 95) })),
+  "30d": Array.from({ length: 30 }).map((_, i) => ({
+    label: `${i + 1}`,
+    value: 80 + ((i * 13) % 95),
+  })),
   "12m": [
     { label: "T1", value: 2100 },
     { label: "T2", value: 2260 },
@@ -86,10 +82,12 @@ const lineDataMap = {
 };
 
 const pieData = [
-  { name: "Thành công", value: 84, color: "#16a34a" },
-  { name: "Thất bại", value: 9, color: "#dc2626" },
-  { name: "Đang xử lý", value: 7, color: "#f59e0b" },
+  { name: "SUCCESS", value: 84, color: "#16a34a" },
+  { name: "FAILED", value: 9, color: "#dc2626" },
+  { name: "PROCESSING", value: 7, color: "#f59e0b" },
 ];
+
+const PAGE_SIZE_OPTIONS = [8, 15, 25];
 
 export default function SummaryHistoryManagement() {
   const [search, setSearch] = useState("");
@@ -111,176 +109,536 @@ export default function SummaryHistoryManagement() {
     });
   }, [search, statusFilter]);
 
+  const totalPages = Math.ceil(filteredRows.length / pageSize);
+
   const pagedRows = useMemo(() => {
     const start = (page - 1) * pageSize;
     return filteredRows.slice(start, start + pageSize);
   }, [filteredRows, page, pageSize]);
 
-  const columns = [
-    { title: "STT", dataIndex: "stt", key: "stt", width: 70 },
-    { title: "Người dùng", dataIndex: "userName", key: "userName", width: 140 },
-    { title: "Tài liệu", dataIndex: "documentName", key: "documentName", ellipsis: true },
-    { title: "Độ dài gốc", dataIndex: "originalLength", key: "originalLength", width: 120 },
-    { title: "Độ dài tóm tắt", dataIndex: "summaryLength", key: "summaryLength", width: 140 },
-    { title: "Thời gian xử lý", dataIndex: "duration", key: "duration", width: 130 },
-    { title: "Thời gian tạo", dataIndex: "createdAt", key: "createdAt", width: 170 },
-    {
-      title: "Trạng thái",
-      dataIndex: "status",
-      key: "status",
-      width: 120,
-      render: (status) => {
-        const label = status === "SUCCESS" ? "Thành công" : status === "FAILED" ? "Thất bại" : "Đang xử lý";
-        return <Tag color={statusColors[status]}>{label}</Tag>;
-      },
-    },
-    {
-      title: "Thao tác",
-      key: "actions",
-      width: 110,
-      render: (_, row) => (
-        <Button type="text" icon={<EyeOutlined />} onClick={() => setDetailRow(row)}>
-          Xem
-        </Button>
-      ),
-    },
-  ];
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+    }
+  };
 
   return (
-    <section className="mt-6 space-y-5">
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <Space wrap size={12} style={{ width: "100%" }}>
-          <Input
-            allowClear
-            placeholder="Tìm kiếm tài liệu hoặc người dùng..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ minWidth: 280 }}
-          />
-          <RangePicker />
-          <Select
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={[
-              { value: "ALL", label: "Tất cả trạng thái" },
-              { value: "SUCCESS", label: "Thành công" },
-              { value: "FAILED", label: "Thất bại" },
-              { value: "PROCESSING", label: "Đang xử lý" },
-            ]}
-            style={{ width: 180 }}
-          />
-          <Button type="primary" icon={<DownloadOutlined />}>Xuất Excel</Button>
-        </Space>
+    <section className="mt-6 space-y-4">
+      {/* Title */}
+      <div>
+        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+          Lịch sử tóm tắt
+        </div>
+        <div className="text-lg font-bold text-slate-900">
+          Danh sách lịch sử tóm tắt
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {/* Stat Cards */}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          ["Tổng lượt tóm tắt", "18,540", "+12.4% so với kỳ trước"],
-          ["Lượt tóm tắt hôm nay", "312", "+18.9% so với hôm qua"],
-          ["Tỷ lệ thành công", "92.0%", "+1.6% theo tuần"],
-          ["Thời gian xử lý trung bình", "12.4s", "-8.0% so với tháng trước"],
-        ].map(([title, value, sub]) => (
-          <Card key={title} className="rounded-2xl" styles={{ body: { padding: 18 } }}>
-            <Text type="secondary">{title}</Text>
-            <Title level={2} style={{ margin: "8px 0" }}>{value}</Title>
-            <Text type="secondary">{sub}</Text>
-          </Card>
+          {
+            key: "total-summaries",
+            label: "Tổng lượt tóm tắt",
+            value: "18,540",
+            sub: "+12.4% so với kỳ trước",
+            tone: "from-blue-600 to-sky-500",
+          },
+          {
+            key: "today-summaries",
+            label: "Tóm tắt hôm nay",
+            value: "312",
+            sub: "+18.9% so với hôm qua",
+            tone: "from-indigo-600 to-blue-500",
+          },
+          {
+            key: "success-rate",
+            label: "Tỷ lệ thành công",
+            value: "92%",
+            sub: "+1.6% theo tuần",
+            tone: "from-violet-600 to-purple-500",
+          },
+          {
+            key: "avg-duration",
+            label: "Thời gian xử lý trung bình",
+            value: "12.4s",
+            sub: "-8.0% so với tháng trước",
+            tone: "from-amber-600 to-orange-500",
+          },
+        ].map((card) => (
+          <div
+            key={card.key}
+            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200"
+          >
+            <div
+              className={`inline-flex items-center rounded-2xl bg-gradient-to-r px-3 py-1 text-xs font-semibold text-white ${card.tone}`}
+            >
+              Báo cáo
+            </div>
+            <div className="mt-3 text-sm font-semibold text-slate-600">
+              {card.label}
+            </div>
+            <div className="mt-1 text-2xl font-bold text-slate-900">
+              {card.value}
+            </div>
+            <div className="mt-2 text-xs text-slate-500">{card.sub}</div>
+          </div>
         ))}
       </div>
 
+      {/* Charts */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="rounded-2xl" title="Lượt tóm tắt theo thời gian" extra={(
-          <Select value={lineRange} onChange={setLineRange} style={{ width: 120 }} options={[
-            { value: "7d", label: "7 ngày" },
-            { value: "30d", label: "30 ngày" },
-            { value: "12m", label: "12 tháng" },
-          ]} />
-        )}>
-          <div style={{ height: 280 }}>
+        {/* Line Chart */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                Thống kê tóm tắt
+              </div>
+              <div className="mt-1 text-base font-bold text-slate-900">
+                Lượt tóm tắt theo thời gian
+              </div>
+            </div>
+            <select
+              value={lineRange}
+              onChange={(e) => setLineRange(e.target.value)}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+            >
+              <option value="7d">7 ngày</option>
+              <option value="30d">30 ngày</option>
+              <option value="12m">12 tháng</option>
+            </select>
+          </div>
+          <div className="mt-4 h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={lineDataMap[lineRange]}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="label" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={3} dot={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis
+                  dataKey="label"
+                  stroke="#64748b"
+                  tickLine={false}
+                  axisLine={false}
+                  minTickGap={18}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  stroke="#64748b"
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip
+                  formatter={(value) => [`${value} lượt`, "Tóm tắt"]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#2563eb"
+                  strokeWidth={3}
+                  dot={{ r: 3, fill: "#2563eb" }}
+                  activeDot={{ r: 5 }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </Card>
+        </div>
 
-        <Card className="rounded-2xl" title="Phân bố trạng thái xử lý">
-          <div style={{ height: 280 }}>
+        {/* Pie Chart */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+            Trạng thái xử lý
+          </div>
+          <div className="mt-1 text-base font-bold text-slate-900">
+            Phân bố SUCCESS / FAILED / PROCESSING
+          </div>
+          <div className="mt-4 h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={58} outerRadius={90}>
-                  {pieData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={62}
+                  outerRadius={98}
+                  paddingAngle={2}
+                >
+                  {pieData.map((item) => (
+                    <Cell key={item.name} fill={item.color} />
+                  ))}
                 </Pie>
                 <Tooltip />
-                <Legend />
+                <Legend verticalAlign="bottom" height={24} />
               </PieChart>
             </ResponsiveContainer>
           </div>
-        </Card>
+        </div>
       </div>
 
-      <Card className="rounded-2xl" title="Bảng lịch sử tóm tắt">
-        <Table
-          columns={columns}
-          dataSource={pagedRows}
-          pagination={false}
-          scroll={{ x: 1200 }}
-          rowKey="key"
-        />
-        <div className="mt-4 flex justify-end">
-          <Pagination
-            current={page}
-            pageSize={pageSize}
-            total={filteredRows.length}
-            showSizeChanger
-            onChange={(p, size) => {
-              setPage(p);
-              setPageSize(size);
-            }}
-          />
-        </div>
-      </Card>
+      {/* Search & Filters */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-center gap-3 lg:flex-nowrap lg:justify-between">
+          <div className="relative w-full lg:max-w-[520px] lg:flex-1">
+            <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Tìm theo tài liệu hoặc người dùng..."
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
+            />
+          </div>
 
-      <Drawer
-        title="Chi tiết lần tóm tắt"
-        open={Boolean(detailRow)}
-        width={500}
-        onClose={() => setDetailRow(null)}
-        extra={<Button onClick={() => setDetailRow(null)}>Đóng</Button>}
-      >
-        {detailRow && (
-          <Space direction="vertical" size={14} style={{ width: "100%" }}>
-            <Card size="small" title="Thông tin chung">
-              <p><b>Tên người dùng:</b> {detailRow.userName}</p>
-              <p><b>Email:</b> {detailRow.email}</p>
-              <p><b>Tài liệu:</b> {detailRow.documentName}</p>
-              <p><b>Loại file:</b> {detailRow.fileType}</p>
-              <p><b>Model AI:</b> {detailRow.model}</p>
-              <p><b>Thời gian xử lý:</b> {detailRow.duration}</p>
-              <p><b>Thời gian tạo:</b> {detailRow.createdAt}</p>
-            </Card>
-            <Card size="small" title="Thông tin thống kê">
-              <p><b>Số từ văn bản gốc:</b> {detailRow.originalLength}</p>
-              <p><b>Số từ bản tóm tắt:</b> {detailRow.summaryLength}</p>
-              <p><b>Tỷ lệ rút gọn:</b> {Math.round((1 - detailRow.summaryLength / detailRow.originalLength) * 100)}%</p>
-            </Card>
-            <Card size="small" title="Nội dung tóm tắt">
-              <div className="max-h-64 overflow-auto whitespace-pre-wrap rounded-lg border border-slate-200 p-3">
-                {detailRow.summaryContent}
+          <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:justify-end">
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+            >
+              <option value="ALL">Tất cả trạng thái</option>
+              <option value="SUCCESS">Thành công</option>
+              <option value="FAILED">Thất bại</option>
+              <option value="PROCESSING">Đang xử lý</option>
+            </select>
+
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              <DownloadOutlinedIcon fontSize="small" />
+              Xuất Excel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="text-sm text-slate-600">
+            {filteredRows.length} lịch sử tóm tắt
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500">Hiển thị</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(1);
+              }}
+              className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold text-slate-600 outline-none"
+            >
+              {PAGE_SIZE_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs text-slate-500">/ trang</span>
+          </div>
+        </div>
+
+        {filteredRows.length === 0 ? (
+          <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm font-semibold text-slate-500">
+            Không tìm thấy bản ghi nào phù hợp.
+          </div>
+        ) : (
+          <>
+            <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
+              <div className="overflow-auto">
+                <table className="min-w-[1200px] w-full text-left">
+                  <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                    <tr>
+                      <th className="px-4 py-3">STT</th>
+                      <th className="px-4 py-3">Người dùng</th>
+                      <th className="px-4 py-3">Tên tài liệu</th>
+                      <th className="px-4 py-3">Loại file</th>
+                      <th className="px-4 py-3">Độ dài gốc</th>
+                      <th className="px-4 py-3">Độ dài tóm tắt</th>
+                      <th className="px-4 py-3">Thời gian xử lý</th>
+                      <th className="px-4 py-3">Ngày tạo</th>
+                      <th className="px-4 py-3">Trạng thái</th>
+                      <th className="px-4 py-3 text-right">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pagedRows.map((row) => (
+                      <tr
+                        key={row.key}
+                        className="border-t border-slate-100 text-sm text-slate-700 transition hover:bg-blue-50/40"
+                      >
+                        <td className="px-4 py-3 font-semibold text-slate-500">
+                          {row.stt}
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-slate-800">
+                          {row.userName}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600 max-w-[200px] truncate">
+                          {row.documentName}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {row.fileType}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {row.originalLength.toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {row.summaryLength.toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {row.duration}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {row.createdAt}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                              summaryStatusBadgeMap[row.status] ||
+                              summaryStatusBadgeMap.PROCESSING
+                            }`}
+                          >
+                            {summaryStatusLabel[row.status] || row.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setDetailRow(row)}
+                              className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
+                              title="Xem chi tiết"
+                              aria-label="Xem chi tiết"
+                            >
+                              <VisibilityOutlinedIcon fontSize="small" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </Card>
-            <Space>
-              <Button type="default" icon={<FileSearchOutlined />}>Xem tài liệu gốc</Button>
-              <Button type="primary" onClick={() => setDetailRow(null)}>Đóng</Button>
-            </Space>
-          </Space>
+            </div>
+
+            {/* Pagination */}
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+              <div className="text-xs text-slate-500">
+                Trang {page} / {totalPages} — Hiển thị{" "}
+                {(page - 1) * pageSize + 1}–
+                {Math.min(page * pageSize, filteredRows.length)} trên{" "}
+                {filteredRows.length}
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => handlePageChange(page - 1)}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  ‹ Trước
+                </button>
+                {Array.from({ length: Math.min(totalPages, 5) }).map(
+                  (_, idx) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = idx + 1;
+                    } else if (page <= 3) {
+                      pageNum = idx + 1;
+                    } else if (page >= totalPages - 2) {
+                      pageNum = totalPages - 4 + idx;
+                    } else {
+                      pageNum = page - 2 + idx;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                          page === pageNum
+                            ? "bg-blue-600 text-white"
+                            : "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  }
+                )}
+                <button
+                  type="button"
+                  disabled={page >= totalPages}
+                  onClick={() => handlePageChange(page + 1)}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Sau ›
+                </button>
+              </div>
+            </div>
+          </>
         )}
-      </Drawer>
+      </div>
+
+      {/* Detail Drawer (Side Panel) */}
+      {detailRow && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/30 transition-opacity"
+            onClick={() => setDetailRow(null)}
+          />
+
+          {/* Panel */}
+          <div className="relative z-10 flex w-full max-w-lg flex-col bg-white shadow-2xl animate-[fadeUp_200ms_ease-out]">
+            {/* Panel Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Chi tiết
+                </div>
+                <div className="text-base font-bold text-slate-900">
+                  Chi tiết lần tóm tắt
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDetailRow(null)}
+                className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
+              >
+                <CloseOutlinedIcon fontSize="small" />
+              </button>
+            </div>
+
+            {/* Panel Body */}
+            <div className="flex-1 overflow-auto p-6 space-y-4">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Thông tin chung
+                </div>
+                <div className="mt-3 space-y-2 text-sm text-slate-700">
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-500">
+                      Người dùng
+                    </span>
+                    <span className="font-semibold">{detailRow.userName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-500">Email</span>
+                    <span>{detailRow.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-500">
+                      Tài liệu
+                    </span>
+                    <span className="max-w-[200px] truncate text-right">
+                      {detailRow.documentName}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-500">
+                      Loại file
+                    </span>
+                    <span>{detailRow.fileType}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-500">
+                      Model AI
+                    </span>
+                    <span>{detailRow.model}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-500">
+                      Thời gian xử lý
+                    </span>
+                    <span>{detailRow.duration}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-500">
+                      Ngày tạo
+                    </span>
+                    <span>{detailRow.createdAt}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-500">
+                      Trạng thái
+                    </span>
+                    <span
+                      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                        summaryStatusBadgeMap[detailRow.status]
+                      }`}
+                    >
+                      {summaryStatusLabel[detailRow.status]}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Thông tin thống kê
+                </div>
+                <div className="mt-3 space-y-2 text-sm text-slate-700">
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-500">
+                      Số từ văn bản gốc
+                    </span>
+                    <span className="font-semibold">
+                      {detailRow.originalLength.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-500">
+                      Số từ bản tóm tắt
+                    </span>
+                    <span className="font-semibold">
+                      {detailRow.summaryLength.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-500">
+                      Tỷ lệ rút gọn
+                    </span>
+                    <span className="font-semibold text-blue-600">
+                      {Math.round(
+                        (1 -
+                          detailRow.summaryLength / detailRow.originalLength) *
+                          100
+                      )}
+                      %
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Nội dung tóm tắt
+                </div>
+                <div className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm text-slate-700">
+                  {detailRow.summaryContent}
+                </div>
+              </div>
+            </div>
+
+            {/* Panel Footer */}
+            <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-6 py-4">
+              <button
+                type="button"
+                onClick={() => setDetailRow(null)}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
