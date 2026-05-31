@@ -57,6 +57,7 @@ import {
 import DeletedUsersPage from "./components/DeletedUsersPage";
 import RestoreUserDialog from "./components/RestoreUserDialog";
 import HardDeleteDialog from "./components/HardDeleteDialog";
+import SummaryHistoryManagement from "./components/SummaryHistoryManagement";
 
 const USER_CACHE_KEY = "currentUser";
 
@@ -798,7 +799,7 @@ const AdminDashboard = () => {
       return;
     }
 
-    if (item.key === "users" || item.key === "dashboard" || item.key === "documents") {
+    if (item.key === "users" || item.key === "dashboard" || item.key === "documents" || item.key === "history") {
       return;
     }
 
@@ -2187,6 +2188,8 @@ const AdminDashboard = () => {
                 )}
               </div>
             </section>
+          ) : activeMenu === "history" ? (
+            <SummaryHistoryManagement />
           ) : (
             <>
               <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
