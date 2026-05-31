@@ -1,5 +1,9 @@
 package com.datn.dms.configuations;
 
+import com.datn.dms.repositories.FileRepository;
+import com.datn.dms.repositories.SummaryRepository;
+import com.datn.dms.repositories.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,9 +17,25 @@ import org.springframework.web.socket.server.standard.ServletServerContainerFact
 public class WebSocketConfig implements WebSocketConfigurer {
 
     private final String aiBaseUrl;
+    private final SummaryRepository summaryRepository;
+    private final FileRepository fileRepository;
+    private final UserRepository userRepository;
+    private final ObjectMapper objectMapper;
+    private final JwtDecodeCustomize jwtDecoder;
 
-    public WebSocketConfig(@Value("${app.ai.base-url}") String aiBaseUrl) {
+    public WebSocketConfig(
+            @Value("${app.ai.base-url}") String aiBaseUrl,
+            SummaryRepository summaryRepository,
+            FileRepository fileRepository,
+            UserRepository userRepository,
+            ObjectMapper objectMapper,
+            JwtDecodeCustomize jwtDecoder) {
         this.aiBaseUrl = aiBaseUrl;
+        this.summaryRepository = summaryRepository;
+        this.fileRepository = fileRepository;
+        this.userRepository = userRepository;
+        this.objectMapper = objectMapper;
+        this.jwtDecoder = jwtDecoder;
     }
 
     /**
@@ -32,16 +52,22 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+        JwtWebSocketInterceptor interceptor = new JwtWebSocketInterceptor(jwtDecoder, userRepository);
+
         // Proxy WebSocket cho tóm tắt từ file
         registry.addHandler(
-                new SummarizeWebSocketHandler(aiBaseUrl, "/ws/summarize"),
+                new SummarizeWebSocketHandler(aiBaseUrl, "/ws/summarize", summaryRepository, fileRepository, objectMapper),
                 "/ws/summarize"
-        ).setAllowedOrigins("*");
+        )
+        .addInterceptors(interceptor)
+        .setAllowedOrigins("*");
 
         // Proxy WebSocket cho tóm tắt từ văn bản
         registry.addHandler(
-                new SummarizeWebSocketHandler(aiBaseUrl, "/ws/summarize-text"),
+                new SummarizeWebSocketHandler(aiBaseUrl, "/ws/summarize-text", summaryRepository, fileRepository, objectMapper),
                 "/ws/summarize-text"
-        ).setAllowedOrigins("*");
+        )
+        .addInterceptors(interceptor)
+        .setAllowedOrigins("*");
     }
 }

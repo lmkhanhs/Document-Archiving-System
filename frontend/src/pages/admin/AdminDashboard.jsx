@@ -1370,7 +1370,8 @@ const AdminDashboard = () => {
       }))
       .then((base64Content) => {
         const wsUrl = import.meta.env.VITE_SUMMARY_WS_URL || `${WS_BASE_URL}/ws/summarize`;
-        const ws = new WebSocket(wsUrl);
+        const wsToken = localStorage.getItem("accessToken") || "";
+        const ws = new WebSocket(`${wsUrl}?token=${wsToken}`);
         docSummarySocketRef.current = ws;
 
         ws.onopen = () => {

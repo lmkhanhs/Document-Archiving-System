@@ -77,7 +77,8 @@ const TextSummarizer = ({
     setProgress({ current: 0, total: 0 });
     receivedDoneRef.current = false;
 
-    const ws = new WebSocket(SUMMARY_TEXT_WS_URL);
+    const token = localStorage.getItem("accessToken") || "";
+    const ws = new WebSocket(`${SUMMARY_TEXT_WS_URL}?token=${token}`);
     websocketRef.current = ws;
 
     ws.onopen = () => {

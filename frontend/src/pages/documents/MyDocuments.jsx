@@ -814,7 +814,8 @@ const MyDocuments = () => {
       });
 
       const wsUrl = import.meta.env.VITE_SUMMARY_WS_URL || `${WS_BASE_URL}/ws/summarize`;
-      const ws = new WebSocket(wsUrl);
+      const wsToken = localStorage.getItem("accessToken") || "";
+      const ws = new WebSocket(`${wsUrl}?token=${wsToken}`);
       summarySocketRef.current = ws;
 
       ws.onopen = () => {

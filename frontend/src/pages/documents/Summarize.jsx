@@ -156,7 +156,8 @@ const Summarize = () => {
   };
 
   const connectWebSocket = (filename, base64Content) => {
-    const ws = new WebSocket(SUMMARY_WS_URL);
+    const token = localStorage.getItem("accessToken") || "";
+    const ws = new WebSocket(`${SUMMARY_WS_URL}?token=${token}`);
     websocketRef.current = ws;
 
     ws.onopen = () => {
