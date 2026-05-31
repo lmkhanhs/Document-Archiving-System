@@ -172,3 +172,32 @@ export const getCountries = async () => {
   }
 };
 
+export const getUserStatistics = async () => {
+  try {
+    const response = await api.get("/users/statistics");
+    return parseApiResponse(response, "Không thể lấy thống kê người dùng");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể lấy thống kê người dùng");
+  }
+};
+
+export const getUserDistribution = async () => {
+  try {
+    const response = await api.get("/users/distribution");
+    return parseApiResponse(response, "Không thể lấy phân bổ người dùng");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể lấy phân bổ người dùng");
+  }
+};
+
+export const getRegistrationGrowth = async (startDate, endDate) => {
+  try {
+    const response = await api.get("/users/registration-growth", {
+      params: { startDate, endDate },
+    });
+    return parseApiResponse(response, "Không thể lấy dữ liệu tăng trưởng");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể lấy dữ liệu tăng trưởng");
+  }
+};
+

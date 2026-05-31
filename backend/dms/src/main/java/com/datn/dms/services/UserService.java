@@ -6,8 +6,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,6 +22,9 @@ import org.springframework.web.multipart.MultipartFile;
 import com.datn.dms.dtos.users.request.UpdateProfileRequest;
 import com.datn.dms.dtos.users.response.DetailUserResponse;
 import com.datn.dms.dtos.users.response.InfoUserResponse;
+import com.datn.dms.dtos.users.response.RegistrationGrowthResponse;
+import com.datn.dms.dtos.users.response.UserDistributionResponse;
+import com.datn.dms.dtos.users.response.UserStatisticsResponse;
 import com.datn.dms.entities.CountryEntity;
 import com.datn.dms.entities.GenderEntity;
 import com.datn.dms.entities.RoleEntity;
@@ -203,5 +212,74 @@ public class UserService {
         return this.userRepository.findByIsDeletedTrue().stream()
                 .map(this.userMapper::toInfoUserResponse)
                 .toList();
+    }
+
+    public UserStatisticsResponse getUserStatistics() {
+        long totalUsers = userRepository.count();
+        long totalAdmins = userRepository.countByRoles_Name("ADMIN");
+        long totalNormalUsers = userRepository.countByRoles_Name("USER");
+        long totalDeletedUsers = userRepository.countByIsDeletedTrue();
+
+        return UserStatisticsResponse.builder()
+                .totalUsers(totalUsers)
+                .totalAdmins(totalAdmins)
+                .totalNormalUsers(totalNormalUsers)
+                .totalDeletedUsers(totalDeletedUsers)
+                .build();
+    }
+
+    public UserDistributionResponse getUserDistribution() {
+        long active = userRepository.countByIsActiveTrueAndIsDeletedFalse();
+        long locked = userRepository.countByIsActiveFalseAndIsDeletedFalse();
+        long deleted = userRepository.countByIsDeletedTrue();
+        
+        long admin = userRepository.countByRoles_NameAndIsDeletedFalse("ADMIN");
+        long user = userRepository.countByRoles_NameAndIsDeletedFalse("USER");
+
+        UserDistributionResponse.StatusDistribution statusDistribution = UserDistributionResponse.StatusDistribution.builder()
+                .active(active)
+                .locked(locked)
+                .deleted(deleted)
+                .build();
+
+        UserDistributionResponse.RoleDistribution roleDistribution = UserDistributionResponse.RoleDistribution.builder()
+                .admin(admin)
+                .user(user)
+                .build();
+
+        return UserDistributionResponse.builder()
+                .statusDistribution(statusDistribution)
+                .roleDistribution(roleDistribution)
+                .build();
+    }
+
+    public RegistrationGrowthResponse getRegistrationGrowth(LocalDate startDate, LocalDate endDate) {
+        LocalDateTime start = startDate.atStartOfDay();
+        LocalDateTime end = endDate.atTime(LocalTime.MAX);
+
+        List<UserEntity> users = userRepository.findByCreatedAtBetween(start, end);
+
+        Map<LocalDate, Long> countByDate = users.stream()
+                .map(u -> u.getCreatedAt().toLocalDate())
+                .collect(Collectors.groupingBy(d -> d, Collectors.counting()));
+
+        List<RegistrationGrowthResponse.DailyRegistration> registrations = new ArrayList<>();
+        long totalUsers = 0;
+
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            long count = countByDate.getOrDefault(date, 0L);
+            registrations.add(RegistrationGrowthResponse.DailyRegistration.builder()
+                    .date(date)
+                    .count(count)
+                    .build());
+            totalUsers += count;
+        }
+
+        return RegistrationGrowthResponse.builder()
+                .startDate(startDate)
+                .endDate(endDate)
+                .totalUsers(totalUsers)
+                .registrations(registrations)
+                .build();
     }
 }

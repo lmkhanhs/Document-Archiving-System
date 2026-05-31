@@ -36,6 +36,9 @@ import { getInfoUser, getRoles, logout } from "../../services/authService";
 import {
   filterUsers,
   getDeletedUsers,
+  getRegistrationGrowth,
+  getUserDistribution,
+  getUserStatistics,
   getUsers,
   hardDeleteUser,
   restoreUser,
@@ -58,6 +61,19 @@ import DeletedUsersPage from "./components/DeletedUsersPage";
 import RestoreUserDialog from "./components/RestoreUserDialog";
 import HardDeleteDialog from "./components/HardDeleteDialog";
 import SummaryHistoryManagement from "./components/SummaryHistoryManagement";
+import {
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 const USER_CACHE_KEY = "currentUser";
 
@@ -391,7 +407,48 @@ const statCards = [
   },
 ];
 
+const toDateInputValue = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const addDays = (date, amount) => {
+  const clone = new Date(date);
+  clone.setDate(clone.getDate() + amount);
+  return clone;
+};
+
 const AdminDashboard = () => {
+  const today = useMemo(() => new Date(), []);
+  const [trendDateRange, setTrendDateRange] = useState(() => ({
+    start: toDateInputValue(addDays(today, -30)),
+    end: toDateInputValue(today),
+  }));
+
+  const handleTrendStartChange = (nextStart) => {
+    setTrendDateRange((prev) => {
+      if (!nextStart) {
+        return prev;
+      }
+
+      const nextEnd = prev.end && prev.end < nextStart ? nextStart : prev.end;
+      return { start: nextStart, end: nextEnd };
+    });
+  };
+
+  const handleTrendEndChange = (nextEnd) => {
+    setTrendDateRange((prev) => {
+      if (!nextEnd) {
+        return prev;
+      }
+
+      const nextStart = prev.start && prev.start > nextEnd ? nextEnd : prev.start;
+      return { start: nextStart, end: nextEnd };
+    });
+  };
+
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState("dashboard");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -477,6 +534,12 @@ const AdminDashboard = () => {
     submitting: false,
   });
   const [toast, setToast] = useState("");
+  const [statistics, setStatistics] = useState(null);
+  const [distribution, setDistribution] = useState(null);
+  const [growthData, setGrowthData] = useState([]);
+  const [isDashboardLoading, setIsDashboardLoading] = useState(false);
+  const [isGrowthLoading, setIsGrowthLoading] = useState(false);
+  const [statsReloadKey, setStatsReloadKey] = useState(0);
   const userMenuRef = useRef(null);
   const userTriggerRef = useRef(null);
   const previewUrlRef = useRef("");
@@ -579,6 +642,98 @@ const AdminDashboard = () => {
     const timer = setTimeout(() => setToast(""), 2400);
     return () => clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    if (activeMenu !== "users") {
+      return;
+    }
+
+    let isMounted = true;
+    setIsDashboardLoading(true);
+
+    Promise.all([
+      getUserStatistics().catch(() => null),
+      getUserDistribution().catch(() => null),
+      getRegistrationGrowth(trendDateRange.start, trendDateRange.end).catch(() => null),
+    ])
+      .then(([statsData, distData, growthResult]) => {
+        if (!isMounted) {
+          return;
+        }
+
+        if (statsData) {
+          setStatistics(statsData);
+        }
+
+        if (distData) {
+          setDistribution(distData);
+        }
+
+        if (growthResult?.registrations) {
+          setGrowthData(
+            growthResult.registrations.map((item) => ({
+              key: item.date,
+              label: `${String(new Date(item.date).getDate()).padStart(2, "0")}/${String(new Date(item.date).getMonth() + 1).padStart(2, "0")}`,
+              value: item.count,
+            }))
+          );
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setToast("Không thể tải dữ liệu thống kê");
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsDashboardLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeMenu, statsReloadKey]);
+
+  useEffect(() => {
+    if (activeMenu !== "users") {
+      return;
+    }
+
+    let isMounted = true;
+    setIsGrowthLoading(true);
+
+    getRegistrationGrowth(trendDateRange.start, trendDateRange.end)
+      .then((result) => {
+        if (!isMounted) {
+          return;
+        }
+
+        if (result?.registrations) {
+          setGrowthData(
+            result.registrations.map((item) => ({
+              key: item.date,
+              label: `${String(new Date(item.date).getDate()).padStart(2, "0")}/${String(new Date(item.date).getMonth() + 1).padStart(2, "0")}`,
+              value: item.count,
+            }))
+          );
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setToast("Không thể tải dữ liệu tăng trưởng");
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsGrowthLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeMenu, trendDateRange.start, trendDateRange.end]);
 
   useEffect(() => {
     docSummaryStatusRef.current = docSummaryState.status;
@@ -819,6 +974,7 @@ const AdminDashboard = () => {
   const normalizedDeletedUsers = useMemo(() => (
     deletedUsers.map((user) => ({
       ...user,
+      role: getUserRoleLabel(user),
       active: Boolean(user?.active),
       status: "DELETED",
       thumbnailUrl: resolveThumbnailUrl(user?.thumbnailUrl || user?.avatar || ""),
@@ -925,6 +1081,26 @@ const AdminDashboard = () => {
     });
   }, [normalizedUsers, roleFilter, search, statusFilter]);
 
+  const userDashboardStats = useMemo(() => ({
+    totalCount: statistics?.totalUsers ?? 0,
+    adminCount: statistics?.totalAdmins ?? 0,
+    userCount: statistics?.totalNormalUsers ?? 0,
+    deletedCount: statistics?.totalDeletedUsers ?? 0,
+  }), [statistics]);
+
+  const userStatusChartData = useMemo(() => ([
+    { name: "ACTIVE", value: distribution?.statusDistribution?.active ?? 0, color: "#16a34a" },
+    { name: "LOCKED", value: distribution?.statusDistribution?.locked ?? 0, color: "#f59e0b" },
+    { name: "DELETED", value: distribution?.statusDistribution?.deleted ?? 0, color: "#dc2626" },
+  ]), [distribution]);
+
+  const userRoleChartData = useMemo(() => ([
+    { name: "ADMIN", value: distribution?.roleDistribution?.admin ?? 0, color: "#2563eb" },
+    { name: "USER", value: distribution?.roleDistribution?.user ?? 0, color: "#7c3aed" },
+  ]), [distribution]);
+
+  const userRegistrationTrendData = growthData;
+
   const handleRoleDialogOpen = (user) => {
     setRoleDialog({
       open: true,
@@ -954,6 +1130,7 @@ const AdminDashboard = () => {
           : item
       )));
       setToast("Đã cập nhật vai trò người dùng");
+      setStatsReloadKey((prev) => prev + 1);
       handleRoleDialogClose();
     } catch (error) {
       setToast(error.message || "Không thể cập nhật vai trò");
@@ -970,6 +1147,7 @@ const AdminDashboard = () => {
     try {
       await updateUserStatus(user.id, nextActive);
       setToast(nextActive ? "Đã mở khóa tài khoản" : "Đã khóa tài khoản");
+      setStatsReloadKey((prev) => prev + 1);
     } catch (error) {
       setUsers((prev) => prev.map((item) => (
         item.id === user.id ? { ...item, active: user.active } : item
@@ -998,6 +1176,7 @@ const AdminDashboard = () => {
       setUsers((prev) => prev.filter((item) => item.id !== softDeleteDialog.user.id));
       setToast("Đã xóa mềm người dùng");
       setDeletedReloadKey((prev) => prev + 1);
+      setStatsReloadKey((prev) => prev + 1);
       handleSoftDeleteClose();
     } catch (error) {
       setToast(error.message || "Không thể xóa mềm người dùng");
@@ -1024,6 +1203,7 @@ const AdminDashboard = () => {
       await restoreUser(restoreDialog.user.id);
       setDeletedUsers((prev) => prev.filter((item) => item.id !== restoreDialog.user.id));
       setUserReloadKey((prev) => prev + 1);
+      setStatsReloadKey((prev) => prev + 1);
       setToast("Đã khôi phục tài khoản");
       handleRestoreClose();
     } catch (error) {
@@ -1051,6 +1231,7 @@ const AdminDashboard = () => {
       await hardDeleteUser(hardDeleteDialog.user.id);
       setDeletedUsers((prev) => prev.filter((item) => item.id !== hardDeleteDialog.user.id));
       setToast("Đã xóa vĩnh viễn người dùng");
+      setStatsReloadKey((prev) => prev + 1);
       handleHardDeleteClose();
     } catch (error) {
       const message = error.message || "Không thể xóa vĩnh viễn người dùng";
@@ -1506,20 +1687,20 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            <div className="flex flex-1 flex-wrap items-center gap-2">
-              <div className="relative flex-1 min-w-[220px]">
-                <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder={activeMenu === "users"
-                    ? "Tim theo username hoặc email..."
-                    : activeMenu === "documents"
+            <div className="flex flex-1 flex-wrap items-center gap-2 lg:justify-end">
+              {activeMenu !== "users" && (
+                <div className="relative flex-1 min-w-[220px]">
+                  <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder={activeMenu === "documents"
                       ? "Tim theo ten tai lieu..."
                       : "Tim kiem nguoi dung, tai lieu..."}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
-                />
-              </div>
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
+                  />
+                </div>
+              )}
 
               <div className="relative flex items-center gap-2 rounded-xl border border-slate-200 px-2 py-1.5">
                 <button
@@ -1591,66 +1772,258 @@ const AdminDashboard = () => {
 
           {activeMenu === "users" ? (
             <section className="mt-6 space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    Quản lý tài khoản
-                  </div>
-                  <div className="text-lg font-bold text-slate-900">Danh sách người dùng</div>
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Quản lý tài khoản
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-1">
-                    <button
-                      type="button"
-                      onClick={() => setUsersView("active")}
-                      className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
-                        usersView === "active"
-                          ? "bg-blue-600 text-white"
-                          : "text-slate-600 hover:bg-slate-100"
-                      }`}
-                    >
-                      Đang hoạt động
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setUsersView("deleted")}
-                      className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
-                        usersView === "deleted"
-                          ? "bg-slate-900 text-white"
-                          : "text-slate-600 hover:bg-slate-100"
-                      }`}
-                    >
-                      Người dùng đã xóa
-                    </button>
-                  </div>
-
-                  {usersView === "active" && (
-                    <>
-                      <select
-                        value={roleFilter}
-                        onChange={(event) => setRoleFilter(event.target.value)}
-                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
-                      >
-                        <option value="all">Tất cả vai trò</option>
-                        <option value="ADMIN">ADMIN</option>
-                        <option value="USER">USER</option>
-                      </select>
-                      <select
-                        value={statusFilter}
-                        onChange={(event) => setStatusFilter(event.target.value)}
-                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
-                      >
-                        <option value="all">Tất cả trạng thái</option>
-                        <option value="ACTIVE">ACTIVE</option>
-                        <option value="LOCKED">LOCKED</option>
-                      </select>
-                    </>
-                  )}
-                </div>
+                <div className="text-lg font-bold text-slate-900">Danh sách người dùng</div>
               </div>
 
               {usersView === "active" ? (
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <>
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    {[
+                      {
+                        key: "total-users",
+                        label: "Tổng số người dùng",
+                        value: userDashboardStats.totalCount,
+                        sub: "Toàn bộ tài khoản trong hệ thống",
+                        tone: "from-blue-600 to-sky-500",
+                      },
+                      {
+                        key: "admin-users",
+                        label: "Số lượng Admin",
+                        value: userDashboardStats.adminCount,
+                        sub: "Tài khoản quản trị",
+                        tone: "from-indigo-600 to-blue-500",
+                      },
+                      {
+                        key: "normal-users",
+                        label: "Số lượng User",
+                        value: userDashboardStats.userCount,
+                        sub: "Tài khoản người dùng",
+                        tone: "from-violet-600 to-purple-500",
+                      },
+                      {
+                        key: "deleted-users",
+                        label: "Đã xóa mềm",
+                        value: userDashboardStats.deletedCount,
+                        sub: "Tài khoản trong thùng rác",
+                        tone: "from-amber-600 to-orange-500",
+                      },
+                    ].map((card) => (
+                      <div
+                        key={card.key}
+                        className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200"
+                      >
+                        <div className={`inline-flex items-center rounded-2xl bg-gradient-to-r px-3 py-1 text-xs font-semibold text-white ${card.tone}`}>
+                          Báo cáo
+                        </div>
+                        <div className="mt-3 text-sm font-semibold text-slate-600">{card.label}</div>
+                        {isDashboardLoading ? (
+                          <div className="mt-1 h-8 w-16 animate-pulse rounded-lg bg-slate-200" />
+                        ) : (
+                          <div className="mt-1 text-2xl font-bold text-slate-900">{card.value}</div>
+                        )}
+                        <div className="mt-2 text-xs text-slate-500">{card.sub}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        Trạng thái tài khoản
+                      </div>
+                      <div className="mt-1 text-base font-bold text-slate-900">Phân bổ ACTIVE / LOCKED / DELETED</div>
+                      <div className="mt-4 h-[280px] w-full">
+                        {isDashboardLoading ? (
+                          <div className="flex h-full items-center justify-center">
+                            <div className="h-[196px] w-[196px] animate-pulse rounded-full bg-slate-200" />
+                          </div>
+                        ) : (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={userStatusChartData}
+                                dataKey="value"
+                                nameKey="name"
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={62}
+                                outerRadius={98}
+                                paddingAngle={2}
+                              >
+                                {userStatusChartData.map((item) => (
+                                  <Cell key={item.name} fill={item.color} />
+                                ))}
+                              </Pie>
+                              <Tooltip />
+                              <Legend verticalAlign="bottom" height={24} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        Vai trò người dùng
+                      </div>
+                      <div className="mt-1 text-base font-bold text-slate-900">Phân bố ADMIN / USER</div>
+                      <div className="mt-4 h-[280px] w-full">
+                        {isDashboardLoading ? (
+                          <div className="flex h-full items-center justify-center">
+                            <div className="h-[196px] w-[196px] animate-pulse rounded-full bg-slate-200" />
+                          </div>
+                        ) : (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={userRoleChartData}
+                                dataKey="value"
+                                nameKey="name"
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={62}
+                                outerRadius={98}
+                                paddingAngle={2}
+                              >
+                                {userRoleChartData.map((item) => (
+                                  <Cell key={item.name} fill={item.color} />
+                                ))}
+                              </Pie>
+                              <Tooltip />
+                              <Legend verticalAlign="bottom" height={24} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                          Tăng trưởng người dùng
+                        </div>
+                        <div className="mt-1 text-base font-bold text-slate-900">Số lượng đăng ký theo thời gian</div>
+                      </div>
+
+                      <div className="flex flex-wrap items-end gap-2">
+                        <label className="flex flex-col text-xs font-semibold text-slate-500">
+                          Từ ngày
+                          <input
+                            type="date"
+                            value={trendDateRange.start}
+                            onChange={(event) => handleTrendStartChange(event.target.value)}
+                            max={trendDateRange.end}
+                            className="mt-1 rounded-lg border border-slate-200 px-2 py-1.5 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-300"
+                          />
+                        </label>
+                        <label className="flex flex-col text-xs font-semibold text-slate-500">
+                          Đến ngày
+                          <input
+                            type="date"
+                            value={trendDateRange.end}
+                            onChange={(event) => handleTrendEndChange(event.target.value)}
+                            min={trendDateRange.start}
+                            max={toDateInputValue(today)}
+                            className="mt-1 rounded-lg border border-slate-200 px-2 py-1.5 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-300"
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 h-[280px] w-full">
+                      {isGrowthLoading ? (
+                        <div className="flex h-full flex-col justify-end gap-1 px-4">
+                          <div className="h-full animate-pulse rounded-lg bg-slate-100" />
+                        </div>
+                      ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={userRegistrationTrendData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                            <XAxis dataKey="label" stroke="#64748b" tickLine={false} axisLine={false} minTickGap={18} />
+                            <YAxis allowDecimals={false} stroke="#64748b" tickLine={false} axisLine={false} />
+                            <Tooltip formatter={(value) => [`${value} người dùng`, "Đăng ký"]} />
+                            <Line
+                              type="monotone"
+                              dataKey="value"
+                              stroke="#2563eb"
+                              strokeWidth={3}
+                              dot={{ r: 3, fill: "#2563eb" }}
+                              activeDot={{ r: 5 }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex flex-wrap items-center gap-3 lg:flex-nowrap lg:justify-between">
+                      <div className="relative w-full lg:max-w-[520px] lg:flex-1">
+                        <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          value={search}
+                          onChange={(event) => setSearch(event.target.value)}
+                          placeholder="Tìm theo username hoặc email..."
+                          className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
+                        />
+                      </div>
+
+                      <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:justify-end">
+                        <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-1">
+                          <button
+                            type="button"
+                            onClick={() => setUsersView("active")}
+                            className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+                              usersView === "active"
+                                ? "bg-blue-600 text-white"
+                                : "text-slate-600 hover:bg-slate-100"
+                            }`}
+                          >
+                            Đang hoạt động
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setUsersView("deleted")}
+                            className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+                              usersView === "deleted"
+                                ? "bg-slate-900 text-white"
+                                : "text-slate-600 hover:bg-slate-100"
+                            }`}
+                          >
+                            Người dùng đã xóa
+                          </button>
+                        </div>
+
+                        <select
+                          value={roleFilter}
+                          onChange={(event) => setRoleFilter(event.target.value)}
+                          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+                        >
+                          <option value="all">Tất cả vai trò</option>
+                          <option value="ADMIN">ADMIN</option>
+                          <option value="USER">USER</option>
+                        </select>
+
+                        <select
+                          value={statusFilter}
+                          onChange={(event) => setStatusFilter(event.target.value)}
+                          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+                        >
+                          <option value="all">Tất cả trạng thái</option>
+                          <option value="ACTIVE">ACTIVE</option>
+                          <option value="LOCKED">LOCKED</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="text-sm text-slate-600">
                       {filteredUsers.length} nguoi dung
@@ -1798,17 +2171,81 @@ const AdminDashboard = () => {
                     </div>
                   )}
                 </div>
+                </>
               ) : (
-                <DeletedUsersPage
-                  users={normalizedDeletedUsers}
-                  isLoading={isDeletedLoading}
-                  error={deletedError}
-                  onRefresh={() => setDeletedReloadKey((prev) => prev + 1)}
-                  onRestore={handleRestoreOpen}
-                  onHardDelete={handleHardDeleteOpen}
-                  getAvatarLabel={getAvatarLabel}
-                  formatDate={formatDate}
-                />
+                <>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex flex-wrap items-center gap-3 lg:flex-nowrap lg:justify-between">
+                      <div className="relative w-full lg:max-w-[520px] lg:flex-1">
+                        <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          value={search}
+                          onChange={(event) => setSearch(event.target.value)}
+                          placeholder="Tìm theo username hoặc email..."
+                          className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
+                        />
+                      </div>
+
+                      <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:justify-end">
+                        <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-1">
+                          <button
+                            type="button"
+                            onClick={() => setUsersView("active")}
+                            className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+                              usersView === "active"
+                                ? "bg-blue-600 text-white"
+                                : "text-slate-600 hover:bg-slate-100"
+                            }`}
+                          >
+                            Đang hoạt động
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setUsersView("deleted")}
+                            className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+                              usersView === "deleted"
+                                ? "bg-slate-900 text-white"
+                                : "text-slate-600 hover:bg-slate-100"
+                            }`}
+                          >
+                            Người dùng đã xóa
+                          </button>
+                        </div>
+
+                        <select
+                          value={roleFilter}
+                          onChange={(event) => setRoleFilter(event.target.value)}
+                          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+                        >
+                          <option value="all">Tất cả vai trò</option>
+                          <option value="ADMIN">ADMIN</option>
+                          <option value="USER">USER</option>
+                        </select>
+
+                        <select
+                          value={statusFilter}
+                          onChange={(event) => setStatusFilter(event.target.value)}
+                          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+                        >
+                          <option value="all">Tất cả trạng thái</option>
+                          <option value="ACTIVE">ACTIVE</option>
+                          <option value="LOCKED">LOCKED</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <DeletedUsersPage
+                    users={normalizedDeletedUsers}
+                    isLoading={isDeletedLoading}
+                    error={deletedError}
+                    onRefresh={() => setDeletedReloadKey((prev) => prev + 1)}
+                    onRestore={handleRestoreOpen}
+                    onHardDelete={handleHardDeleteOpen}
+                    getAvatarLabel={getAvatarLabel}
+                    formatDate={formatDate}
+                  />
+                </>
               )}
             </section>
           ) : activeMenu === "documents" ? (

@@ -12,6 +12,9 @@ import com.datn.dms.dtos.users.request.UpdateProfileRequest;
 import com.datn.dms.dtos.users.response.CreateUserResponse;
 import com.datn.dms.dtos.users.response.DetailUserResponse;
 import com.datn.dms.dtos.users.response.InfoUserResponse;
+import com.datn.dms.dtos.users.response.RegistrationGrowthResponse;
+import com.datn.dms.dtos.users.response.UserDistributionResponse;
+import com.datn.dms.dtos.users.response.UserStatisticsResponse;
 import com.datn.dms.services.UserService;
 
 import lombok.AccessLevel;
@@ -19,9 +22,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -171,5 +176,35 @@ public class UserController {
                 .data(userService.getSoftDeletedUsers())
                 .build();
     }
-    
+    @GetMapping("/statistics")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<UserStatisticsResponse> getUserStatistics() {
+        return ApiResponse.<UserStatisticsResponse>builder()
+                .code(200)
+                .message("Get user statistics successfully")
+                .data(userService.getUserStatistics())
+                .build();
+    }
+
+    @GetMapping("/distribution")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<UserDistributionResponse> getUserDistribution() {
+        return ApiResponse.<UserDistributionResponse>builder()
+                .code(200)
+                .message("Get user distribution successfully")
+                .data(userService.getUserDistribution())
+                .build();
+    }
+
+    @GetMapping("/registration-growth")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<RegistrationGrowthResponse> getRegistrationGrowth(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return ApiResponse.<RegistrationGrowthResponse>builder()
+                .code(200)
+                .message("Get registration growth successfully")
+                .data(userService.getRegistrationGrowth(startDate, endDate))
+                .build();
+    }
 }

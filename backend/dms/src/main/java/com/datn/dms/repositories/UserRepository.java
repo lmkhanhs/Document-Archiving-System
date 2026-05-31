@@ -21,4 +21,16 @@ public interface UserRepository extends JpaRepository<UserEntity,  Long> {
     List<UserEntity> findByIsDeletedTrue();
 
     List<UserEntity> findAllByIsDeletedFalse();
+
+    long countByRoles_Name(String roleName);
+    
+    long countByIsDeletedTrue();
+
+    long countByIsActiveTrueAndIsDeletedFalse();
+
+    long countByIsActiveFalseAndIsDeletedFalse();
+
+    long countByRoles_NameAndIsDeletedFalse(String roleName);
+
+    List<UserEntity> findByCreatedAtBetween(java.time.LocalDateTime start, java.time.LocalDateTime end);
 }
