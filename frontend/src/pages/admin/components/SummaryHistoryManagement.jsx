@@ -1,8 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
+import { getSummaryStatistics } from "../../../services/summaryService";
 import {
   CartesianGrid,
   Cell,
@@ -23,7 +29,7 @@ const summaryStatusBadgeMap = {
   PROCESSING: "bg-amber-50 text-amber-700 border-amber-200",
 };
 
-const summaryStatusLabel = {
+const summaryStatusLabelMap = {
   SUCCESS: "Thành công",
   FAILED: "Thất bại",
   PROCESSING: "Đang xử lý",
@@ -31,16 +37,20 @@ const summaryStatusLabel = {
 
 const mockRows = Array.from({ length: 28 }).map((_, idx) => {
   const statuses = ["SUCCESS", "FAILED", "PROCESSING"];
+  const fileTypes = ["PDF", "DOCX", "TXT"];
   const status = statuses[idx % 3];
-  const original = 900 + idx * 27;
-  const summary = Math.floor(original * 0.28);
+  const original = 900 + idx * 31;
+  const summary = Math.floor(original * 0.3);
+  const fileType = fileTypes[idx % 3];
+
   return {
     key: idx + 1,
     stt: idx + 1,
     userName: `user_${idx + 1}`,
     email: `user${idx + 1}@mail.com`,
-    documentName: `Tai_lieu_bao_cao_${idx + 1}.pdf`,
-    fileType: "PDF",
+    documentName: `Tai_lieu_bao_cao_${idx + 1}.${fileType.toLowerCase()}`,
+    fileType,
+    fileSize: `${(0.6 + (idx % 6) * 0.4).toFixed(1)} MB`,
     model: idx % 2 === 0 ? "claude-sonnet-4-6" : "claude-opus-4-8",
     originalLength: original,
     summaryLength: summary,
@@ -87,29 +97,47 @@ const pieData = [
   { name: "PROCESSING", value: 7, color: "#f59e0b" },
 ];
 
-const PAGE_SIZE_OPTIONS = [8, 15, 25];
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
+
+const getAvatarLabel = (value) => {
+  const normalized = String(value || "").trim();
+  return normalized ? normalized.charAt(0).toUpperCase() : "U";
+};
 
 export default function SummaryHistoryManagement() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [lineRange, setLineRange] = useState("7d");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(8);
+  const [pageSize, setPageSize] = useState(10);
   const [detailRow, setDetailRow] = useState(null);
+  const [toast, setToast] = useState("");
+  const [stats, setStats] = useState(null);
+  const [isStatsLoading, setIsStatsLoading] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    setIsStatsLoading(true);
+    getSummaryStatistics()
+      .then((data) => { if (isMounted) setStats(data); })
+      .catch(() => { if (isMounted) setToast("Không thể tải dữ liệu thống kê"); })
+      .finally(() => { if (isMounted) setIsStatsLoading(false); });
+    return () => { isMounted = false; };
+  }, []);
 
   const filteredRows = useMemo(() => {
     const keyword = search.trim().toLowerCase();
     return mockRows.filter((row) => {
       const passSearch =
-        !keyword ||
-        row.documentName.toLowerCase().includes(keyword) ||
-        row.userName.toLowerCase().includes(keyword);
+        !keyword
+        || row.documentName.toLowerCase().includes(keyword)
+        || row.userName.toLowerCase().includes(keyword);
       const passStatus = statusFilter === "ALL" || row.status === statusFilter;
       return passSearch && passStatus;
     });
   }, [search, statusFilter]);
 
-  const totalPages = Math.ceil(filteredRows.length / pageSize);
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
 
   const pagedRows = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -122,9 +150,37 @@ export default function SummaryHistoryManagement() {
     }
   };
 
+  const handleRefresh = () => {
+    setSearch("");
+    setStatusFilter("ALL");
+    setLineRange("7d");
+    setPage(1);
+    setPageSize(10);
+    setToast("Đã làm mới bộ lọc");
+    window.setTimeout(() => setToast(""), 1800);
+  };
+
+  const handleExport = () => {
+    setToast("Đã mô phỏng xuất Excel (chưa tích hợp API)");
+    window.setTimeout(() => setToast(""), 1800);
+  };
+
+  const handleViewSummaryContent = (row) => {
+    setDetailRow(row);
+  };
+
+  const handleViewOriginalDocument = () => {
+    setToast("Tính năng xem tài liệu gốc sẽ được tích hợp với API");
+    window.setTimeout(() => setToast(""), 1800);
+  };
+
+  const handleDeleteHistory = (row) => {
+    setToast(`Đã mô phỏng xóa lịch sử #${row.stt}`);
+    window.setTimeout(() => setToast(""), 1800);
+  };
+
   return (
-    <section className="mt-6 space-y-4">
-      {/* Title */}
+    <section className="mt-6 space-y-4 overflow-hidden">
       <div>
         <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
           Lịch sử tóm tắt
@@ -134,35 +190,34 @@ export default function SummaryHistoryManagement() {
         </div>
       </div>
 
-      {/* Stat Cards */}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
           {
             key: "total-summaries",
             label: "Tổng lượt tóm tắt",
-            value: "18,540",
-            sub: "+12.4% so với kỳ trước",
+            value: isStatsLoading ? "..." : stats ? stats.totalSummaries.toLocaleString() : "—",
+            sub: stats ? `${stats.totalSummariesGrowth >= 0 ? "+" : ""}${stats.totalSummariesGrowth}% so với kỳ trước` : "",
             tone: "from-blue-600 to-sky-500",
           },
           {
             key: "today-summaries",
             label: "Tóm tắt hôm nay",
-            value: "312",
-            sub: "+18.9% so với hôm qua",
+            value: isStatsLoading ? "..." : stats ? stats.todaySummaries.toLocaleString() : "—",
+            sub: stats ? `${stats.todaySummariesGrowth >= 0 ? "+" : ""}${stats.todaySummariesGrowth}% so với hôm qua` : "",
             tone: "from-indigo-600 to-blue-500",
           },
           {
             key: "success-rate",
             label: "Tỷ lệ thành công",
-            value: "92%",
-            sub: "+1.6% theo tuần",
+            value: isStatsLoading ? "..." : stats ? `${stats.successRate}%` : "—",
+            sub: stats ? `${stats.successRateGrowth >= 0 ? "+" : ""}${stats.successRateGrowth}% theo tuần` : "",
             tone: "from-violet-600 to-purple-500",
           },
           {
             key: "avg-duration",
             label: "Thời gian xử lý trung bình",
-            value: "12.4s",
-            sub: "-8.0% so với tháng trước",
+            value: isStatsLoading ? "..." : stats ? `${stats.averageProcessingTime}s` : "—",
+            sub: stats ? `${stats.averageProcessingTimeGrowth >= 0 ? "+" : ""}${stats.averageProcessingTimeGrowth}% so với tháng trước` : "",
             tone: "from-amber-600 to-orange-500",
           },
         ].map((card) => (
@@ -186,139 +241,137 @@ export default function SummaryHistoryManagement() {
         ))}
       </div>
 
-      {/* Charts */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Line Chart */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Thống kê tóm tắt
+      <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm overflow-hidden min-w-0">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Thống kê tóm tắt
+                </div>
+                <div className="mt-1 text-base font-bold text-slate-900">
+                  Lượt tóm tắt theo thời gian
+                </div>
               </div>
-              <div className="mt-1 text-base font-bold text-slate-900">
-                Lượt tóm tắt theo thời gian
-              </div>
+              <select
+                value={lineRange}
+                onChange={(e) => setLineRange(e.target.value)}
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+              >
+                <option value="7d">7 ngày</option>
+                <option value="30d">30 ngày</option>
+                <option value="12m">12 tháng</option>
+              </select>
             </div>
-            <select
-              value={lineRange}
-              onChange={(e) => setLineRange(e.target.value)}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
-            >
-              <option value="7d">7 ngày</option>
-              <option value="30d">30 ngày</option>
-              <option value="12m">12 tháng</option>
-            </select>
-          </div>
-          <div className="mt-4 h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={lineDataMap[lineRange]}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis
-                  dataKey="label"
-                  stroke="#64748b"
-                  tickLine={false}
-                  axisLine={false}
-                  minTickGap={18}
-                />
-                <YAxis
-                  allowDecimals={false}
-                  stroke="#64748b"
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip
-                  formatter={(value) => [`${value} lượt`, "Tóm tắt"]}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#2563eb"
-                  strokeWidth={3}
-                  dot={{ r: 3, fill: "#2563eb" }}
-                  activeDot={{ r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+            <div className="mt-4 h-[280px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={lineDataMap[lineRange]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis
+                    dataKey="label"
+                    stroke="#64748b"
+                    tickLine={false}
+                    axisLine={false}
+                    minTickGap={18}
+                  />
+                  <YAxis
+                    allowDecimals={false}
+                    stroke="#64748b"
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip formatter={(value) => [`${value} lượt`, "Tóm tắt"]} />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#2563eb"
+                    strokeWidth={3}
+                    dot={{ r: 3, fill: "#2563eb" }}
+                    activeDot={{ r: 5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
         </div>
 
-        {/* Pie Chart */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Trạng thái xử lý
-          </div>
-          <div className="mt-1 text-base font-bold text-slate-900">
-            Phân bố SUCCESS / FAILED / PROCESSING
-          </div>
-          <div className="mt-4 h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={62}
-                  outerRadius={98}
-                  paddingAngle={2}
-                >
-                  {pieData.map((item) => (
-                    <Cell key={item.name} fill={item.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend verticalAlign="bottom" height={24} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm overflow-hidden min-w-0">
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+              Trạng thái xử lý
+            </div>
+            <div className="mt-1 text-base font-bold text-slate-900">
+              Phân bố SUCCESS / FAILED / PROCESSING
+            </div>
+            <div className="mt-4 h-[280px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={62}
+                    outerRadius={98}
+                    paddingAngle={2}
+                  >
+                    {pieData.map((item) => (
+                      <Cell key={item.name} fill={item.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend verticalAlign="bottom" height={24} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
         </div>
       </div>
 
-      {/* Search & Filters */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-center gap-3 lg:flex-nowrap lg:justify-between">
-          <div className="relative w-full lg:max-w-[520px] lg:flex-1">
-            <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              placeholder="Tìm theo tài liệu hoặc người dùng..."
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
-            />
-          </div>
-
-          <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:justify-end">
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
-            >
-              <option value="ALL">Tất cả trạng thái</option>
-              <option value="SUCCESS">Thành công</option>
-              <option value="FAILED">Thất bại</option>
-              <option value="PROCESSING">Đang xử lý</option>
-            </select>
-
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
-            >
-              <DownloadOutlinedIcon fontSize="small" />
-              Xuất Excel
-            </button>
-          </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="relative flex-1 min-w-[220px]">
+          <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Tìm theo tài liệu hoặc người dùng..."
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+          >
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="SUCCESS">SUCCESS</option>
+            <option value="FAILED">FAILED</option>
+            <option value="PROCESSING">PROCESSING</option>
+          </select>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+          >
+            <RefreshOutlinedIcon fontSize="small" />
+            Làm mới
+          </button>
+          <button
+            type="button"
+            onClick={handleExport}
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+          >
+            <DownloadOutlinedIcon fontSize="small" />
+            Xuất Excel
+          </button>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="text-sm text-slate-600">
             {filteredRows.length} lịch sử tóm tắt
@@ -339,7 +392,6 @@ export default function SummaryHistoryManagement() {
                 </option>
               ))}
             </select>
-            <span className="text-xs text-slate-500">/ trang</span>
           </div>
         </div>
 
@@ -351,7 +403,7 @@ export default function SummaryHistoryManagement() {
           <>
             <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
               <div className="overflow-auto">
-                <table className="min-w-[1200px] w-full text-left">
+                <table className="min-w-[1320px] w-full text-left">
                   <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                     <tr>
                       <th className="px-4 py-3">STT</th>
@@ -378,7 +430,7 @@ export default function SummaryHistoryManagement() {
                         <td className="px-4 py-3 font-semibold text-slate-800">
                           {row.userName}
                         </td>
-                        <td className="px-4 py-3 text-slate-600 max-w-[200px] truncate">
+                        <td className="px-4 py-3 text-slate-600 max-w-[220px] truncate">
                           {row.documentName}
                         </td>
                         <td className="px-4 py-3 text-slate-600">
@@ -399,11 +451,10 @@ export default function SummaryHistoryManagement() {
                         <td className="px-4 py-3">
                           <span
                             className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
-                              summaryStatusBadgeMap[row.status] ||
-                              summaryStatusBadgeMap.PROCESSING
+                              summaryStatusBadgeMap[row.status] || summaryStatusBadgeMap.PROCESSING
                             }`}
                           >
-                            {summaryStatusLabel[row.status] || row.status}
+                            {summaryStatusLabelMap[row.status] || row.status}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -417,6 +468,33 @@ export default function SummaryHistoryManagement() {
                             >
                               <VisibilityOutlinedIcon fontSize="small" />
                             </button>
+                            <button
+                              type="button"
+                              onClick={() => handleViewSummaryContent(row)}
+                              className="rounded-lg border border-slate-200 p-2 text-blue-600 transition hover:bg-blue-50"
+                              title="Xem nội dung tóm tắt"
+                              aria-label="Xem nội dung tóm tắt"
+                            >
+                              <DescriptionOutlinedIcon fontSize="small" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleViewOriginalDocument}
+                              className="rounded-lg border border-slate-200 p-2 text-emerald-600 transition hover:bg-emerald-50"
+                              title="Xem tài liệu gốc"
+                              aria-label="Xem tài liệu gốc"
+                            >
+                              <ArticleOutlinedIcon fontSize="small" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteHistory(row)}
+                              className="rounded-lg border border-slate-200 p-2 text-rose-600 transition hover:bg-rose-50"
+                              title="Xóa lịch sử"
+                              aria-label="Xóa lịch sử"
+                            >
+                              <DeleteOutlineOutlinedIcon fontSize="small" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -426,13 +504,10 @@ export default function SummaryHistoryManagement() {
               </div>
             </div>
 
-            {/* Pagination */}
             <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
               <div className="text-xs text-slate-500">
-                Trang {page} / {totalPages} — Hiển thị{" "}
-                {(page - 1) * pageSize + 1}–
-                {Math.min(page * pageSize, filteredRows.length)} trên{" "}
-                {filteredRows.length}
+                Trang {page} / {totalPages} — Hiển thị {(page - 1) * pageSize + 1}–
+                {Math.min(page * pageSize, filteredRows.length)} trên {filteredRows.length}
               </div>
               <div className="flex items-center gap-1">
                 <button
@@ -443,34 +518,33 @@ export default function SummaryHistoryManagement() {
                 >
                   ‹ Trước
                 </button>
-                {Array.from({ length: Math.min(totalPages, 5) }).map(
-                  (_, idx) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = idx + 1;
-                    } else if (page <= 3) {
-                      pageNum = idx + 1;
-                    } else if (page >= totalPages - 2) {
-                      pageNum = totalPages - 4 + idx;
-                    } else {
-                      pageNum = page - 2 + idx;
-                    }
-                    return (
-                      <button
-                        key={pageNum}
-                        type="button"
-                        onClick={() => handlePageChange(pageNum)}
-                        className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                          page === pageNum
-                            ? "bg-blue-600 text-white"
-                            : "border border-slate-200 text-slate-600 hover:bg-slate-50"
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
+                {Array.from({ length: Math.min(totalPages, 5) }).map((_, idx) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = idx + 1;
+                  } else if (page <= 3) {
+                    pageNum = idx + 1;
+                  } else if (page >= totalPages - 2) {
+                    pageNum = totalPages - 4 + idx;
+                  } else {
+                    pageNum = page - 2 + idx;
                   }
-                )}
+
+                  return (
+                    <button
+                      key={pageNum}
+                      type="button"
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                        page === pageNum
+                          ? "bg-blue-600 text-white"
+                          : "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
                 <button
                   type="button"
                   disabled={page >= totalPages}
@@ -485,25 +559,21 @@ export default function SummaryHistoryManagement() {
         )}
       </div>
 
-      {/* Detail Drawer (Side Panel) */}
       {detailRow && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          {/* Overlay */}
+        <div className="fixed inset-0 z-[70] flex justify-end">
           <div
-            className="absolute inset-0 bg-black/30 transition-opacity"
+            className="absolute inset-0 bg-slate-900/45"
             onClick={() => setDetailRow(null)}
           />
 
-          {/* Panel */}
-          <div className="relative z-10 flex w-full max-w-lg flex-col bg-white shadow-2xl animate-[fadeUp_200ms_ease-out]">
-            {/* Panel Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+          <div className="relative z-10 flex h-full w-full max-w-[520px] flex-col border-l border-slate-200 bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
               <div>
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Chi tiết
+                  Chi tiết lịch sử
                 </div>
                 <div className="text-base font-bold text-slate-900">
-                  Chi tiết lần tóm tắt
+                  Thông tin lần tóm tắt
                 </div>
               </div>
               <button
@@ -515,103 +585,78 @@ export default function SummaryHistoryManagement() {
               </button>
             </div>
 
-            {/* Panel Body */}
-            <div className="flex-1 overflow-auto p-6 space-y-4">
+            <div className="flex-1 space-y-4 overflow-auto p-5">
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Thông tin chung
+                  Thông tin người dùng
                 </div>
-                <div className="mt-3 space-y-2 text-sm text-slate-700">
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-slate-500">
-                      Người dùng
-                    </span>
-                    <span className="font-semibold">{detailRow.userName}</span>
+                <div className="mt-3 flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-sm font-semibold text-slate-600">
+                    {getAvatarLabel(detailRow.userName)}
                   </div>
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-slate-500">Email</span>
-                    <span>{detailRow.email}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-slate-500">
-                      Tài liệu
-                    </span>
-                    <span className="max-w-[200px] truncate text-right">
-                      {detailRow.documentName}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-slate-500">
-                      Loại file
-                    </span>
-                    <span>{detailRow.fileType}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-slate-500">
-                      Model AI
-                    </span>
-                    <span>{detailRow.model}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-slate-500">
-                      Thời gian xử lý
-                    </span>
-                    <span>{detailRow.duration}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-slate-500">
-                      Ngày tạo
-                    </span>
-                    <span>{detailRow.createdAt}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-slate-500">
-                      Trạng thái
-                    </span>
-                    <span
-                      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
-                        summaryStatusBadgeMap[detailRow.status]
-                      }`}
-                    >
-                      {summaryStatusLabel[detailRow.status]}
-                    </span>
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900">{detailRow.userName}</div>
+                    <div className="text-xs text-slate-500">{detailRow.email}</div>
                   </div>
                 </div>
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Thông tin thống kê
+                  Thông tin tài liệu
+                </div>
+                <div className="mt-3 space-y-2 text-sm text-slate-700">
+                  <div className="flex justify-between gap-4">
+                    <span className="font-semibold text-slate-500">Tên tài liệu</span>
+                    <span className="max-w-[240px] truncate text-right">{detailRow.documentName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-500">Loại file</span>
+                    <span>{detailRow.fileType}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-500">Kích thước file</span>
+                    <span>{detailRow.fileSize}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Thông tin AI
                 </div>
                 <div className="mt-3 space-y-2 text-sm text-slate-700">
                   <div className="flex justify-between">
-                    <span className="font-semibold text-slate-500">
-                      Số từ văn bản gốc
-                    </span>
-                    <span className="font-semibold">
-                      {detailRow.originalLength.toLocaleString()}
-                    </span>
+                    <span className="font-semibold text-slate-500">Model AI</span>
+                    <span>{detailRow.model}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-semibold text-slate-500">
-                      Số từ bản tóm tắt
-                    </span>
-                    <span className="font-semibold">
-                      {detailRow.summaryLength.toLocaleString()}
-                    </span>
+                    <span className="font-semibold text-slate-500">Thời gian xử lý</span>
+                    <span>{detailRow.duration}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-semibold text-slate-500">
-                      Tỷ lệ rút gọn
-                    </span>
+                    <span className="font-semibold text-slate-500">Độ dài gốc</span>
+                    <span>{detailRow.originalLength.toLocaleString()} từ</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-500">Độ dài tóm tắt</span>
+                    <span>{detailRow.summaryLength.toLocaleString()} từ</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-500">Tỷ lệ rút gọn</span>
                     <span className="font-semibold text-blue-600">
-                      {Math.round(
-                        (1 -
-                          detailRow.summaryLength / detailRow.originalLength) *
-                          100
-                      )}
-                      %
+                      {Math.round((1 - detailRow.summaryLength / detailRow.originalLength) * 100)}%
                     </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-slate-500">Trạng thái</span>
+                    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${summaryStatusBadgeMap[detailRow.status] || summaryStatusBadgeMap.PROCESSING}`}>
+                      {summaryStatusLabelMap[detailRow.status] || detailRow.status}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-slate-500">Ngày tạo</span>
+                    <span>{detailRow.createdAt}</span>
                   </div>
                 </div>
               </div>
@@ -620,23 +665,35 @@ export default function SummaryHistoryManagement() {
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Nội dung tóm tắt
                 </div>
-                <div className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm text-slate-700">
+                <div className="mt-3 max-h-[240px] overflow-auto whitespace-pre-wrap rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm text-slate-700">
                   {detailRow.summaryContent}
                 </div>
               </div>
             </div>
 
-            {/* Panel Footer */}
-            <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-6 py-4">
+            <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-5 py-4">
+              <button
+                type="button"
+                onClick={handleViewOriginalDocument}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                Xem tài liệu gốc
+              </button>
               <button
                 type="button"
                 onClick={() => setDetailRow(null)}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
               >
                 Đóng
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {toast && (
+        <div className="fixed bottom-4 right-4 z-50 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-lg">
+          {toast}
         </div>
       )}
     </section>
