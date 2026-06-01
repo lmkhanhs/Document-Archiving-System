@@ -61,6 +61,7 @@ import DeletedUsersPage from "./components/DeletedUsersPage";
 import RestoreUserDialog from "./components/RestoreUserDialog";
 import HardDeleteDialog from "./components/HardDeleteDialog";
 import AdminSummaryHistory from "./components/AdminSummaryHistory";
+import AdminAnalyticsDashboard from "./components/AdminAnalyticsDashboard";
 import {
   CartesianGrid,
   Cell,
@@ -1679,16 +1680,16 @@ const AdminDashboard = () => {
         <main className="flex-1 p-4 md:p-6">
           <header className="flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-center">
             <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
-                Admin Dashboard
+              <div className="text-xs font-bold uppercase tracking-[0.2em] text-blue-700">
+                {activeMenu === "stats" ? "THỐNG KÊ CHI TIẾT - HỆ THỐNG LƯU TRỮ TÀI LIỆU" : "Admin Dashboard"}
               </div>
-              <div className="text-xl font-bold text-slate-800">
-                Hệ thống lưu trữ tài liệu
+              <div className={`${activeMenu === "stats" ? "text-2xl leading-tight" : "text-xl"} font-bold text-slate-800`}>
+                {activeMenu === "stats" ? "Phân tích hoạt động hệ thống" : "Hệ thống lưu trữ tài liệu"}
               </div>
             </div>
 
             <div className="flex flex-1 flex-wrap items-center gap-2 lg:justify-end">
-              {activeMenu !== "users" && (
+              {activeMenu !== "users" && activeMenu !== "stats" && (
                 <div className="relative flex-1 min-w-[220px]">
                   <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
@@ -2250,6 +2251,8 @@ const AdminDashboard = () => {
             </section>
           ) : activeMenu === "summary_history" ? (
             <AdminSummaryHistory onNotify={setToast} />
+          ) : activeMenu === "stats" ? (
+            <AdminAnalyticsDashboard />
           ) : activeMenu === "documents" ? (
             <section className="mt-6 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
