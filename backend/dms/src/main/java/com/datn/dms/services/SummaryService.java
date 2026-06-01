@@ -1,8 +1,17 @@
 package com.datn.dms.services;
 
 import com.datn.dms.dtos.summary.response.AdminSummaryStatisticsResponse;
+import com.datn.dms.dtos.summary.response.InputTypeStatisticsResponse;
 import com.datn.dms.dtos.summary.response.SummaryStatisticsResponse;
+import com.datn.dms.dtos.summary.response.SummaryTrendItemResponse;
 import com.datn.dms.repositories.SummaryRepository;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -139,6 +148,73 @@ public class SummaryService {
         return (current - previous) / previous * 100.0;
     }
     
+    public List<SummaryTrendItemResponse> getSummaryTrend(int days) {
+        if (days < 0) {
+            days = 0;
+        }
+        
+        List<Object[]> rawData = summaryRepository.getSummaryTrend(days);
+        
+        Map<String, Long> countMap = new HashMap<>();
+        for (Object[] row : rawData) {
+            String dateStr = String.valueOf(row[0]);
+            Long count = ((Number) row[1]).longValue();
+            countMap.put(dateStr, count);
+        }
+        
+        List<SummaryTrendItemResponse> result = new ArrayList<>();
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(Math.max(0, days - 1));
+        
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            String dateStr = date.format(formatter);
+            long count = countMap.getOrDefault(dateStr, 0L);
+            result.add(SummaryTrendItemResponse.builder()
+                    .date(dateStr)
+                    .count(count)
+                    .build());
+        }
+        
+        return result;
+    }
+
+    public InputTypeStatisticsResponse getInputTypeStatistics() {
+        List<Object[]> rawData = summaryRepository.countInputTypesGrouped();
+        
+        long fileCount = 0;
+        long textCount = 0;
+        
+        for (Object[] row : rawData) {
+            String type = String.valueOf(row[0]);
+            long count = ((Number) row[1]).longValue();
+            
+            if ("FILE".equalsIgnoreCase(type)) {
+                fileCount += count;
+            } else if ("TEXT".equalsIgnoreCase(type)) {
+                textCount += count;
+            }
+        }
+        
+        long total = fileCount + textCount;
+        double filePercent = 0.0;
+        double textPercent = 0.0;
+        
+        if (total > 0) {
+            filePercent = Math.round(((double) fileCount / total * 100.0) * 100.0) / 100.0;
+            textPercent = Math.round(((double) textCount / total * 100.0) * 100.0) / 100.0;
+        }
+        
+        return InputTypeStatisticsResponse.builder()
+                .total(total)
+                .fileCount(fileCount)
+                .textCount(textCount)
+                .filePercent(filePercent)
+                .textPercent(textPercent)
+                .build();
+    }
+
     private double round(double value) {
         return Math.round(value * 10.0) / 10.0;
     }

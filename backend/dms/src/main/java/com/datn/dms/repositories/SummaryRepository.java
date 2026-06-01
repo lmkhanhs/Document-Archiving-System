@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface SummaryRepository extends JpaRepository<SummaryEntity, Long> {
 
@@ -68,4 +70,12 @@ public interface SummaryRepository extends JpaRepository<SummaryEntity, Long> {
     // Lượt tóm tắt đang xử lý
     @Query("SELECT COUNT(s) FROM SummaryEntity s WHERE s.status = 'PROCESSING'")
     long countProcessingTasks();
+
+    // Lượt tóm tắt theo từng ngày (trend)
+    @Query(value = "SELECT DATE(created_at) as date, COUNT(*) as count FROM summaries WHERE status = 'SUCCESS' AND created_at >= CURDATE() - INTERVAL :days DAY GROUP BY DATE(created_at) ORDER BY DATE(created_at)", nativeQuery = true)
+    List<Object[]> getSummaryTrend(@Param("days") int days);
+
+    // Thống kê loại đầu vào (chỉ tính SUCCESS)
+    @Query("SELECT s.summaryType, COUNT(s) FROM SummaryEntity s WHERE s.status = 'SUCCESS' GROUP BY s.summaryType")
+    List<Object[]> countInputTypesGrouped();
 }

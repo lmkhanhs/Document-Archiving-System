@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
@@ -19,39 +20,42 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { fetchSummaryStatistics } from "../../../services/summaryService";
 
-const summaryStats = [
-  {
-    key: "history",
-    label: "Lịch sử tóm tắt (30 ngày)",
-    value: "1,215 lượt",
-    sub: "+50 hôm nay",
-    tone: "from-blue-600 to-sky-500",
+const defaultSummaryStatistics = {
+  summaryHistory30Days: {
+    total: 0,
+    unit: "lượt",
+    todayIncrease: 0,
   },
-  {
-    key: "content",
-    label: "Nội dung đã tóm tắt",
-    value: "890",
-    sub: "+15 tuần này",
-    tone: "from-sky-600 to-cyan-500",
-    tooltip: ["Tổng: 890", "File: 312", "Text: 578"],
+  summarizedContent: {
+    total: 0,
+    thisWeekIncrease: 0,
+    fileCount: 0,
+    textCount: 0,
   },
-  {
-    key: "time",
-    label: "Thời gian TB",
-    value: "11s",
-    sub: "-2% so với tháng",
-    tone: "from-emerald-600 to-emerald-400",
+  averageProcessingTime: {
+    value: 0,
+    unit: "s",
+    changePercent: 0,
   },
-  {
-    key: "task",
-    label: "Task đang xử lý",
-    value: "5",
-    sub: "Loader",
-    tone: "from-violet-600 to-purple-500",
-    loading: true,
+  processingTasks: {
+    total: 0,
+    isLoading: false,
   },
-];
+};
+
+const toSafeNumber = (value) => (value === null || value === undefined ? 0 : Number(value) || 0);
+
+const formatSignedNumber = (value) => {
+  const safeValue = toSafeNumber(value);
+  return `${safeValue > 0 ? "+" : ""}${safeValue}`;
+};
+
+const formatStatValue = (value) => {
+  const safeValue = toSafeNumber(value);
+  return Number.isInteger(safeValue) ? safeValue.toLocaleString("vi-VN") : safeValue.toLocaleString("vi-VN", { maximumFractionDigits: 1 });
+};
 
 const trendData = [
   { label: "0 ngày", value: 18 },
@@ -136,6 +140,104 @@ const getStatusClass = (status) => (
 );
 
 const AdminSummaryHistory = ({ onNotify }) => {
+  const [summaryStatistics, setSummaryStatistics] = useState(defaultSummaryStatistics);
+  const [isStatisticsLoading, setIsStatisticsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadSummaryStatistics = async () => {
+      setIsStatisticsLoading(true);
+
+      try {
+        const data = await fetchSummaryStatistics();
+        if (isMounted) {
+          setSummaryStatistics({
+            summaryHistory30Days: {
+              total: toSafeNumber(data?.summaryHistory30Days?.total),
+              unit: data?.summaryHistory30Days?.unit || "lượt",
+              todayIncrease: toSafeNumber(data?.summaryHistory30Days?.todayIncrease),
+            },
+            summarizedContent: {
+              total: toSafeNumber(data?.summarizedContent?.total),
+              thisWeekIncrease: toSafeNumber(data?.summarizedContent?.thisWeekIncrease),
+              fileCount: toSafeNumber(data?.summarizedContent?.fileCount),
+              textCount: toSafeNumber(data?.summarizedContent?.textCount),
+            },
+            averageProcessingTime: {
+              value: toSafeNumber(data?.averageProcessingTime?.value),
+              unit: data?.averageProcessingTime?.unit || "s",
+              changePercent: toSafeNumber(data?.averageProcessingTime?.changePercent),
+            },
+            processingTasks: {
+              total: toSafeNumber(data?.processingTasks?.total),
+              isLoading: Boolean(data?.processingTasks?.isLoading),
+            },
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch summary statistics:", error);
+        if (isMounted) {
+          setSummaryStatistics(defaultSummaryStatistics);
+        }
+      } finally {
+        if (isMounted) {
+          setIsStatisticsLoading(false);
+        }
+      }
+    };
+
+    loadSummaryStatistics();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const summaryStats = useMemo(() => {
+    const history = summaryStatistics.summaryHistory30Days;
+    const content = summaryStatistics.summarizedContent;
+    const averageTime = summaryStatistics.averageProcessingTime;
+    const processingTasks = summaryStatistics.processingTasks;
+
+    return [
+      {
+        key: "history",
+        label: "Lịch sử tóm tắt (30 ngày)",
+        value: `${formatStatValue(history.total)} ${history.unit || "lượt"}`,
+        sub: `${formatSignedNumber(history.todayIncrease)} hôm nay`,
+        tone: "from-blue-600 to-sky-500",
+      },
+      {
+        key: "content",
+        label: "Nội dung đã tóm tắt",
+        value: formatStatValue(content.total),
+        sub: `${formatSignedNumber(content.thisWeekIncrease)} tuần này`,
+        tone: "from-sky-600 to-cyan-500",
+        tooltip: [
+          `Tổng: ${formatStatValue(content.total)}`,
+          `File: ${formatStatValue(content.fileCount)}`,
+          `Text: ${formatStatValue(content.textCount)}`,
+        ],
+      },
+      {
+        key: "time",
+        label: "Thời gian TB",
+        value: `${formatStatValue(averageTime.value)}${averageTime.unit || "s"}`,
+        sub: `${formatSignedNumber(averageTime.changePercent)}% so với tháng`,
+        tone: "from-emerald-600 to-emerald-400",
+      },
+      {
+        key: "task",
+        label: "Task đang xử lý",
+        value: formatStatValue(processingTasks.total),
+        sub: processingTasks.isLoading ? "Loader" : "Không có task chạy",
+        tone: "from-violet-600 to-purple-500",
+        loading: processingTasks.isLoading,
+      },
+    ];
+  }, [summaryStatistics]);
+
   const handleAction = (message) => {
     if (onNotify) {
       onNotify(message);
@@ -162,11 +264,20 @@ const AdminSummaryHistory = ({ onNotify }) => {
               Báo cáo
             </div>
             <div className="mt-3 text-sm font-semibold text-slate-600">{card.label}</div>
-            <div className="mt-1 flex items-center gap-2 text-2xl font-bold text-slate-900">
-              {card.value}
-              {card.loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />}
-            </div>
-            <div className="mt-2 text-xs text-slate-500">{card.sub}</div>
+            {isStatisticsLoading ? (
+              <>
+                <div className="mt-2 h-8 w-24 animate-pulse rounded-lg bg-slate-200" />
+                <div className="mt-3 h-3 w-20 animate-pulse rounded bg-slate-100" />
+              </>
+            ) : (
+              <>
+                <div className="mt-1 flex items-center gap-2 text-2xl font-bold text-slate-900">
+                  {card.value}
+                  {card.loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />}
+                </div>
+                <div className="mt-2 text-xs text-slate-500">{card.sub}</div>
+              </>
+            )}
 
             {card.tooltip && (
               <div className="pointer-events-none absolute right-4 top-10 z-10 w-28 rounded-xl border border-slate-200 bg-slate-50 p-2 text-xs font-semibold text-slate-600 opacity-100 shadow-sm transition md:opacity-0 md:group-hover:opacity-100">
