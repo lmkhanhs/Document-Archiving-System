@@ -12,6 +12,7 @@ import java.util.List;
 import com.datn.dms.dtos.ApiResponse;
 import com.datn.dms.dtos.summary.response.AdminSummaryStatisticsResponse;
 import com.datn.dms.dtos.summary.response.InputTypeStatisticsResponse;
+import com.datn.dms.dtos.summary.response.SummaryHistoryPageResponse;
 import com.datn.dms.dtos.summary.response.SummaryStatisticsResponse;
 import com.datn.dms.dtos.summary.response.SummaryTrendItemResponse;
 import com.datn.dms.services.SummaryService;
@@ -61,6 +62,25 @@ public class SummaryController {
                 .code(200)
                 .message("Get input type statistics successfully")
                 .data(stats)
+                .build());
+    }
+
+    @GetMapping("/history")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<ApiResponse<SummaryHistoryPageResponse>> getSummaryHistory(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false, defaultValue = "ALL") String inputType,
+            @RequestParam(required = false, defaultValue = "ALL") String status,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
+        
+        SummaryHistoryPageResponse response = summaryService.getSummaryHistory(page, size, inputType, status, startDate, endDate);
+
+        return ResponseEntity.ok(ApiResponse.<SummaryHistoryPageResponse>builder()
+                .code(200)
+                .message("Get summary history successfully")
+                .data(response)
                 .build());
     }
 }

@@ -2,16 +2,28 @@ package com.datn.dms.services;
 
 import com.datn.dms.dtos.summary.response.AdminSummaryStatisticsResponse;
 import com.datn.dms.dtos.summary.response.InputTypeStatisticsResponse;
+import com.datn.dms.dtos.summary.response.SummaryHistoryItemResponse;
+import com.datn.dms.dtos.summary.response.SummaryHistoryPageResponse;
 import com.datn.dms.dtos.summary.response.SummaryStatisticsResponse;
 import com.datn.dms.dtos.summary.response.SummaryTrendItemResponse;
+import com.datn.dms.entities.SummaryEntity;
 import com.datn.dms.repositories.SummaryRepository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.Predicate;
+
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -213,6 +225,104 @@ public class SummaryService {
                 .filePercent(filePercent)
                 .textPercent(textPercent)
                 .build();
+    }
+
+    public SummaryHistoryPageResponse getSummaryHistory(int page, int size, String inputType, String status, String startDateStr, String endDateStr) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Specification<SummaryEntity> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (inputType != null && !inputType.equalsIgnoreCase("ALL") && !inputType.isEmpty()) {
+                predicates.add(cb.equal(root.get("summaryType"), inputType));
+            }
+
+            if (status != null && !status.equalsIgnoreCase("ALL") && !status.isEmpty()) {
+                String dbStatus = status;
+                if ("COMPLETED".equalsIgnoreCase(status)) {
+                    dbStatus = "SUCCESS";
+                }
+                predicates.add(cb.equal(root.get("status"), dbStatus));
+            }
+
+            if (startDateStr != null && !startDateStr.isEmpty()) {
+                LocalDate startDate = LocalDate.parse(startDateStr);
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), startDate.atStartOfDay()));
+            }
+
+            if (endDateStr != null && !endDateStr.isEmpty()) {
+                LocalDate endDate = LocalDate.parse(endDateStr);
+                predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), endDate.atTime(LocalTime.MAX)));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<SummaryEntity> entityPage = summaryRepository.findAll(spec, pageable);
+
+        List<SummaryHistoryItemResponse> items = entityPage.getContent().stream()
+                .map(this::mapToHistoryItemResponse)
+                .collect(Collectors.toList());
+
+        SummaryHistoryPageResponse.PaginationMeta pagination = SummaryHistoryPageResponse.PaginationMeta.builder()
+                .page(entityPage.getNumber() + 1)
+                .size(entityPage.getSize())
+                .totalItems(entityPage.getTotalElements())
+                .totalPages(entityPage.getTotalPages())
+                .hasNext(entityPage.hasNext())
+                .hasPrevious(entityPage.hasPrevious())
+                .build();
+
+        return SummaryHistoryPageResponse.builder()
+                .items(items)
+                .pagination(pagination)
+                .build();
+    }
+
+    private SummaryHistoryItemResponse mapToHistoryItemResponse(SummaryEntity entity) {
+        String title = "Không có tiêu đề";
+        String fileSizeStr = null;
+
+        if ("FILE".equalsIgnoreCase(entity.getSummaryType()) && entity.getFile() != null) {
+            title = entity.getFile().getName();
+            fileSizeStr = formatFileSize(entity.getFile().getSize());
+        } else if ("TEXT".equalsIgnoreCase(entity.getSummaryType()) && entity.getOriginalContent() != null) {
+            String content = entity.getOriginalContent().trim();
+            title = content.length() > 30 ? content.substring(0, 30) + "..." : content;
+        }
+
+        String mappedStatus = "SUCCESS".equalsIgnoreCase(entity.getStatus()) ? "COMPLETED" : entity.getStatus();
+        String statusLabel = "Đang xử lý";
+        if ("COMPLETED".equalsIgnoreCase(mappedStatus)) statusLabel = "Hoàn thành";
+        else if ("FAILED".equalsIgnoreCase(mappedStatus)) statusLabel = "Lỗi";
+
+        String username = "Unknown";
+        if (entity.getUser() != null) {
+            username = entity.getUser().getUsername();
+            if (username == null) {
+                username = entity.getUser().getEmail();
+            }
+        }
+
+        return SummaryHistoryItemResponse.builder()
+                .id(entity.getId())
+                .title(title)
+                .inputType(entity.getSummaryType())
+                .username(username)
+                .createdAt(entity.getCreatedAt())
+                .fileSize(fileSizeStr)
+                .status(mappedStatus)
+                .errorMessage(null)
+                .build();
+    }
+
+    private String formatFileSize(Long bytes) {
+        if (bytes == null || bytes == 0) return "0 B";
+        String[] units = {"B", "KB", "MB", "GB", "TB"};
+        int index = (int) (Math.log(bytes) / Math.log(1024));
+        if (index >= units.length) index = units.length - 1;
+        double size = bytes / Math.pow(1024, index);
+        return String.format("%.1f %s", size, units[index]).replace(",", ".");
     }
 
     private double round(double value) {
