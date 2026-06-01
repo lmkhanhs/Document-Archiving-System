@@ -20,7 +20,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { fetchSummaryStatistics } from "../../../services/summaryService";
+import { fetchSummaryStatistics, summaryStatisticsService } from "../../../services/summaryService";
 
 const defaultSummaryStatistics = {
   summaryHistory30Days: {
@@ -57,23 +57,55 @@ const formatStatValue = (value) => {
   return Number.isInteger(safeValue) ? safeValue.toLocaleString("vi-VN") : safeValue.toLocaleString("vi-VN", { maximumFractionDigits: 1 });
 };
 
-const trendData = [
-  { label: "0 ngày", value: 18 },
-  { label: "1 ngày", value: 80 },
-  { label: "2 ngày", value: 50 },
-  { label: "3 ngày", value: 38 },
-  { label: "4 ngày", value: 75 },
-  { label: "5 ngày", value: 40 },
-  { label: "6 ngày", value: 73 },
-  { label: "7 ngày", value: 22 },
-];
+const formatTrendLabel = (dateValue) => {
+  if (!dateValue) {
+    return "";
+  }
 
-const inputTypeData = [
-  { name: "Text", value: 578, color: "#7fc5ee" },
-  { name: "File", value: 312, color: "#2563a9" },
-];
+  const [year, month, day] = String(dateValue).split("-");
+  if (!year || !month || !day) {
+    return String(dateValue);
+  }
 
-const inputTypeTotal = inputTypeData.reduce((sum, item) => sum + item.value, 0);
+  return `${day.padStart(2, "0")}/${month.padStart(2, "0")}`;
+};
+
+const mapTrendData = (items = []) => (
+  Array.isArray(items)
+    ? items.map((item) => ({
+      label: formatTrendLabel(item?.date),
+      value: toSafeNumber(item?.count),
+    }))
+    : []
+);
+
+const TrendTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-lg">
+      <div className="font-bold text-slate-800">{label}</div>
+      <div className="mt-1 font-semibold text-blue-700">
+        Tóm tắt: {formatStatValue(payload[0]?.value)} lượt
+      </div>
+    </div>
+  );
+};
+
+const defaultInputTypeStatistics = {
+  total: 0,
+  fileCount: 0,
+  textCount: 0,
+  filePercent: 0,
+  textPercent: 0,
+};
+
+const getInputTypeData = (inputTypeStatistics) => [
+  { name: "Text", value: toSafeNumber(inputTypeStatistics.textCount), percent: toSafeNumber(inputTypeStatistics.textPercent), color: "#7fc5ee" },
+  { name: "File", value: toSafeNumber(inputTypeStatistics.fileCount), percent: toSafeNumber(inputTypeStatistics.filePercent), color: "#2563a9" },
+];
 
 const historyRows = [
   {
@@ -142,6 +174,14 @@ const getStatusClass = (status) => (
 const AdminSummaryHistory = ({ onNotify }) => {
   const [summaryStatistics, setSummaryStatistics] = useState(defaultSummaryStatistics);
   const [isStatisticsLoading, setIsStatisticsLoading] = useState(true);
+  const [selectedTrendDays, setSelectedTrendDays] = useState(7);
+  const [customTrendDays, setCustomTrendDays] = useState("7");
+  const [trendData, setTrendData] = useState([]);
+  const [isTrendLoading, setIsTrendLoading] = useState(true);
+  const [trendError, setTrendError] = useState("");
+  const [inputTypeStatistics, setInputTypeStatistics] = useState(defaultInputTypeStatistics);
+  const [isInputTypeLoading, setIsInputTypeLoading] = useState(true);
+  const [inputTypeError, setInputTypeError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -194,6 +234,79 @@ const AdminSummaryHistory = ({ onNotify }) => {
     };
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadTrendData = async () => {
+      setIsTrendLoading(true);
+      setTrendError("");
+
+      try {
+        const data = await summaryStatisticsService.getTrend(selectedTrendDays);
+        if (isMounted) {
+          setTrendData(mapTrendData(data));
+        }
+      } catch (error) {
+        console.error("Failed to fetch summary trend:", error);
+        if (isMounted) {
+          setTrendData([]);
+          setTrendError("Không có dữ liệu");
+        }
+      } finally {
+        if (isMounted) {
+          setIsTrendLoading(false);
+        }
+      }
+    };
+
+    loadTrendData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedTrendDays]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadInputTypeStatistics = async () => {
+      setIsInputTypeLoading(true);
+      setInputTypeError("");
+
+      try {
+        const data = await summaryStatisticsService.getInputType();
+        if (isMounted) {
+          setInputTypeStatistics({
+            total: toSafeNumber(data?.total),
+            fileCount: toSafeNumber(data?.fileCount),
+            textCount: toSafeNumber(data?.textCount),
+            filePercent: toSafeNumber(data?.filePercent),
+            textPercent: toSafeNumber(data?.textPercent),
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch input type statistics:", error);
+        if (isMounted) {
+          setInputTypeStatistics(defaultInputTypeStatistics);
+          setInputTypeError("Không có dữ liệu");
+        }
+      } finally {
+        if (isMounted) {
+          setIsInputTypeLoading(false);
+        }
+      }
+    };
+
+    loadInputTypeStatistics();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const inputTypeData = useMemo(() => getInputTypeData(inputTypeStatistics), [inputTypeStatistics]);
+  const inputTypeTotal = toSafeNumber(inputTypeStatistics.total);
+
   const summaryStats = useMemo(() => {
     const history = summaryStatistics.summaryHistory30Days;
     const content = summaryStatistics.summarizedContent;
@@ -237,6 +350,16 @@ const AdminSummaryHistory = ({ onNotify }) => {
       },
     ];
   }, [summaryStatistics]);
+
+  const handleTrendDaysChange = (event) => {
+    const nextValue = event.target.value;
+    setCustomTrendDays(nextValue);
+
+    const nextDays = Number(nextValue);
+    if (Number.isInteger(nextDays) && nextDays > 0) {
+      setSelectedTrendDays(nextDays);
+    }
+  };
 
   const handleAction = (message) => {
     if (onNotify) {
@@ -297,95 +420,150 @@ const AdminSummaryHistory = ({ onNotify }) => {
               Báo cáo: Xu hướng tóm tắt theo thời gian
             </div>
             <div className="flex items-center gap-1 rounded-xl bg-slate-50 p-1 text-xs font-semibold text-slate-600">
-              <button type="button" className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-blue-700 shadow-sm">
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomTrendDays("7");
+                  setSelectedTrendDays(7);
+                }}
+                className={`rounded-lg px-3 py-1.5 transition ${
+                  selectedTrendDays === 7
+                    ? "border border-blue-200 bg-blue-50 text-blue-700 shadow-sm"
+                    : "hover:bg-white hover:text-slate-900"
+                }`}
+              >
                 7 ngày
               </button>
-              <button type="button" className="rounded-lg px-3 py-1.5 transition hover:bg-white hover:text-slate-900">
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomTrendDays("30");
+                  setSelectedTrendDays(30);
+                }}
+                className={`rounded-lg px-3 py-1.5 transition ${
+                  selectedTrendDays === 30
+                    ? "border border-blue-200 bg-blue-50 text-blue-700 shadow-sm"
+                    : "hover:bg-white hover:text-slate-900"
+                }`}
+              >
                 30 ngày
               </button>
-              <button type="button" className="rounded-lg px-2 py-1.5 transition hover:bg-white hover:text-slate-900" aria-label="Tùy chọn biểu đồ">
-                <MoreHorizOutlinedIcon fontSize="small" />
-              </button>
+              <label className="flex items-center gap-1 rounded-lg bg-white px-2 py-1 text-slate-600 ring-1 ring-slate-200">
+                <input
+                  type="number"
+                  min="1"
+                  value={customTrendDays}
+                  onChange={handleTrendDaysChange}
+                  className="w-14 bg-transparent text-center text-xs font-bold text-slate-700 outline-none"
+                  aria-label="Số ngày tùy chọn"
+                />
+                <span>ngày</span>
+              </label>
+              <MoreHorizOutlinedIcon fontSize="small" className="mx-1 text-slate-500" />
             </div>
           </div>
 
           <div className="mt-4 h-[260px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trendData} margin={{ top: 8, right: 10, left: -18, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="summaryTrendFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#60a5fa" stopOpacity={0.34} />
-                    <stop offset="95%" stopColor="#60a5fa" stopOpacity={0.04} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#334155", fontSize: 12 }} interval={0} />
-                <YAxis tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 12 }} width={42} />
-                <Tooltip
-                  formatter={(value) => [`${value} lượt`, "Tóm tắt"]}
-                  contentStyle={{ borderRadius: 12, borderColor: "#e2e8f0", boxShadow: "0 10px 25px rgba(15, 23, 42, 0.08)" }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#2f8fbd"
-                  strokeWidth={2.5}
-                  fill="url(#summaryTrendFill)"
-                  dot={{ r: 4, fill: "#2f8fbd", stroke: "#ffffff", strokeWidth: 2 }}
-                  activeDot={{ r: 5, fill: "#2563eb", stroke: "#ffffff", strokeWidth: 2 }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {isTrendLoading ? (
+              <div className="flex h-full flex-col justify-end gap-3 rounded-2xl bg-slate-50 p-4">
+                <div className="h-full animate-pulse rounded-xl bg-slate-100" />
+                <div className="grid grid-cols-7 gap-2">
+                  {Array.from({ length: 7 }).map((_, index) => (
+                    <div key={index} className="h-2 animate-pulse rounded bg-slate-200" />
+                  ))}
+                </div>
+              </div>
+            ) : trendError || trendData.length === 0 ? (
+              <div className="grid h-full place-items-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm font-semibold text-slate-500">
+                Không có dữ liệu
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trendData} margin={{ top: 8, right: 10, left: -18, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="summaryTrendFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#60a5fa" stopOpacity={0.34} />
+                      <stop offset="95%" stopColor="#60a5fa" stopOpacity={0.04} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#334155", fontSize: 12 }} interval="preserveStartEnd" />
+                  <YAxis tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 12 }} width={42} allowDecimals={false} />
+                  <Tooltip content={<TrendTooltip />} />
+                  <Area
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#2f8fbd"
+                    strokeWidth={2.5}
+                    fill="url(#summaryTrendFill)"
+                    dot={{ r: 4, fill: "#2f8fbd", stroke: "#ffffff", strokeWidth: 2 }}
+                    activeDot={{ r: 5, fill: "#2563eb", stroke: "#ffffff", strokeWidth: 2 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="text-base font-bold text-slate-900">Báo cáo: Tỷ lệ loại đầu vào</div>
           <div className="mt-4 grid min-h-[260px] items-center gap-4 sm:grid-cols-[1fr_auto]">
-            <div className="relative h-[230px] min-w-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={inputTypeData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={58}
-                    outerRadius={88}
-                    paddingAngle={1}
-                    stroke="#ffffff"
-                    strokeWidth={3}
-                  >
-                    {inputTypeData.map((item) => (
-                      <Cell key={item.name} fill={item.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value, name) => [`${value} lượt`, name]}
-                    contentStyle={{ borderRadius: 12, borderColor: "#e2e8f0", boxShadow: "0 10px 25px rgba(15, 23, 42, 0.08)" }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <DescriptionOutlinedIcon className="text-blue-600" fontSize="small" />
-                  <div className="mt-1 text-sm font-bold text-slate-700">Tổng: {inputTypeTotal}</div>
-                </div>
+            {isInputTypeLoading ? (
+              <div className="grid min-h-[230px] animate-pulse place-items-center rounded-2xl bg-slate-50 sm:col-span-2">
+                <div className="h-36 w-36 rounded-full border-[26px] border-slate-200" />
               </div>
-              <div className="absolute right-2 top-8 text-xs font-semibold text-slate-700">≈ 65%<br />Text</div>
-              <div className="absolute left-2 top-12 text-xs font-semibold text-slate-700">≈ 35%<br />File</div>
-            </div>
+            ) : inputTypeError || inputTypeTotal === 0 ? (
+              <div className="grid min-h-[230px] place-items-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm font-semibold text-slate-500 sm:col-span-2">
+                Không có dữ liệu
+              </div>
+            ) : (
+              <>
+                <div className="relative h-[230px] min-w-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={inputTypeData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={58}
+                        outerRadius={88}
+                        paddingAngle={1}
+                        stroke="#ffffff"
+                        strokeWidth={3}
+                      >
+                        {inputTypeData.map((item) => (
+                          <Cell key={item.name} fill={item.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value, name) => [`${formatStatValue(value)} lượt`, name]}
+                        contentStyle={{ borderRadius: 12, borderColor: "#e2e8f0", boxShadow: "0 10px 25px rgba(15, 23, 42, 0.08)" }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
 
-            <div className="space-y-3 pr-2 text-sm font-semibold text-slate-700">
-              {inputTypeData.map((item) => (
-                <div key={item.name} className="flex items-center gap-2 whitespace-nowrap">
-                  <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: item.color }} />
-                  <span>{item.name} ({item.value})</span>
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <DescriptionOutlinedIcon className="text-blue-600" fontSize="small" />
+                      <div className="mt-1 text-sm font-bold text-slate-700">Tổng: {formatStatValue(inputTypeTotal)}</div>
+                    </div>
+                  </div>
+                  <div className="absolute right-2 top-8 text-xs font-semibold text-slate-700">≈ {formatStatValue(inputTypeStatistics.textPercent)}%<br />Text</div>
+                  <div className="absolute left-2 top-12 text-xs font-semibold text-slate-700">≈ {formatStatValue(inputTypeStatistics.filePercent)}%<br />File</div>
                 </div>
-              ))}
-            </div>
+
+                <div className="space-y-3 pr-2 text-sm font-semibold text-slate-700">
+                  {inputTypeData.map((item) => (
+                    <div key={item.name} className="flex items-center gap-2 whitespace-nowrap">
+                      <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: item.color }} />
+                      <span>{item.name} ({formatStatValue(item.value)})</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
