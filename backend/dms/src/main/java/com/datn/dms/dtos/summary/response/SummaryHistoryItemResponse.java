@@ -11,6 +11,7 @@ public class SummaryHistoryItemResponse {
     private String title;
     private String inputType; 
     private String username;
+    private String thumbnailUrl;
     private LocalDateTime createdAt;
     private String fileSize;
     private String status;

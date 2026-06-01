@@ -7,6 +7,7 @@ import com.datn.dms.dtos.summary.response.SummaryHistoryPageResponse;
 import com.datn.dms.dtos.summary.response.SummaryStatisticsResponse;
 import com.datn.dms.dtos.summary.response.SummaryTrendItemResponse;
 import com.datn.dms.entities.SummaryEntity;
+import com.datn.dms.mapper.SummaryMapper;
 import com.datn.dms.repositories.SummaryRepository;
 
 import org.springframework.data.domain.Page;
@@ -37,6 +38,7 @@ import org.springframework.stereotype.Service;
 public class SummaryService {
 
     SummaryRepository summaryRepository;
+    SummaryMapper summaryMapper;
 
     public SummaryStatisticsResponse getStatistics() {
         // 1. Total summaries
@@ -261,7 +263,7 @@ public class SummaryService {
         Page<SummaryEntity> entityPage = summaryRepository.findAll(spec, pageable);
 
         List<SummaryHistoryItemResponse> items = entityPage.getContent().stream()
-                .map(this::mapToHistoryItemResponse)
+                .map(summaryMapper::toSummaryHistoryItemResponse)
                 .collect(Collectors.toList());
 
         SummaryHistoryPageResponse.PaginationMeta pagination = SummaryHistoryPageResponse.PaginationMeta.builder()
@@ -277,52 +279,6 @@ public class SummaryService {
                 .items(items)
                 .pagination(pagination)
                 .build();
-    }
-
-    private SummaryHistoryItemResponse mapToHistoryItemResponse(SummaryEntity entity) {
-        String title = "Không có tiêu đề";
-        String fileSizeStr = null;
-
-        if ("FILE".equalsIgnoreCase(entity.getSummaryType()) && entity.getFile() != null) {
-            title = entity.getFile().getName();
-            fileSizeStr = formatFileSize(entity.getFile().getSize());
-        } else if ("TEXT".equalsIgnoreCase(entity.getSummaryType()) && entity.getOriginalContent() != null) {
-            String content = entity.getOriginalContent().trim();
-            title = content.length() > 30 ? content.substring(0, 30) + "..." : content;
-        }
-
-        String mappedStatus = "SUCCESS".equalsIgnoreCase(entity.getStatus()) ? "COMPLETED" : entity.getStatus();
-        String statusLabel = "Đang xử lý";
-        if ("COMPLETED".equalsIgnoreCase(mappedStatus)) statusLabel = "Hoàn thành";
-        else if ("FAILED".equalsIgnoreCase(mappedStatus)) statusLabel = "Lỗi";
-
-        String username = "Unknown";
-        if (entity.getUser() != null) {
-            username = entity.getUser().getUsername();
-            if (username == null) {
-                username = entity.getUser().getEmail();
-            }
-        }
-
-        return SummaryHistoryItemResponse.builder()
-                .id(entity.getId())
-                .title(title)
-                .inputType(entity.getSummaryType())
-                .username(username)
-                .createdAt(entity.getCreatedAt())
-                .fileSize(fileSizeStr)
-                .status(mappedStatus)
-                .errorMessage(null)
-                .build();
-    }
-
-    private String formatFileSize(Long bytes) {
-        if (bytes == null || bytes == 0) return "0 B";
-        String[] units = {"B", "KB", "MB", "GB", "TB"};
-        int index = (int) (Math.log(bytes) / Math.log(1024));
-        if (index >= units.length) index = units.length - 1;
-        double size = bytes / Math.pow(1024, index);
-        return String.format("%.1f %s", size, units[index]).replace(",", ".");
     }
 
     private double round(double value) {

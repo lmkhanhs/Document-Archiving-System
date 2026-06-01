@@ -4,10 +4,10 @@ import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
-import LoopOutlinedIcon from "@mui/icons-material/LoopOutlined";
 import MoreHorizOutlinedIcon from "@mui/icons-material/MoreHorizOutlined";
 import TextSnippetOutlinedIcon from "@mui/icons-material/TextSnippetOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import SummaryDetailModal from "./SummaryDetailModal";
 import {
   Area,
   AreaChart,
@@ -20,6 +20,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { API_ORIGIN } from "../../../services/api";
 import { fetchSummaryStatistics, summaryStatisticsService } from "../../../services/summaryService";
 
 const defaultSummaryStatistics = {
@@ -174,6 +175,48 @@ const getContentIcon = (inputType) => {
   return DescriptionOutlinedIcon;
 };
 
+const getAvatarUrl = (thumbnailUrl) => {
+  if (!thumbnailUrl) {
+    return null;
+  }
+
+  if (thumbnailUrl.startsWith("http")) {
+    return thumbnailUrl;
+  }
+
+  return `${API_ORIGIN}${thumbnailUrl}`;
+};
+
+const UserCell = ({ username, thumbnailUrl }) => {
+  const [imageError, setImageError] = useState(false);
+  const avatarUrl = getAvatarUrl(thumbnailUrl);
+  const displayName = username || "-";
+  const fallbackLetter = username?.trim()?.charAt(0)?.toUpperCase() || "?";
+  const shouldShowImage = avatarUrl && !imageError;
+
+  useEffect(() => {
+    setImageError(false);
+  }, [thumbnailUrl]);
+
+  return (
+    <div className="flex items-center gap-2.5">
+      {shouldShowImage ? (
+        <img
+          src={avatarUrl}
+          alt={displayName}
+          onError={() => setImageError(true)}
+          className="h-8 w-8 rounded-full object-cover ring-1 ring-slate-200"
+        />
+      ) : (
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-sm font-semibold text-blue-700 ring-1 ring-blue-100">
+          {fallbackLetter}
+        </div>
+      )}
+      <span className="font-semibold text-slate-700">{displayName}</span>
+    </div>
+  );
+};
+
 const AdminSummaryHistory = ({ onNotify }) => {
   const [summaryStatistics, setSummaryStatistics] = useState(defaultSummaryStatistics);
   const [isStatisticsLoading, setIsStatisticsLoading] = useState(true);
@@ -197,6 +240,8 @@ const AdminSummaryHistory = ({ onNotify }) => {
     startDate: "",
     endDate: "",
   });
+  const [selectedSummary, setSelectedSummary] = useState(null);
+  const [historyReloadKey, setHistoryReloadKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -354,7 +399,7 @@ const AdminSummaryHistory = ({ onNotify }) => {
     return () => {
       isMounted = false;
     };
-  }, [historyFilters]);
+  }, [historyFilters, historyReloadKey]);
 
   const inputTypeData = useMemo(() => getInputTypeData(inputTypeStatistics), [inputTypeStatistics]);
   const inputTypeTotal = toSafeNumber(inputTypeStatistics.total);
@@ -426,6 +471,14 @@ const AdminSummaryHistory = ({ onNotify }) => {
       ...currentFilters,
       page,
     }));
+  };
+
+  const handleOpenDetail = (item) => {
+    setSelectedSummary(item);
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedSummary(null);
   };
 
   const historyPageButtons = useMemo(() => {
@@ -747,7 +800,9 @@ const AdminSummaryHistory = ({ onNotify }) => {
                           <span className="font-semibold text-slate-800">{title}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 font-semibold text-slate-700">{item?.username || "-"}</td>
+                      <td className="px-4 py-3">
+                        <UserCell username={item?.username} thumbnailUrl={item?.thumbnailUrl} />
+                      </td>
                       <td className="px-4 py-3 text-slate-600">{formatHistoryTime(item?.createdAt)}</td>
                       <td className="px-4 py-3 text-slate-600">{item?.fileSize ?? "-"}</td>
                       <td className="px-4 py-3">
@@ -759,24 +814,13 @@ const AdminSummaryHistory = ({ onNotify }) => {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             type="button"
-                            onClick={() => handleAction(`Xem chi tiết lịch sử #${item?.id}`)}
+                            onClick={() => handleOpenDetail(item)}
                             className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
                             title="Xem chi tiết"
                             aria-label="Xem chi tiết"
                           >
                             <VisibilityOutlinedIcon fontSize="small" />
                           </button>
-                          {item?.status === "FAILED" && (
-                            <button
-                              type="button"
-                              onClick={() => handleAction(`Đã gửi yêu cầu xử lý lại lịch sử #${item?.id}`)}
-                              className="rounded-lg border border-slate-200 p-2 text-blue-600 transition hover:bg-blue-50"
-                              title="Tải lại / xử lý lại"
-                              aria-label="Tải lại / xử lý lại"
-                            >
-                              <LoopOutlinedIcon fontSize="small" />
-                            </button>
-                          )}
                           <button
                             type="button"
                             onClick={() => handleAction(`Xóa lịch sử #${item?.id}`)}
@@ -830,6 +874,14 @@ const AdminSummaryHistory = ({ onNotify }) => {
           </button>
         </div>
       </div>
+
+      <SummaryDetailModal
+        open={Boolean(selectedSummary)}
+        summaryId={selectedSummary?.id}
+        initialData={selectedSummary}
+        onClose={handleCloseDetail}
+        onNotify={onNotify}
+      />
     </section>
   );
 };

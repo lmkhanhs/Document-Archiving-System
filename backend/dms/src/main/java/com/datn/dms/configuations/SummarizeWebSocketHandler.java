@@ -192,7 +192,7 @@ public class SummarizeWebSocketHandler extends TextWebSocketHandler {
             SummaryEntity summary = new SummaryEntity();
             summary.setUser(user);
             summary.setStatus(SummaryStatus.PROCESSING.name()); // Temporarily using string since user modified the entity to use String
-            summary.setModel("claude-auto"); // Default or parse from message if provided
+            summary.setModel("BartPho"); // Default or parse from message if provided
             summary.setSummaryLength(0);
             summary.setDuration(0.0);
 
