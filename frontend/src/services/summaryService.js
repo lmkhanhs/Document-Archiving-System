@@ -43,4 +43,27 @@ export const summaryStatisticsService = {
       throw new Error(error.response?.data?.message || error.message || "Không thể tải thống kê loại đầu vào");
     }
   },
+
+  getHistory: async ({ page = 1, size = 5, inputType, status, startDate, endDate } = {}) => {
+    try {
+      const response = await api.get("/summaries/history", {
+        params: {
+          page,
+          size,
+          inputType: inputType && inputType !== "all" ? inputType : undefined,
+          status: status && status !== "all" ? status : undefined,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+        },
+      });
+
+      if (response?.data?.code < 200 || response?.data?.code >= 300) {
+        throw new Error(response?.data?.message || "Không thể tải lịch sử tóm tắt");
+      }
+
+      return response;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || error.message || "Không thể tải lịch sử tóm tắt");
+    }
+  },
 };

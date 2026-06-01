@@ -107,69 +107,72 @@ const getInputTypeData = (inputTypeStatistics) => [
   { name: "File", value: toSafeNumber(inputTypeStatistics.fileCount), percent: toSafeNumber(inputTypeStatistics.filePercent), color: "#2563a9" },
 ];
 
-const historyRows = [
-  {
-    id: 1,
-    title: "Báo cáo tài chính Q4",
-    type: "Chi tiết",
-    user: "admin",
-    time: "09:15, 25/05/2024",
-    size: "4.2 MB",
-    status: "Hoàn thành",
-    inputType: "file",
-  },
-  {
-    id: 2,
-    title: "Tóm tắt tin tức sáng nay",
-    type: "Ngắn gọn",
-    user: "admin",
-    time: "09:15, 25/05/2024",
-    size: "-",
-    status: "Hoàn thành",
-    inputType: "text",
-  },
-  {
-    id: 3,
-    title: "Hợp đồng lao động - NV X",
-    type: "Chi tiết",
-    user: "admin",
-    time: "15:42, 24/05/2024",
-    size: "1.1 MB",
-    status: "Hoàn thành",
-    inputType: "file",
-  },
-  {
-    id: 4,
-    title: "Mô tả dự án AI mới",
-    type: "Đoạn ngắn",
-    user: "admin",
-    time: "11:00, 24/05/2024",
-    size: "-",
-    status: "Đang xử lý",
-    inputType: "text",
-  },
-  {
-    id: 5,
-    title: "Bài viết kỹ thuật AI mới",
-    type: "Chi tiết",
-    user: "admin",
-    time: "09:30, 23/05/2024",
-    size: "-",
-    status: "Lỗi (Nội dung quá dài)",
-    inputType: "text",
-    canRetry: true,
-  },
-];
-
-const statusClassMap = {
-  "Hoàn thành": "border-emerald-200 bg-emerald-50 text-emerald-700",
-  "Đang xử lý": "border-amber-200 bg-amber-50 text-amber-700",
-  error: "border-rose-200 bg-rose-50 text-rose-700",
+const defaultPagination = {
+  page: 1,
+  size: 5,
+  totalItems: 0,
+  totalPages: 1,
+  hasNext: false,
+  hasPrevious: false,
 };
 
-const getStatusClass = (status) => (
-  status.startsWith("Lỗi") ? statusClassMap.error : statusClassMap[status]
-);
+const statusLabelMap = {
+  COMPLETED: "Hoàn thành",
+  PROCESSING: "Đang xử lý",
+  FAILED: "Lỗi",
+};
+
+const statusClassMap = {
+  COMPLETED: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  PROCESSING: "border-amber-200 bg-amber-50 text-amber-700",
+  FAILED: "border-rose-200 bg-rose-50 text-rose-700",
+};
+
+const getStatusLabel = (status, errorMessage) => {
+  const label = statusLabelMap[status] || status || "-";
+
+  if (status === "FAILED" && errorMessage) {
+    return `${label} (${errorMessage})`;
+  }
+
+  return label;
+};
+
+const getStatusClass = (status) => statusClassMap[status] || "border-slate-200 bg-slate-50 text-slate-600";
+
+const formatHistoryTime = (dateValue) => {
+  if (!dateValue) {
+    return "-";
+  }
+
+  const normalizedDate = String(dateValue).replace(/\.(\d{3})\d*/, ".$1");
+  const date = new Date(normalizedDate);
+
+  if (Number.isNaN(date.getTime())) {
+    return String(dateValue);
+  }
+
+  return date.toLocaleString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour12: false,
+  });
+};
+
+const getContentIcon = (inputType) => {
+  if (inputType === "FILE") {
+    return InsertDriveFileOutlinedIcon;
+  }
+
+  if (inputType === "TEXT") {
+    return TextSnippetOutlinedIcon;
+  }
+
+  return DescriptionOutlinedIcon;
+};
 
 const AdminSummaryHistory = ({ onNotify }) => {
   const [summaryStatistics, setSummaryStatistics] = useState(defaultSummaryStatistics);
@@ -182,6 +185,18 @@ const AdminSummaryHistory = ({ onNotify }) => {
   const [inputTypeStatistics, setInputTypeStatistics] = useState(defaultInputTypeStatistics);
   const [isInputTypeLoading, setIsInputTypeLoading] = useState(true);
   const [inputTypeError, setInputTypeError] = useState("");
+  const [historyItems, setHistoryItems] = useState([]);
+  const [historyPagination, setHistoryPagination] = useState(defaultPagination);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState("");
+  const [historyFilters, setHistoryFilters] = useState({
+    page: 1,
+    size: 5,
+    inputType: "all",
+    status: "all",
+    startDate: "",
+    endDate: "",
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -304,6 +319,43 @@ const AdminSummaryHistory = ({ onNotify }) => {
     };
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadHistory = async () => {
+      setIsHistoryLoading(true);
+      setHistoryError("");
+
+      try {
+        const response = await summaryStatisticsService.getHistory(historyFilters);
+        const items = response?.data?.data?.items || [];
+        const pagination = response?.data?.data?.pagination || defaultPagination;
+
+        if (isMounted) {
+          setHistoryItems(Array.isArray(items) ? items : []);
+          setHistoryPagination({ ...defaultPagination, ...pagination });
+        }
+      } catch (error) {
+        console.error("Failed to fetch summary history:", error);
+        if (isMounted) {
+          setHistoryItems([]);
+          setHistoryPagination(defaultPagination);
+          setHistoryError("Không thể tải lịch sử tóm tắt");
+        }
+      } finally {
+        if (isMounted) {
+          setIsHistoryLoading(false);
+        }
+      }
+    };
+
+    loadHistory();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [historyFilters]);
+
   const inputTypeData = useMemo(() => getInputTypeData(inputTypeStatistics), [inputTypeStatistics]);
   const inputTypeTotal = toSafeNumber(inputTypeStatistics.total);
 
@@ -360,6 +412,31 @@ const AdminSummaryHistory = ({ onNotify }) => {
       setSelectedTrendDays(nextDays);
     }
   };
+
+  const handleHistoryFilterChange = (key, value) => {
+    setHistoryFilters((currentFilters) => ({
+      ...currentFilters,
+      [key]: value,
+      page: 1,
+    }));
+  };
+
+  const handleHistoryPageChange = (page) => {
+    setHistoryFilters((currentFilters) => ({
+      ...currentFilters,
+      page,
+    }));
+  };
+
+  const historyPageButtons = useMemo(() => {
+    const totalPages = Math.max(1, toSafeNumber(historyPagination.totalPages));
+    const currentPage = Math.min(Math.max(1, toSafeNumber(historyPagination.page) || 1), totalPages);
+    const pages = new Set([1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
+
+    return Array.from(pages)
+      .filter((page) => page >= 1 && page <= totalPages)
+      .sort((firstPage, secondPage) => firstPage - secondPage);
+  }, [historyPagination.page, historyPagination.totalPages]);
 
   const handleAction = (message) => {
     if (onNotify) {
@@ -575,8 +652,9 @@ const AdminSummaryHistory = ({ onNotify }) => {
             <div className="relative mt-1">
               <CalendarTodayOutlinedIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fontSize="small" />
               <input
-                type="text"
-                placeholder="ngày tóm tắt - date tóm tắt"
+                type="date"
+                value={historyFilters.startDate}
+                onChange={(event) => handleHistoryFilterChange("startDate", event.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-3 text-sm font-medium text-slate-600 outline-none transition focus:border-blue-300 focus:bg-white"
               />
             </div>
@@ -584,20 +662,28 @@ const AdminSummaryHistory = ({ onNotify }) => {
 
           <label className="text-sm font-semibold text-slate-700">
             Loại đầu vào
-            <select className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300">
-              <option>Tất cả</option>
-              <option>File</option>
-              <option>Text</option>
+            <select
+              value={historyFilters.inputType}
+              onChange={(event) => handleHistoryFilterChange("inputType", event.target.value)}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+            >
+              <option value="all">Tất cả</option>
+              <option value="FILE">File</option>
+              <option value="TEXT">Text</option>
             </select>
           </label>
 
           <label className="text-sm font-semibold text-slate-700">
             Trạng thái
-            <select className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300">
-              <option>Tất cả</option>
-              <option>Hoàn thành</option>
-              <option>Đang xử lý</option>
-              <option>Lỗi</option>
+            <select
+              value={historyFilters.status}
+              onChange={(event) => handleHistoryFilterChange("status", event.target.value)}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+            >
+              <option value="all">Tất cả</option>
+              <option value="COMPLETED">Hoàn thành</option>
+              <option value="PROCESSING">Đang xử lý</option>
+              <option value="FAILED">Lỗi</option>
             </select>
           </label>
         </div>
@@ -609,7 +695,6 @@ const AdminSummaryHistory = ({ onNotify }) => {
             <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-4 py-3">Nội dung</th>
-                <th className="px-4 py-3">Kiểu tóm tắt</th>
                 <th className="px-4 py-3">Người dùng</th>
                 <th className="px-4 py-3">Thời gian</th>
                 <th className="px-4 py-3">Dung lượng (File)</th>
@@ -618,82 +703,131 @@ const AdminSummaryHistory = ({ onNotify }) => {
               </tr>
             </thead>
             <tbody>
-              {historyRows.map((row) => {
-                const ContentIcon = row.inputType === "file" ? InsertDriveFileOutlinedIcon : TextSnippetOutlinedIcon;
-
-                return (
-                  <tr key={row.id} className="border-t border-slate-100 text-sm text-slate-700 transition hover:bg-blue-50/40">
+              {isHistoryLoading ? (
+                Array.from({ length: historyFilters.size }).map((_, index) => (
+                  <tr key={index} className="border-t border-slate-100 text-sm text-slate-700">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600">
-                          <ContentIcon fontSize="small" />
-                        </div>
-                        <span className="font-semibold text-slate-800">{row.title}</span>
+                        <div className="h-10 w-10 animate-pulse rounded-xl bg-slate-100" />
+                        <div className="h-4 w-48 animate-pulse rounded bg-slate-100" />
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-medium text-slate-600">{row.type}</td>
-                    <td className="px-4 py-3 font-semibold text-slate-700">{row.user}</td>
-                    <td className="px-4 py-3 text-slate-600">{row.time}</td>
-                    <td className="px-4 py-3 text-slate-600">{row.size}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusClass(row.status)}`}>
-                        {row.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleAction("Tính năng xem chi tiết sẽ được gắn API sau")}
-                          className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
-                          title="Xem chi tiết"
-                          aria-label="Xem chi tiết"
-                        >
-                          <VisibilityOutlinedIcon fontSize="small" />
-                        </button>
-                        {row.canRetry && (
+                    <td className="px-4 py-3"><div className="h-4 w-24 animate-pulse rounded bg-slate-100" /></td>
+                    <td className="px-4 py-3"><div className="h-4 w-32 animate-pulse rounded bg-slate-100" /></td>
+                    <td className="px-4 py-3"><div className="h-4 w-20 animate-pulse rounded bg-slate-100" /></td>
+                    <td className="px-4 py-3"><div className="h-6 w-24 animate-pulse rounded-full bg-slate-100" /></td>
+                    <td className="px-4 py-3"><div className="ml-auto h-9 w-28 animate-pulse rounded-lg bg-slate-100" /></td>
+                  </tr>
+                ))
+              ) : historyError ? (
+                <tr className="border-t border-slate-100">
+                  <td colSpan={6} className="px-4 py-10 text-center text-sm font-semibold text-rose-600">
+                    Không thể tải lịch sử tóm tắt
+                  </td>
+                </tr>
+              ) : historyItems.length === 0 ? (
+                <tr className="border-t border-slate-100">
+                  <td colSpan={6} className="px-4 py-10 text-center text-sm font-semibold text-slate-500">
+                    Không có lịch sử tóm tắt
+                  </td>
+                </tr>
+              ) : (
+                historyItems.map((item) => {
+                  const ContentIcon = getContentIcon(item?.inputType);
+                  const title = item?.title?.trim() || "Không có tiêu đề";
+                  const statusText = getStatusLabel(item?.status, item?.errorMessage);
+
+                  return (
+                    <tr key={item?.id} className="border-t border-slate-100 text-sm text-slate-700 transition hover:bg-blue-50/40">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600">
+                            <ContentIcon fontSize="small" />
+                          </div>
+                          <span className="font-semibold text-slate-800">{title}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-slate-700">{item?.username || "-"}</td>
+                      <td className="px-4 py-3 text-slate-600">{formatHistoryTime(item?.createdAt)}</td>
+                      <td className="px-4 py-3 text-slate-600">{item?.fileSize ?? "-"}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusClass(item?.status)}`}>
+                          {statusText}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-2">
                           <button
                             type="button"
-                            onClick={() => handleAction("Đã gửi yêu cầu xử lý lại")}
-                            className="rounded-lg border border-slate-200 p-2 text-blue-600 transition hover:bg-blue-50"
-                            title="Tải lại / xử lý lại"
-                            aria-label="Tải lại / xử lý lại"
+                            onClick={() => handleAction(`Xem chi tiết lịch sử #${item?.id}`)}
+                            className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
+                            title="Xem chi tiết"
+                            aria-label="Xem chi tiết"
                           >
-                            <LoopOutlinedIcon fontSize="small" />
+                            <VisibilityOutlinedIcon fontSize="small" />
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => handleAction("Tính năng xóa sẽ được gắn API sau")}
-                          className="rounded-lg border border-rose-100 bg-rose-50 p-2 text-rose-600 transition hover:bg-rose-100"
-                          title="Xóa"
-                          aria-label="Xóa"
-                        >
-                          <DeleteOutlineOutlinedIcon fontSize="small" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                          {item?.status === "FAILED" && (
+                            <button
+                              type="button"
+                              onClick={() => handleAction(`Đã gửi yêu cầu xử lý lại lịch sử #${item?.id}`)}
+                              className="rounded-lg border border-slate-200 p-2 text-blue-600 transition hover:bg-blue-50"
+                              title="Tải lại / xử lý lại"
+                              aria-label="Tải lại / xử lý lại"
+                            >
+                              <LoopOutlinedIcon fontSize="small" />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleAction(`Xóa lịch sử #${item?.id}`)}
+                            className="rounded-lg border border-rose-100 bg-rose-50 p-2 text-rose-600 transition hover:bg-rose-100"
+                            title="Xóa"
+                            aria-label="Xóa"
+                          >
+                            <DeleteOutlineOutlinedIcon fontSize="small" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-2 border-t border-slate-100 px-4 py-3 text-sm font-semibold text-slate-600">
-          {["Prev", "1", "2", "3", "...", "10", "Next"].map((item) => (
+          <button
+            type="button"
+            disabled={!historyPagination.hasPrevious || isHistoryLoading}
+            onClick={() => handleHistoryPageChange(Math.max(1, historyPagination.page - 1))}
+            className="rounded-lg border border-transparent px-3 py-1.5 transition hover:border-slate-200 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-transparent disabled:hover:bg-transparent"
+          >
+            Prev
+          </button>
+          {historyPageButtons.map((page) => (
             <button
-              key={item}
+              key={page}
               type="button"
+              disabled={isHistoryLoading}
+              onClick={() => handleHistoryPageChange(page)}
               className={`rounded-lg border px-3 py-1.5 transition ${
-                item === "1"
+                page === historyPagination.page
                   ? "border-blue-200 bg-blue-50 text-blue-700"
                   : "border-transparent hover:border-slate-200 hover:bg-slate-50"
-              }`}
+              } disabled:cursor-not-allowed disabled:opacity-60`}
             >
-              {item}
+              {page}
             </button>
           ))}
+          <button
+            type="button"
+            disabled={!historyPagination.hasNext || isHistoryLoading}
+            onClick={() => handleHistoryPageChange(historyPagination.page + 1)}
+            className="rounded-lg border border-transparent px-3 py-1.5 transition hover:border-slate-200 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-transparent disabled:hover:bg-transparent"
+          >
+            Next
+          </button>
         </div>
       </div>
     </section>
