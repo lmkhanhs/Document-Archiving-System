@@ -3,6 +3,7 @@ package com.datn.dms.repositories;
 import com.datn.dms.entities.SummaryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -55,4 +56,16 @@ public interface SummaryRepository extends JpaRepository<SummaryEntity, Long> {
     // Average processing time previous month
     @Query(value = "SELECT AVG(duration) FROM summaries WHERE status = 'SUCCESS' AND DATE_FORMAT(created_at, '%Y-%m') = DATE_FORMAT(CURDATE() - INTERVAL 1 MONTH, '%Y-%m')", nativeQuery = true)
     Double getAverageProcessingTimePreviousMonth();
+
+    // Lượt tóm tắt 30 ngày gần nhất
+    @Query(value = "SELECT COUNT(*) FROM summaries WHERE created_at >= CURDATE() - INTERVAL 30 DAY", nativeQuery = true)
+    long countSummariesLast30Days();
+
+    // Lượt tóm tắt theo loại (FILE hoặc TEXT)
+    @Query("SELECT COUNT(s) FROM SummaryEntity s WHERE s.summaryType = :summaryType")
+    long countBySummaryType(@Param("summaryType") String summaryType);
+
+    // Lượt tóm tắt đang xử lý
+    @Query("SELECT COUNT(s) FROM SummaryEntity s WHERE s.status = 'PROCESSING'")
+    long countProcessingTasks();
 }

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.datn.dms.dtos.ApiResponse;
+import com.datn.dms.dtos.summary.response.AdminSummaryStatisticsResponse;
 import com.datn.dms.dtos.summary.response.SummaryStatisticsResponse;
 import com.datn.dms.services.SummaryService;
 
@@ -21,14 +22,25 @@ import lombok.experimental.FieldDefaults;
 public class SummaryController {
     SummaryService summaryService;
 
+    // @GetMapping("/statistics")
+    // @PreAuthorize("hasAuthority('ADMIN')")
+    // public ResponseEntity<ApiResponse<SummaryStatisticsResponse>> getStatistics() {
+    //     SummaryStatisticsResponse statistics = summaryService.getStatistics();
+
+    //     return ResponseEntity.ok(ApiResponse.<SummaryStatisticsResponse>builder()
+    //             .code(200)
+    //             .message("Get summary statistics successfully")
+    //             .data(statistics)
+    //             .build());
+    // }
     @GetMapping("/statistics")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<ApiResponse<SummaryStatisticsResponse>> getStatistics() {
-        SummaryStatisticsResponse statistics = summaryService.getStatistics();
+    public ResponseEntity<ApiResponse<AdminSummaryStatisticsResponse>> getStatistics() {
+        AdminSummaryStatisticsResponse statistics = summaryService.getAdminStatistics();
 
-        return ResponseEntity.ok(ApiResponse.<SummaryStatisticsResponse>builder()
+        return ResponseEntity.ok(ApiResponse.<AdminSummaryStatisticsResponse>builder()
                 .code(200)
-                .message("Get summary statistics successfully")
+                .message("Get admin summary statistics successfully")
                 .data(statistics)
                 .build());
     }

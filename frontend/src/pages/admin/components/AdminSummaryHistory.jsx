@@ -4,8 +4,21 @@ import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import LoopOutlinedIcon from "@mui/icons-material/LoopOutlined";
+import MoreHorizOutlinedIcon from "@mui/icons-material/MoreHorizOutlined";
 import TextSnippetOutlinedIcon from "@mui/icons-material/TextSnippetOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 const summaryStats = [
   {
@@ -39,6 +52,24 @@ const summaryStats = [
     loading: true,
   },
 ];
+
+const trendData = [
+  { label: "0 ngày", value: 18 },
+  { label: "1 ngày", value: 80 },
+  { label: "2 ngày", value: 50 },
+  { label: "3 ngày", value: 38 },
+  { label: "4 ngày", value: 75 },
+  { label: "5 ngày", value: 40 },
+  { label: "6 ngày", value: 73 },
+  { label: "7 ngày", value: 22 },
+];
+
+const inputTypeData = [
+  { name: "Text", value: 578, color: "#7fc5ee" },
+  { name: "File", value: 312, color: "#2563a9" },
+];
+
+const inputTypeTotal = inputTypeData.reduce((sum, item) => sum + item.value, 0);
 
 const historyRows = [
   {
@@ -146,6 +177,106 @@ const AdminSummaryHistory = ({ onNotify }) => {
             )}
           </div>
         ))}
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[3fr_2fr]">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="text-base font-bold text-slate-900">
+              Báo cáo: Xu hướng tóm tắt theo thời gian
+            </div>
+            <div className="flex items-center gap-1 rounded-xl bg-slate-50 p-1 text-xs font-semibold text-slate-600">
+              <button type="button" className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-blue-700 shadow-sm">
+                7 ngày
+              </button>
+              <button type="button" className="rounded-lg px-3 py-1.5 transition hover:bg-white hover:text-slate-900">
+                30 ngày
+              </button>
+              <button type="button" className="rounded-lg px-2 py-1.5 transition hover:bg-white hover:text-slate-900" aria-label="Tùy chọn biểu đồ">
+                <MoreHorizOutlinedIcon fontSize="small" />
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 h-[260px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={trendData} margin={{ top: 8, right: 10, left: -18, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="summaryTrendFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#60a5fa" stopOpacity={0.34} />
+                    <stop offset="95%" stopColor="#60a5fa" stopOpacity={0.04} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#334155", fontSize: 12 }} interval={0} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 12 }} width={42} />
+                <Tooltip
+                  formatter={(value) => [`${value} lượt`, "Tóm tắt"]}
+                  contentStyle={{ borderRadius: 12, borderColor: "#e2e8f0", boxShadow: "0 10px 25px rgba(15, 23, 42, 0.08)" }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#2f8fbd"
+                  strokeWidth={2.5}
+                  fill="url(#summaryTrendFill)"
+                  dot={{ r: 4, fill: "#2f8fbd", stroke: "#ffffff", strokeWidth: 2 }}
+                  activeDot={{ r: 5, fill: "#2563eb", stroke: "#ffffff", strokeWidth: 2 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="text-base font-bold text-slate-900">Báo cáo: Tỷ lệ loại đầu vào</div>
+          <div className="mt-4 grid min-h-[260px] items-center gap-4 sm:grid-cols-[1fr_auto]">
+            <div className="relative h-[230px] min-w-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={inputTypeData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={58}
+                    outerRadius={88}
+                    paddingAngle={1}
+                    stroke="#ffffff"
+                    strokeWidth={3}
+                  >
+                    {inputTypeData.map((item) => (
+                      <Cell key={item.name} fill={item.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value, name) => [`${value} lượt`, name]}
+                    contentStyle={{ borderRadius: 12, borderColor: "#e2e8f0", boxShadow: "0 10px 25px rgba(15, 23, 42, 0.08)" }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <DescriptionOutlinedIcon className="text-blue-600" fontSize="small" />
+                  <div className="mt-1 text-sm font-bold text-slate-700">Tổng: {inputTypeTotal}</div>
+                </div>
+              </div>
+              <div className="absolute right-2 top-8 text-xs font-semibold text-slate-700">≈ 65%<br />Text</div>
+              <div className="absolute left-2 top-12 text-xs font-semibold text-slate-700">≈ 35%<br />File</div>
+            </div>
+
+            <div className="space-y-3 pr-2 text-sm font-semibold text-slate-700">
+              {inputTypeData.map((item) => (
+                <div key={item.name} className="flex items-center gap-2 whitespace-nowrap">
+                  <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: item.color }} />
+                  <span>{item.name} ({item.value})</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
