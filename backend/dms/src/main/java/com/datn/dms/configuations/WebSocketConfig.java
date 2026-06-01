@@ -17,6 +17,7 @@ import org.springframework.web.socket.server.standard.ServletServerContainerFact
 public class WebSocketConfig implements WebSocketConfigurer {
 
     private final String aiBaseUrl;
+    private final String uploadDir;
     private final SummaryRepository summaryRepository;
     private final FileRepository fileRepository;
     private final UserRepository userRepository;
@@ -25,12 +26,14 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     public WebSocketConfig(
             @Value("${app.ai.base-url}") String aiBaseUrl,
+            @Value("${app.storage.upload-dir:uploads}") String uploadDir,
             SummaryRepository summaryRepository,
             FileRepository fileRepository,
             UserRepository userRepository,
             ObjectMapper objectMapper,
             JwtDecodeCustomize jwtDecoder) {
         this.aiBaseUrl = aiBaseUrl;
+        this.uploadDir = uploadDir;
         this.summaryRepository = summaryRepository;
         this.fileRepository = fileRepository;
         this.userRepository = userRepository;
@@ -56,7 +59,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
         // Proxy WebSocket cho tóm tắt từ file
         registry.addHandler(
-                new SummarizeWebSocketHandler(aiBaseUrl, "/ws/summarize", summaryRepository, fileRepository, objectMapper),
+                new SummarizeWebSocketHandler(aiBaseUrl, "/ws/summarize", summaryRepository, fileRepository, objectMapper, uploadDir),
                 "/ws/summarize"
         )
         .addInterceptors(interceptor)
@@ -64,7 +67,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
         // Proxy WebSocket cho tóm tắt từ văn bản
         registry.addHandler(
-                new SummarizeWebSocketHandler(aiBaseUrl, "/ws/summarize-text", summaryRepository, fileRepository, objectMapper),
+                new SummarizeWebSocketHandler(aiBaseUrl, "/ws/summarize-text", summaryRepository, fileRepository, objectMapper, uploadDir),
                 "/ws/summarize-text"
         )
         .addInterceptors(interceptor)

@@ -826,6 +826,7 @@ const MyDocuments = () => {
         ws.send(JSON.stringify({
           filename: previewState.name || "file",
           content: base64Content,
+          fileId: previewState.fileId,
         }));
       };
 

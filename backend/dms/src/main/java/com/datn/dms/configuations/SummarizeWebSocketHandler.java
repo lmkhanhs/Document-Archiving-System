@@ -1,5 +1,6 @@
 package com.datn.dms.configuations;
 
+import com.datn.dms.entities.FileEntity;
 import com.datn.dms.entities.SummaryEntity;
 import com.datn.dms.emuns.SummaryStatus;
 import com.datn.dms.entities.UserEntity;
@@ -16,7 +17,12 @@ import jakarta.websocket.ContainerProvider;
 import jakarta.websocket.WebSocketContainer;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.Queue;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -29,11 +35,13 @@ public class SummarizeWebSocketHandler extends TextWebSocketHandler {
     private final FileRepository fileRepository;
     private final ObjectMapper objectMapper;
     private final boolean isTextSummary;
+    private final String uploadDir;
 
     public SummarizeWebSocketHandler(String aiBaseUrl, String pythonPath,
                                      SummaryRepository summaryRepository,
                                      FileRepository fileRepository,
-                                     ObjectMapper objectMapper) {
+                                     ObjectMapper objectMapper,
+                                     String uploadDir) {
         this.pythonWsUrl = aiBaseUrl.replace("http://", "ws://")
                 .replace("https://", "wss://")
                 + pythonPath;
@@ -41,6 +49,7 @@ public class SummarizeWebSocketHandler extends TextWebSocketHandler {
         this.fileRepository = fileRepository;
         this.objectMapper = objectMapper;
         this.isTextSummary = pythonPath.contains("-text");
+        this.uploadDir = uploadDir;
     }
 
     @Override
@@ -191,8 +200,8 @@ public class SummarizeWebSocketHandler extends TextWebSocketHandler {
             JsonNode rootNode = objectMapper.readTree(payload);
             SummaryEntity summary = new SummaryEntity();
             summary.setUser(user);
-            summary.setStatus(SummaryStatus.PROCESSING.name()); // Temporarily using string since user modified the entity to use String
-            summary.setModel("BartPho"); // Default or parse from message if provided
+            summary.setStatus(SummaryStatus.PROCESSING.name());
+            summary.setModel("BartPho");
             summary.setSummaryLength(0);
             summary.setDuration(0.0);
 
@@ -200,14 +209,43 @@ public class SummarizeWebSocketHandler extends TextWebSocketHandler {
                 summary.setSummaryType("TEXT");
                 String text = rootNode.has("text") ? rootNode.get("text").asText() : "";
                 summary.setOriginalContent(text);
-                summary.setOriginalLength(text.split("\\s+").length); // rough word count
+                summary.setOriginalLength(text.split("\\s+").length);
             } else {
                 summary.setSummaryType("FILE");
                 String base64Content = rootNode.has("content") ? rootNode.get("content").asText() : "";
-                summary.setOriginalLength(base64Content.length()); // Approximate for now
+                String filename = rootNode.has("filename") ? rootNode.get("filename").asText() : "unknown";
 
-                if (rootNode.has("fileId")) { // If frontend sends fileId
-                    fileRepository.findById(rootNode.get("fileId").asLong()).ifPresent(summary::setFile);
+                // Ưu tiên lấy FileEntity có sẵn nếu frontend gửi fileId (từ MyDocuments)
+                boolean fileLinked = false;
+                if (rootNode.has("fileId") && !rootNode.get("fileId").isNull()) {
+                    try {
+                        Long fileId = rootNode.get("fileId").asLong();
+                        var fileOpt = fileRepository.findById(fileId);
+                        if (fileOpt.isPresent()) {
+                            summary.setFile(fileOpt.get());
+                            summary.setOriginalLength((int) fileOpt.get().getSize().longValue());
+                            fileLinked = true;
+                            log.info("Linked existing FileEntity ID: {} for summary", fileId);
+                        }
+                    } catch (Exception e) {
+                        log.warn("Could not link file by fileId: {}", e.getMessage());
+                    }
+                }
+
+                // Nếu chưa liên kết được (user upload trực tiếp từ trang Summarize),
+                // decode base64, lưu file vào local storage và tạo FileEntity mới
+                if (!fileLinked && base64Content != null && !base64Content.isEmpty()) {
+                    try {
+                        FileEntity newFile = saveBase64ToFile(base64Content, filename, user);
+                        if (newFile != null) {
+                            summary.setFile(newFile);
+                            summary.setOriginalLength((int) newFile.getSize().longValue());
+                            log.info("Created new FileEntity ID: {} from uploaded file: {}", newFile.getId(), filename);
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to save uploaded file to storage: {}", e.getMessage());
+                        summary.setOriginalLength(base64Content.length());
+                    }
                 }
             }
 
@@ -217,6 +255,62 @@ public class SummarizeWebSocketHandler extends TextWebSocketHandler {
         } catch (Exception e) {
             log.error("Failed to init summary record: {}", e.getMessage());
         }
+    }
+
+    /**
+     * Decode base64 content (data URL format), lưu file vào thư mục uploads,
+     * tạo và trả về FileEntity với đầy đủ metadata.
+     */
+    private FileEntity saveBase64ToFile(String base64Content, String filename, UserEntity user) throws IOException {
+        // Tách phần header "data:application/pdf;base64," khỏi nội dung base64
+        String pureBase64 = base64Content;
+        String contentType = "application/octet-stream";
+
+        if (base64Content.contains(",")) {
+            String[] parts = base64Content.split(",", 2);
+            pureBase64 = parts[1];
+
+            // Trích xuất content type từ header, VD: "data:application/pdf;base64"
+            String header = parts[0]; // "data:application/pdf;base64"
+            if (header.startsWith("data:") && header.contains(";")) {
+                contentType = header.substring(5, header.indexOf(";"));
+            }
+        }
+
+        // Decode base64 sang byte array
+        byte[] fileBytes = Base64.getDecoder().decode(pureBase64);
+
+        // Tạo đường dẫn lưu file: uploads/users/{userId}/summaries/{uuid}{extension}
+        String extension = getFileExtension(filename);
+        String storedName = UUID.randomUUID() + extension;
+        Path relativePath = Paths.get("users", String.valueOf(user.getId()), "summaries", storedName);
+        Path destination = Paths.get(uploadDir).resolve(relativePath).normalize();
+
+        // Tạo thư mục nếu chưa có và ghi file
+        Files.createDirectories(destination.getParent());
+        Files.write(destination, fileBytes);
+
+        log.info("Saved file to: {} ({} bytes)", destination, fileBytes.length);
+
+        // Tạo FileEntity với metadata
+        FileEntity fileEntity = new FileEntity();
+        fileEntity.setName(filename);
+        fileEntity.setType(contentType);
+        fileEntity.setSize((long) fileBytes.length);
+        fileEntity.setUrl("/uploads/" + relativePath.toString().replace('\\', '/'));
+        fileEntity.setOwner(user);
+        fileEntity.setDeleted(false);
+
+        return fileRepository.save(fileEntity);
+    }
+
+    private String getFileExtension(String fileName) {
+        if (fileName == null) return "";
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex < 0 || dotIndex == fileName.length() - 1) {
+            return "";
+        }
+        return fileName.substring(dotIndex);
     }
 
     private void handlePythonMessage(WebSocketSession session, TextMessage message) {
