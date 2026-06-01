@@ -60,7 +60,6 @@ import {
 import DeletedUsersPage from "./components/DeletedUsersPage";
 import RestoreUserDialog from "./components/RestoreUserDialog";
 import HardDeleteDialog from "./components/HardDeleteDialog";
-import SummaryHistoryManagement from "./components/SummaryHistoryManagement";
 import {
   CartesianGrid,
   Cell,
@@ -369,8 +368,7 @@ const sidebarItems = [
   { key: "dashboard", label: "Dashboard", icon: DashboardOutlinedIcon },
   { key: "users", label: "Quản lý người dùng", icon: PeopleOutlinedIcon },
   { key: "documents", label: "Quản lý tài liệu", icon: FolderOpenOutlinedIcon },
-  { key: "history", label: "Lịch sử tóm tắt", icon: HistoryOutlinedIcon },
-  { key: "roles", label: "Quản lý vai trò", icon: VerifiedUserOutlinedIcon },
+  { key: "summary_history", label: "Lịch sử tóm tắt", icon: HistoryOutlinedIcon },
   { key: "stats", label: "Thống kê", icon: BarChartOutlinedIcon },
   { key: "settings", label: "Cài đặt", icon: SettingsOutlinedIcon },
   { key: "logout", label: "Đăng xuất", icon: LogoutOutlinedIcon },
@@ -954,7 +952,7 @@ const AdminDashboard = () => {
       return;
     }
 
-    if (item.key === "users" || item.key === "dashboard" || item.key === "documents" || item.key === "history") {
+    if (item.key === "users" || item.key === "dashboard" || item.key === "documents") {
       return;
     }
 
@@ -2626,8 +2624,6 @@ const AdminDashboard = () => {
                 )}
               </div>
             </section>
-          ) : activeMenu === "history" ? (
-            <SummaryHistoryManagement />
           ) : (
             <>
               <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
