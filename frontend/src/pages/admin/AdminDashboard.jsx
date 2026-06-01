@@ -60,6 +60,7 @@ import {
 import DeletedUsersPage from "./components/DeletedUsersPage";
 import RestoreUserDialog from "./components/RestoreUserDialog";
 import HardDeleteDialog from "./components/HardDeleteDialog";
+import AdminSummaryHistory from "./components/AdminSummaryHistory";
 import {
   CartesianGrid,
   Cell,
@@ -952,7 +953,7 @@ const AdminDashboard = () => {
       return;
     }
 
-    if (item.key === "users" || item.key === "dashboard" || item.key === "documents") {
+    if (item.key === "users" || item.key === "dashboard" || item.key === "documents" || item.key === "summary_history") {
       return;
     }
 
@@ -1651,7 +1652,7 @@ const AdminDashboard = () => {
                   onClick={() => handleSidebarClick(item)}
                   className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-semibold transition ${
                     isActive
-                      ? "bg-blue-100 text-blue-700 ring-1 ring-blue-200"
+                      ? "bg-blue-800 text-white shadow-sm ring-1 ring-blue-700"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
@@ -2247,6 +2248,8 @@ const AdminDashboard = () => {
                 </>
               )}
             </section>
+          ) : activeMenu === "summary_history" ? (
+            <AdminSummaryHistory onNotify={setToast} />
           ) : activeMenu === "documents" ? (
             <section className="mt-6 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
