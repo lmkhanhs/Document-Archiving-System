@@ -9,7 +9,7 @@ import DataObjectOutlinedIcon from "@mui/icons-material/DataObjectOutlined";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
 import TextSnippetOutlinedIcon from "@mui/icons-material/TextSnippetOutlined";
-import { summaryStatisticsService } from "../../../services/summaryService";
+import { summaryHistoryService } from "../../../services/summaryService";
 
 const statusLabelMap = {
   COMPLETED: "Hoàn thành",
@@ -55,7 +55,12 @@ const getSummaryContent = (detail) => (
   || ""
 );
 
-const getFailureContent = (detail) => detail?.errorMessage || "Tóm tắt thất bại";
+const inputTypeLabelMap = {
+  FILE: "File",
+  TEXT: "Text",
+};
+
+const getInputTypeLabel = (inputType) => inputTypeLabelMap[inputType] || inputType || "-";
 
 const InfoCard = ({ icon: Icon, label, value, children }) => (
   <div className="flex min-h-[76px] gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
@@ -69,10 +74,49 @@ const InfoCard = ({ icon: Icon, label, value, children }) => (
   </div>
 );
 
+const formatProcessingTime = (seconds) => {
+  if (seconds === null || seconds === undefined || seconds === "") {
+    return "-";
+  }
+
+  const safeSeconds = Number(seconds);
+
+  if (Number.isNaN(safeSeconds)) {
+    return "-";
+  }
+
+  return `${safeSeconds.toLocaleString("vi-VN", { maximumFractionDigits: 1 })} giây`;
+};
+
+const formatLengthInfo = (originalLength, summaryLength) => {
+  const hasOriginalLength = originalLength !== null && originalLength !== undefined && originalLength !== "";
+  const hasSummaryLength = summaryLength !== null && summaryLength !== undefined && summaryLength !== "";
+
+  if (!hasOriginalLength && !hasSummaryLength) {
+    return "-";
+  }
+
+  return `gốc: ${hasOriginalLength ? Number(originalLength).toLocaleString("vi-VN") : "-"} từ\ntóm tắt: ${hasSummaryLength ? Number(summaryLength).toLocaleString("vi-VN") : "-"} từ`;
+};
+
+const formatCompressionRate = (compressionRate) => {
+  if (compressionRate === null || compressionRate === undefined || compressionRate === "") {
+    return "-";
+  }
+
+  const safeRate = Number(compressionRate);
+
+  if (Number.isNaN(safeRate)) {
+    return "-";
+  }
+
+  return `${safeRate.toLocaleString("vi-VN", { maximumFractionDigits: 1 })}%`;
+};
+
 const MetricCard = ({ label, value }) => (
   <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
     <div className="text-xs font-semibold text-slate-500">{label}</div>
-    <div className="mt-2 text-lg font-black text-slate-950">{value || "-"}</div>
+    <div className="mt-2 whitespace-pre-line text-sm font-bold leading-snug text-slate-950">{value || "-"}</div>
   </div>
 );
 
@@ -110,8 +154,8 @@ const SummaryDetailModal = ({ open, summaryId, initialData, onClose, onNotify })
       setError("");
 
       try {
-        const response = await summaryStatisticsService.getHistoryDetail(summaryId);
-        const nextDetail = response?.data?.data || initialData || null;
+        const response = await summaryHistoryService.getHistoryDetail(summaryId);
+        const nextDetail = response?.data?.data || null;
 
         if (isMounted) {
           setDetail(nextDetail);
@@ -139,7 +183,8 @@ const SummaryDetailModal = ({ open, summaryId, initialData, onClose, onNotify })
   const displayData = detail || initialData || {};
   const title = displayData?.title?.trim() || "Không có tiêu đề";
   const summaryContent = useMemo(() => getSummaryContent(displayData), [displayData]);
-  const visibleContent = displayData?.status === "FAILED" ? getFailureContent(displayData) : summaryContent || "Chưa có nội dung tóm tắt";
+  const hasSummaryContent = Boolean(summaryContent?.trim());
+  const visibleContent = hasSummaryContent ? summaryContent : "Chưa có nội dung tóm tắt";
 
   if (!open) {
     return null;
@@ -152,10 +197,13 @@ const SummaryDetailModal = ({ open, summaryId, initialData, onClose, onNotify })
   };
 
   const handleCopy = async () => {
-    const textToCopy = summaryContent || visibleContent;
+    if (!hasSummaryContent) {
+      notify("Không có nội dung để copy");
+      return;
+    }
 
     try {
-      await navigator.clipboard.writeText(textToCopy || "");
+      await navigator.clipboard.writeText(summaryContent);
       notify("Đã copy nội dung");
     } catch (copyError) {
       console.error("Failed to copy summary content:", copyError);
@@ -164,8 +212,11 @@ const SummaryDetailModal = ({ open, summaryId, initialData, onClose, onNotify })
   };
 
   const handleDownload = () => {
-    const textToDownload = summaryContent || visibleContent || "";
-    const blob = new Blob([textToDownload], { type: "text/plain;charset=utf-8" });
+    if (!hasSummaryContent) {
+      return;
+    }
+
+    const blob = new Blob([summaryContent], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
 
@@ -221,7 +272,7 @@ const SummaryDetailModal = ({ open, summaryId, initialData, onClose, onNotify })
                   <InfoCard icon={InsertDriveFileOutlinedIcon} label="Tên tài liệu" value={title} />
                   <InfoCard icon={DataObjectOutlinedIcon} label="Mô hình AI" value={displayData?.aiModel || displayData?.modelName || "-"} />
                   <InfoCard icon={CalendarTodayOutlinedIcon} label="Ngày thực hiện" value={formatDetailDate(displayData?.createdAt)} />
-                  <InfoCard icon={TextSnippetOutlinedIcon} label="Loại tóm tắt" value={displayData?.summaryMode || displayData?.type || "-"} />
+                  <InfoCard icon={TextSnippetOutlinedIcon} label="Loại tóm tắt" value={getInputTypeLabel(displayData?.inputType)} />
                   <InfoCard icon={StorageOutlinedIcon} label="Dung lượng gốc" value={displayData?.fileSize ?? "-"} />
                   <InfoCard icon={CheckCircleOutlinedIcon} label="Trạng thái">
                     <span className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-xs font-bold ${getStatusClass(displayData?.status)}`}>
@@ -234,10 +285,10 @@ const SummaryDetailModal = ({ open, summaryId, initialData, onClose, onNotify })
               <div>
                 <div className="mb-2 text-sm font-black text-slate-900">Thống kê hiệu suất</div>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <MetricCard label="Thời gian xử lý" value={displayData?.processingTime || displayData?.processingDuration || "-"} />
-                  <MetricCard label="Độ dài" value={displayData?.lengthInfo || displayData?.summaryLength || "-"} />
-                  <MetricCard label="Tỷ lệ nén" value={displayData?.compressionRate || "-"} />
-          
+                  <MetricCard label="Thời gian xử lý" value={formatProcessingTime(displayData?.processingTimeSeconds)} />
+                  <MetricCard label="Độ dài" value={formatLengthInfo(displayData?.originalLength, displayData?.summaryLength)} />
+                  <MetricCard label="Tỷ lệ nén" value={formatCompressionRate(displayData?.compressionRate)} />
+                  <MetricCard label="Độ chính xác" value="-" />
                 </div>
               </div>
 
@@ -255,7 +306,7 @@ const SummaryDetailModal = ({ open, summaryId, initialData, onClose, onNotify })
           <button
             type="button"
             onClick={handleCopy}
-            disabled={isLoading}
+            disabled={isLoading || !hasSummaryContent}
             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ContentCopyOutlinedIcon fontSize="small" />
@@ -264,7 +315,7 @@ const SummaryDetailModal = ({ open, summaryId, initialData, onClose, onNotify })
           <button
             type="button"
             onClick={handleDownload}
-            disabled={isLoading}
+            disabled={isLoading || !hasSummaryContent}
             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <DownloadOutlinedIcon fontSize="small" />

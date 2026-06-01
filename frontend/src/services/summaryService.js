@@ -23,6 +23,22 @@ export const fetchSummaryStatistics = async () => {
   }
 };
 
+export const summaryHistoryService = {
+  getHistoryDetail: async (id) => {
+    try {
+      const response = await api.get(`/summaries/history/${id}`);
+
+      if (response?.data?.code < 200 || response?.data?.code >= 300) {
+        throw new Error(response?.data?.message || "Không thể tải chi tiết tóm tắt");
+      }
+
+      return response;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || error.message || "Không thể tải chi tiết tóm tắt");
+    }
+  },
+};
+
 export const summaryStatisticsService = {
   getTrend: async (days = 7) => {
     try {
@@ -50,8 +66,8 @@ export const summaryStatisticsService = {
         params: {
           page,
           size,
-          inputType: inputType && inputType !== "all" ? inputType : undefined,
-          status: status && status !== "all" ? status : undefined,
+          inputType: inputType || "ALL",
+          status: status || "ALL",
           startDate: startDate || undefined,
           endDate: endDate || undefined,
         },
@@ -64,20 +80,6 @@ export const summaryStatisticsService = {
       return response;
     } catch (error) {
       throw new Error(error.response?.data?.message || error.message || "Không thể tải lịch sử tóm tắt");
-    }
-  },
-
-  getHistoryDetail: async (id) => {
-    try {
-      const response = await api.get(`/summaries/history/${id}`);
-
-      if (response?.data?.code < 200 || response?.data?.code >= 300) {
-        throw new Error(response?.data?.message || "Không thể tải chi tiết tóm tắt");
-      }
-
-      return response;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || error.message || "Không thể tải chi tiết tóm tắt");
     }
   },
 };

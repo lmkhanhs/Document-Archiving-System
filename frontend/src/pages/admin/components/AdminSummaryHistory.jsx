@@ -235,8 +235,8 @@ const AdminSummaryHistory = ({ onNotify }) => {
   const [historyFilters, setHistoryFilters] = useState({
     page: 1,
     size: 5,
-    inputType: "all",
-    status: "all",
+    inputType: "ALL",
+    status: "ALL",
     startDate: "",
     endDate: "",
   });
@@ -699,9 +699,9 @@ const AdminSummaryHistory = ({ onNotify }) => {
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="grid gap-3 lg:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <label className="text-sm font-semibold text-slate-700">
-            Ngày tóm tắt
+            Ngày bắt đầu
             <div className="relative mt-1">
               <CalendarTodayOutlinedIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fontSize="small" />
               <input
@@ -714,13 +714,26 @@ const AdminSummaryHistory = ({ onNotify }) => {
           </label>
 
           <label className="text-sm font-semibold text-slate-700">
+            Ngày kết thúc
+            <div className="relative mt-1">
+              <CalendarTodayOutlinedIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fontSize="small" />
+              <input
+                type="date"
+                value={historyFilters.endDate}
+                onChange={(event) => handleHistoryFilterChange("endDate", event.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-3 text-sm font-medium text-slate-600 outline-none transition focus:border-blue-300 focus:bg-white"
+              />
+            </div>
+          </label>
+
+          <label className="text-sm font-semibold text-slate-700">
             Loại đầu vào
             <select
               value={historyFilters.inputType}
               onChange={(event) => handleHistoryFilterChange("inputType", event.target.value)}
               className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
             >
-              <option value="all">Tất cả</option>
+              <option value="ALL">Tất cả</option>
               <option value="FILE">File</option>
               <option value="TEXT">Text</option>
             </select>
@@ -733,7 +746,7 @@ const AdminSummaryHistory = ({ onNotify }) => {
               onChange={(event) => handleHistoryFilterChange("status", event.target.value)}
               className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
             >
-              <option value="all">Tất cả</option>
+              <option value="ALL">Tất cả</option>
               <option value="COMPLETED">Hoàn thành</option>
               <option value="PROCESSING">Đang xử lý</option>
               <option value="FAILED">Lỗi</option>
