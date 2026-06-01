@@ -35,7 +35,10 @@ public enum ErrorCode {
     GENDER_NOT_FOUND(1016, "Gender not found", HttpStatus.NOT_FOUND),
 
     // Country
-    COUNTRY_NOT_FOUND(1017, "Country not found", HttpStatus.NOT_FOUND);
+    COUNTRY_NOT_FOUND(1017, "Country not found", HttpStatus.NOT_FOUND),
+
+    // Summary
+    SUMMARY_NOT_FOUND(1018, "Summary not found", HttpStatus.NOT_FOUND);
    
     private final int code;
     private final String message;

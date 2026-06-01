@@ -3,10 +3,13 @@ package com.datn.dms.services;
 import com.datn.dms.dtos.summary.response.AdminSummaryStatisticsResponse;
 import com.datn.dms.dtos.summary.response.InputTypeStatisticsResponse;
 import com.datn.dms.dtos.summary.response.SummaryHistoryItemResponse;
+import com.datn.dms.dtos.summary.response.SummaryHistoryDetailResponse;
 import com.datn.dms.dtos.summary.response.SummaryHistoryPageResponse;
 import com.datn.dms.dtos.summary.response.SummaryStatisticsResponse;
 import com.datn.dms.dtos.summary.response.SummaryTrendItemResponse;
 import com.datn.dms.entities.SummaryEntity;
+import com.datn.dms.exception.AppException;
+import com.datn.dms.exception.ErrorCode;
 import com.datn.dms.mapper.SummaryMapper;
 import com.datn.dms.repositories.SummaryRepository;
 
@@ -283,5 +286,11 @@ public class SummaryService {
 
     private double round(double value) {
         return Math.round(value * 10.0) / 10.0;
+    }
+
+    public SummaryHistoryDetailResponse getSummaryHistoryDetail(Long id) {
+        SummaryEntity summaryEntity = summaryRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.SUMMARY_NOT_FOUND));
+        return summaryMapper.toSummaryHistoryDetailResponse(summaryEntity);
     }
 }

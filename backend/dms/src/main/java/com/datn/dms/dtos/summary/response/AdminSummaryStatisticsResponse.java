@@ -2,44 +2,50 @@ package com.datn.dms.dtos.summary.response;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 @Data
 @Builder
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class AdminSummaryStatisticsResponse {
-    private SummaryHistory30Days summaryHistory30Days;
-    private SummarizedContent summarizedContent;
-    private AverageProcessingTime averageProcessingTime;
-    private ProcessingTasks processingTasks;
+    SummaryHistory30Days summaryHistory30Days;
+    SummarizedContent summarizedContent;
+    AverageProcessingTime averageProcessingTime;
+    ProcessingTasks processingTasks;
 
     @Data
     @Builder
+    @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
     public static class SummaryHistory30Days {
-        private Long total;
-        private String unit;
-        private Long todayIncrease;
+        Long total;
+        String unit;
+        Long todayIncrease;
     }
 
     @Data
     @Builder
+    @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
     public static class SummarizedContent {
-        private Long total;
-        private Long thisWeekIncrease;
-        private Long fileCount;
-        private Long textCount;
+        Long total;
+        Long thisWeekIncrease;
+        Long fileCount;
+        Long textCount;
     }
 
     @Data
     @Builder
+    @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
     public static class AverageProcessingTime {
-        private Double value;
-        private String unit;
-        private Double changePercent;
+        Double value;
+        String unit;
+        Double changePercent;
     }
 
     @Data
     @Builder
+    @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
     public static class ProcessingTasks {
-        private Long total;
-        private Boolean isLoading;
+        Long total;
+        Boolean isLoading;
     }
 }

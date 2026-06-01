@@ -25,7 +25,6 @@ public class SummaryEntity extends BaseEntity {
     @JoinColumn(name = "file_id")
     FileEntity file;
 
-    // Loại tóm tắt: "FILE" hoặc "TEXT"
     @Column(nullable = false, length = 20)
     String summaryType;
 

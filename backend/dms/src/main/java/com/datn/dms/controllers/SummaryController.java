@@ -3,6 +3,7 @@ package com.datn.dms.controllers;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +13,7 @@ import java.util.List;
 import com.datn.dms.dtos.ApiResponse;
 import com.datn.dms.dtos.summary.response.AdminSummaryStatisticsResponse;
 import com.datn.dms.dtos.summary.response.InputTypeStatisticsResponse;
+import com.datn.dms.dtos.summary.response.SummaryHistoryDetailResponse;
 import com.datn.dms.dtos.summary.response.SummaryHistoryPageResponse;
 import com.datn.dms.dtos.summary.response.SummaryStatisticsResponse;
 import com.datn.dms.dtos.summary.response.SummaryTrendItemResponse;
@@ -80,6 +82,18 @@ public class SummaryController {
         return ResponseEntity.ok(ApiResponse.<SummaryHistoryPageResponse>builder()
                 .code(200)
                 .message("Get summary history successfully")
+                .data(response)
+                .build());
+    }
+
+    @GetMapping("/history/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<ApiResponse<SummaryHistoryDetailResponse>> getSummaryHistoryDetail(@PathVariable Long id) {
+        SummaryHistoryDetailResponse response = summaryService.getSummaryHistoryDetail(id);
+
+        return ResponseEntity.ok(ApiResponse.<SummaryHistoryDetailResponse>builder()
+                .code(200)
+                .message("Get summary detail successfully")
                 .data(response)
                 .build());
     }

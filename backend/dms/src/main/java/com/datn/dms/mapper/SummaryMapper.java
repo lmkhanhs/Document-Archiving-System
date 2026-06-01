@@ -6,6 +6,7 @@ import org.mapstruct.Mappings;
 import org.mapstruct.Named;
 
 import com.datn.dms.dtos.summary.response.SummaryHistoryItemResponse;
+import com.datn.dms.dtos.summary.response.SummaryHistoryDetailResponse;
 import com.datn.dms.entities.SummaryEntity;
 
 @Mapper(componentModel = "spring")
@@ -20,6 +21,20 @@ public abstract class SummaryMapper {
         @Mapping(target = "status", source = ".", qualifiedByName = "mapStatus")
     })
     public abstract SummaryHistoryItemResponse toSummaryHistoryItemResponse(SummaryEntity entity);
+
+    @Mappings({
+        @Mapping(target = "title", source = ".", qualifiedByName = "mapTitle"),
+        @Mapping(target = "inputType", source = "summaryType"),
+        @Mapping(target = "username", source = ".", qualifiedByName = "mapUsername"),
+        @Mapping(target = "thumbnailUrl", source = "user.thumbnailUrl"),
+        @Mapping(target = "aiModel", source = "model"),
+        @Mapping(target = "summaryType", constant = "Chi tiết"),
+        @Mapping(target = "fileSize", source = ".", qualifiedByName = "mapFileSize"),
+        @Mapping(target = "status", source = ".", qualifiedByName = "mapStatus"),
+        @Mapping(target = "processingTimeSeconds", source = "duration"),
+        @Mapping(target = "compressionRate", source = ".", qualifiedByName = "mapCompressionRate")
+    })
+    public abstract SummaryHistoryDetailResponse toSummaryHistoryDetailResponse(SummaryEntity entity);
 
     @Named("mapTitle")
     protected String mapTitle(SummaryEntity entity) {
@@ -57,5 +72,14 @@ public abstract class SummaryMapper {
     @Named("mapStatus")
     protected String mapStatus(SummaryEntity entity) {
         return "SUCCESS".equalsIgnoreCase(entity.getStatus()) ? "COMPLETED" : entity.getStatus();
+    }
+
+    @Named("mapCompressionRate")
+    protected Double mapCompressionRate(SummaryEntity entity) {
+        if (entity.getOriginalLength() == null || entity.getOriginalLength() == 0 || entity.getSummaryLength() == null) {
+            return 0.0;
+        }
+        double rate = (1.0 - ((double) entity.getSummaryLength() / entity.getOriginalLength())) * 100.0;
+        return Math.round(rate * 10.0) / 10.0;
     }
 }
