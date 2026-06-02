@@ -39,6 +39,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
 import java.text.ParseException;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -88,6 +89,9 @@ public class AuthService {
             throw new AppException(ErrorCode.USER_IS_LOCKED);
         }
 
+        user.setLastLogin(LocalDateTime.now());
+        userRepository.save(user);
+
         String accessToken = generateToken(user, false);
         String refreshToken = generateToken(user, true);
 
@@ -126,8 +130,12 @@ public class AuthService {
                             .isActive(true)
                             .fullName(fullName)
                             .roles(roles)
+                            .lastLogin(LocalDateTime.now())
                             .build();
 
+                    user = userRepository.save(user);
+                } else {
+                    user.setLastLogin(LocalDateTime.now());
                     user = userRepository.save(user);
                 }
 

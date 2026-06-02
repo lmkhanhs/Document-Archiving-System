@@ -15,7 +15,9 @@ import com.datn.dms.dtos.users.response.InfoUserResponse;
 import com.datn.dms.dtos.users.response.RegistrationGrowthResponse;
 import com.datn.dms.dtos.users.response.UserDistributionResponse;
 import com.datn.dms.dtos.users.response.UserStatisticsResponse;
+import com.datn.dms.services.ActiveUserService;
 import com.datn.dms.services.UserService;
+import com.datn.dms.utils.AuthenticationUtills;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +46,30 @@ import org.springframework.web.multipart.MultipartFile;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)    
 public class UserController {
     UserService userService; 
+    ActiveUserService activeUserService;
+    AuthenticationUtills authenticationUtills;
    
+    @PostMapping("/ping")
+    public ApiResponse<Void> ping() {
+        activeUserService.ping(authenticationUtills.getUserName());
+        return ApiResponse.<Void>builder()
+                .code(200)
+                .message("Ping successful")
+                .build();
+    }
+
+    @GetMapping("/active")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<List<InfoUserResponse>> getActiveUsers() {
+        return ApiResponse.<List<InfoUserResponse>>builder()
+                .code(200)
+                .message("Active users retrieved successfully")
+                .data(activeUserService.getActiveUsers().stream()
+                        .map(userService::mapToInfoUserResponse)
+                        .toList())
+                .build();
+    }
+
     @GetMapping("/info")
     public ApiResponse<InfoUserResponse> getInfoUser() {
         return ApiResponse.<InfoUserResponse>builder()
@@ -205,6 +230,15 @@ public class UserController {
                 .code(200)
                 .message("Get registration growth successfully")
                 .data(userService.getRegistrationGrowth(startDate, endDate))
+                .build();
+    }
+    @GetMapping("/active-count")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<Integer> getActiveUserCount() {
+        return ApiResponse.<Integer>builder()
+                .code(200)
+                .message("Active users retrieved successfully")
+                .data(activeUserService.getActiveUserCount())
                 .build();
     }
 }

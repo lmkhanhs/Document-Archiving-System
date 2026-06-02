@@ -14,6 +14,7 @@ public interface UserRepository extends JpaRepository<UserEntity,  Long> {
     Optional<UserEntity> findByUsername(String username);
     Optional<UserEntity> findByEmail(String email);
     List<UserEntity> findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(String username, String email);
+    List<UserEntity> findAllByUsernameIn(List<String> usernames);
     
     @Query("SELECT DISTINCT u FROM UserEntity u LEFT JOIN u.roles r WHERE (:role IS NULL OR r.name = :role) AND (:isActive IS NULL OR u.isActive = :isActive)")
     List<UserEntity> filterUsers(@Param("role") String role, @Param("isActive") Boolean isActive);

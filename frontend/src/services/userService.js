@@ -201,3 +201,22 @@ export const getRegistrationGrowth = async (startDate, endDate) => {
   }
 };
 
+export const pingUser = async () => {
+  try {
+    const response = await api.post("/users/ping");
+    return parseApiResponse(response, "Ping thất bại");
+  } catch (error) {
+    // Không cần ném lỗi nếu ping thất bại để tránh spam console
+    console.warn("Ping failed", error.message);
+  }
+};
+
+export const getActiveUsers = async () => {
+  try {
+    const response = await api.get("/users/active");
+    return parseApiResponse(response, "Không thể lấy danh sách người dùng đang hoạt động");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể lấy danh sách người dùng đang hoạt động");
+  }
+};
+

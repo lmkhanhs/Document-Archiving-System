@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -47,6 +49,9 @@ public class UserEntity extends BaseEntity {
     String address;
     String city;
     String thumbnailUrl;
+    
+    LocalDateTime lastLogin;
+
     @Builder.Default
     boolean isActive = true;
 

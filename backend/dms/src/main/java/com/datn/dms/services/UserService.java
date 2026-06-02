@@ -65,6 +65,10 @@ public class UserService {
         return this.userMapper.toInfoUserResponse(userEntity);
     }
 
+    public InfoUserResponse mapToInfoUserResponse(UserEntity entity) {
+        return this.userMapper.toInfoUserResponse(entity);
+    }
+
     public DetailUserResponse getDetailUser() {
         String username = this.authenticationUtills.getUserName();
         UserEntity userEntity = this.userRepository.findByUsername(username)

@@ -24,6 +24,7 @@ public class InfoUserResponse {
     boolean isActive;
     String thumbnailUrl;
     LocalDateTime createdAt;
+    LocalDateTime lastLogin;
     List<String> roles;
     
 }
