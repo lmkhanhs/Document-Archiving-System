@@ -59,4 +59,16 @@ public class AdminStatisticsController {
                 .data(response)
                 .build());
     }
+
+    @GetMapping("/recent-activities")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<ApiResponse<List<com.datn.dms.dtos.statistics.response.RecentActivityResponse>>> getRecentActivities() {
+        List<com.datn.dms.dtos.statistics.response.RecentActivityResponse> response = adminStatisticsService.getRecentActivities();
+
+        return ResponseEntity.ok(ApiResponse.<List<com.datn.dms.dtos.statistics.response.RecentActivityResponse>>builder()
+                .code(200)
+                .message("Get recent activities successfully")
+                .data(response)
+                .build());
+    }
 }

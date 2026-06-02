@@ -181,31 +181,22 @@ const defaultFileTypeData = [
   { name: "Khác", value: 0, color: "#7c3aed" },
 ];
 
-const activityLogs = [
-  { text: "Nguyễn Văn B vừa đăng ký", time: "2 phút trước", type: "success" },
-  { text: "Tài liệu \"Báo cáo Anh PhoGPT\" được tải lên", time: "2 phút trước", type: "success" },
-  { text: "Tài liệu \"Báo cáo Q1.pdf\" được tải lên", time: "10 phút trước", type: "success" },
-  { text: "Tài liệu \"Báo cáo Q1.pdf\" được tải lên", time: "10 phút trước", type: "warning" },
-  { text: "Tài liệu \"Báo cáo Q1.pdf\" được tải lên", time: "10 phút trước", type: "success" },
-  { text: "Thất bại đơn B vừa đăng ký", time: "10 phút trước", type: "error" },
-];
-
 const badgeClassMap = {
-  success: "border-emerald-100 bg-emerald-50 text-emerald-700",
-  warning: "border-amber-100 bg-amber-50 text-amber-700",
-  error: "border-rose-100 bg-rose-50 text-rose-700",
+  SUCCESS: "border-emerald-100 bg-emerald-50 text-emerald-700",
+  WARNING: "border-amber-100 bg-amber-50 text-amber-700",
+  ERROR: "border-rose-100 bg-rose-50 text-rose-700",
 };
 
 const badgeLabelMap = {
-  success: "Status",
-  warning: "Warning",
-  error: "Error",
+  SUCCESS: "Thành công",
+  WARNING: "Cảnh báo",
+  ERROR: "Lỗi",
 };
 
 const activityIconMap = {
-  success: CheckCircleOutlinedIcon,
-  warning: WarningAmberOutlinedIcon,
-  error: ErrorOutlineOutlinedIcon,
+  SUCCESS: CheckCircleOutlinedIcon,
+  WARNING: WarningAmberOutlinedIcon,
+  ERROR: ErrorOutlineOutlinedIcon,
 };
 
 const AnalyticsCard = ({ children, className = "" }) => (
@@ -246,6 +237,10 @@ const AdminAnalyticsDashboard = () => {
   const [topUsersData, setTopUsersData] = useState([]);
   const [isTopUsersLoading, setIsTopUsersLoading] = useState(true);
   const [topUsersError, setTopUsersError] = useState("");
+
+  const [activitiesData, setActivitiesData] = useState([]);
+  const [isActivitiesLoading, setIsActivitiesLoading] = useState(true);
+  const [activitiesError, setActivitiesError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -362,6 +357,34 @@ const AdminAnalyticsDashboard = () => {
     };
 
     loadTopUsers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadActivities = async () => {
+      setIsActivitiesLoading(true);
+      setActivitiesError("");
+      try {
+        const data = await statisticsService.getRecentActivities();
+        if (isMounted) {
+          setActivitiesData(data);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setActivitiesError(error.message || "Lỗi tải dữ liệu");
+        }
+      } finally {
+        if (isMounted) {
+          setIsActivitiesLoading(false);
+        }
+      }
+    };
+
+    loadActivities();
 
     return () => {
       isMounted = false;
@@ -662,24 +685,42 @@ const AdminAnalyticsDashboard = () => {
       <AnalyticsCard className="p-4">
         <div className="mb-3 text-sm font-black uppercase text-slate-900">Nhật ký hoạt động mới nhất</div>
         <div className="grid gap-2 md:grid-cols-2">
-          {activityLogs.map((log, index) => {
-            const Icon = activityIconMap[log.type];
-
-            return (
-              <div key={`${log.text}-${index}`} className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-white px-3 py-2 text-sm transition hover:bg-slate-50">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${log.type === "success" ? "bg-blue-50 text-blue-700" : log.type === "warning" ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-700"}`}>
-                    <Icon fontSize="small" />
-                  </div>
-                  <div className="truncate font-semibold text-slate-700">{log.text}</div>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-xs font-semibold text-slate-500">{log.time}</span>
-                  <span className={`rounded-full border px-2 py-0.5 text-[11px] font-bold ${badgeClassMap[log.type]}`}>{badgeLabelMap[log.type]}</span>
+          {isActivitiesLoading ? (
+            Array.from({ length: 6 }).map((_, index) => (
+              <div key={`skeleton-log-${index}`} className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-white px-3 py-2">
+                <div className="flex w-full items-center gap-3">
+                  <div className="h-8 w-8 shrink-0 animate-pulse rounded-lg bg-slate-200"></div>
+                  <div className="h-4 flex-1 animate-pulse rounded bg-slate-200"></div>
                 </div>
               </div>
-            );
-          })}
+            ))
+          ) : activitiesError || activitiesData.length === 0 ? (
+            <div className="col-span-full py-6 text-center text-sm font-semibold text-slate-500">
+              Không có hoạt động gần đây
+            </div>
+          ) : (
+            activitiesData.map((log) => {
+              const Icon = activityIconMap[log.status] || activityIconMap["SUCCESS"];
+              const toneClass = log.status === "SUCCESS" ? "bg-emerald-50 text-emerald-700" : log.status === "WARNING" ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-700";
+
+              return (
+                <div key={log.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-white px-3 py-2 text-sm transition hover:bg-slate-50">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${toneClass}`}>
+                      <Icon fontSize="small" />
+                    </div>
+                    <div className="truncate font-semibold text-slate-700" title={log.title}>{log.title}</div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="text-xs font-semibold text-slate-500">{formatRelativeTime(log.createdAt)}</span>
+                    <span className={`rounded-full border px-2 py-0.5 text-[11px] font-bold ${badgeClassMap[log.status] || badgeClassMap["SUCCESS"]}`}>
+                      {badgeLabelMap[log.status] || "Thành công"}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </AnalyticsCard>
     </section>

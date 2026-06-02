@@ -105,4 +105,16 @@ public class AdminStatisticsService {
                     .build();
         }).toList();
     }
+
+    public List<com.datn.dms.dtos.statistics.response.RecentActivityResponse> getRecentActivities() {
+        List<com.datn.dms.dtos.statistics.response.RecentActivityProjection> projections = userRepository.getRecentActivities(10);
+
+        return projections.stream().map(p -> com.datn.dms.dtos.statistics.response.RecentActivityResponse.builder()
+                .id(p.getId())
+                .type(p.getType())
+                .title(p.getTitle())
+                .status(p.getStatus())
+                .createdAt(p.getCreatedAt())
+                .build()).toList();
+    }
 }

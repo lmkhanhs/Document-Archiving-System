@@ -38,4 +38,16 @@ export const statisticsService = {
       throw new Error(error.response?.data?.message || error.message || "Lỗi kết nối đến server");
     }
   },
+
+  getRecentActivities: async () => {
+    try {
+      const response = await api.get("/admin/statistics/recent-activities");
+      if (response?.data?.code >= 200 && response?.data?.code < 300) {
+        return response.data.data;
+      }
+      throw new Error(response?.data?.message || "Lỗi lấy nhật ký hoạt động");
+    } catch (error) {
+      throw new Error(error.response?.data?.message || error.message || "Lỗi kết nối đến server");
+    }
+  },
 };
