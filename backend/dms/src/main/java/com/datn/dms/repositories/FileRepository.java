@@ -37,4 +37,7 @@ public interface FileRepository extends JpaRepository<FileEntity, Long> {
 		   "AND (:uploader IS NULL OR LOWER(f.owner.username) LIKE LOWER(CONCAT('%', :uploader, '%'))) " +
 		   "ORDER BY f.createdAt DESC")
 	List<FileEntity> searchFilesAdmin(@Param("fileName") String fileName, @Param("uploader") String uploader);
+
+	@Query("SELECT f.name FROM FileEntity f")
+	List<String> findAllFileNames();
 }

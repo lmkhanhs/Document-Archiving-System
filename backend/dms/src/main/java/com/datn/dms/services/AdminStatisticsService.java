@@ -2,6 +2,7 @@ package com.datn.dms.services;
 
 import org.springframework.stereotype.Service;
 
+import com.datn.dms.dtos.statistics.response.DocumentTypeStatisticItemResponse;
 import com.datn.dms.dtos.statistics.response.OverviewStatisticsResponse;
 import com.datn.dms.repositories.FileRepository;
 import com.datn.dms.repositories.SummaryRepository;
@@ -13,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -54,5 +56,53 @@ public class AdminStatisticsService {
                 .successRate(successRate)
                 .averageProcessingTime(averageProcessingTime)
                 .build();
+    }
+
+    public List<DocumentTypeStatisticItemResponse> getDocumentTypeStatistics() {
+        List<String> names = fileRepository.findAllFileNames();
+        long pdfCount = 0;
+        long docxCount = 0;
+        long txtCount = 0;
+        long otherCount = 0;
+
+        for (String name : names) {
+            if (name == null) {
+                otherCount++;
+                continue;
+            }
+            String lowerName = name.toLowerCase();
+            if (lowerName.endsWith(".pdf")) {
+                pdfCount++;
+            } else if (lowerName.endsWith(".docx") || lowerName.endsWith(".doc")) {
+                docxCount++;
+            } else if (lowerName.endsWith(".txt")) {
+                txtCount++;
+            } else {
+                otherCount++;
+            }
+        }
+
+        return List.of(
+            new DocumentTypeStatisticItemResponse("PDF", pdfCount),
+            new DocumentTypeStatisticItemResponse("DOCX", docxCount),
+            new DocumentTypeStatisticItemResponse("TXT", txtCount),
+            new DocumentTypeStatisticItemResponse("Khác", otherCount)
+        );
+    }
+
+    public List<com.datn.dms.dtos.statistics.response.TopActiveUserResponse> getTopActiveUsers() {
+        // limit to 5
+        List<com.datn.dms.dtos.statistics.response.TopActiveUserProjection> projections = userRepository.getTopActiveUsers(5);
+
+        return projections.stream().map(p -> {
+            return com.datn.dms.dtos.statistics.response.TopActiveUserResponse.builder()
+                    .userId(p.getUserId())
+                    .username(p.getUsername())
+                    .thumbnailUrl(p.getThumbnailUrl())
+                    .uploadedDocuments(p.getUploadedDocuments() != null ? p.getUploadedDocuments() : 0)
+                    .summaryCount(p.getSummaryCount() != null ? p.getSummaryCount() : 0)
+                    .lastActiveAt(p.getLastActiveAt())
+                    .build();
+        }).toList();
     }
 }

@@ -34,4 +34,15 @@ public interface UserRepository extends JpaRepository<UserEntity,  Long> {
     long countByRoles_NameAndIsDeletedFalse(String roleName);
 
     List<UserEntity> findByCreatedAtBetween(java.time.LocalDateTime start, java.time.LocalDateTime end);
+
+    @Query(value = "SELECT * FROM ( " +
+                   "  SELECT u.id as userId, u.username as username, u.email as email, u.thumbnail_url as thumbnailUrl, u.last_login as lastActiveAt, " +
+                   "  (SELECT COUNT(f.id) FROM files f WHERE f.owner_id = u.id AND f.is_deleted = false) as uploadedDocuments, " +
+                   "  (SELECT COUNT(s.id) FROM summaries s WHERE s.user_id = u.id) as summaryCount " +
+                   "  FROM users u " +
+                   ") as stats " +
+                   "WHERE uploadedDocuments > 0 OR summaryCount > 0 " +
+                   "ORDER BY summaryCount DESC, uploadedDocuments DESC " +
+                   "LIMIT :limit", nativeQuery = true)
+    List<com.datn.dms.dtos.statistics.response.TopActiveUserProjection> getTopActiveUsers(@Param("limit") int limit);
 }

@@ -14,4 +14,28 @@ export const statisticsService = {
       throw new Error(error.response?.data?.message || error.message || "Lỗi kết nối đến server");
     }
   },
+
+  getDocumentTypes: async () => {
+    try {
+      const response = await api.get("/admin/statistics/document-types");
+      if (response?.data?.code >= 200 && response?.data?.code < 300) {
+        return response.data.data;
+      }
+      throw new Error(response?.data?.message || "Lỗi lấy dữ liệu loại tài liệu");
+    } catch (error) {
+      throw new Error(error.response?.data?.message || error.message || "Lỗi kết nối đến server");
+    }
+  },
+
+  getTopActiveUsers: async () => {
+    try {
+      const response = await api.get("/admin/statistics/top-active-users");
+      if (response?.data?.code >= 200 && response?.data?.code < 300) {
+        return response.data.data;
+      }
+      throw new Error(response?.data?.message || "Lỗi lấy dữ liệu top người dùng");
+    } catch (error) {
+      throw new Error(error.response?.data?.message || error.message || "Lỗi kết nối đến server");
+    }
+  },
 };

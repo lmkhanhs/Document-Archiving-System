@@ -27,8 +27,39 @@ import {
 } from "recharts";
 import { summaryStatisticsService } from "../../../services/summaryService";
 import { statisticsService } from "../../../services/statisticsService";
+import { API_ORIGIN } from "../../../services/api";
 
 const formatNumber = (value) => Number(value || 0).toLocaleString("vi-VN");
+
+function getAvatarUrl(thumbnailUrl) {
+  if (!thumbnailUrl) return null;
+  if (thumbnailUrl.startsWith("http://") || thumbnailUrl.startsWith("https://")) {
+    return thumbnailUrl;
+  }
+  return `${API_ORIGIN}${thumbnailUrl}`;
+}
+
+const UserAvatar = ({ user }) => {
+  const [hasError, setHasError] = useState(false);
+  const avatarUrl = getAvatarUrl(user.thumbnailUrl);
+
+  if (!avatarUrl || hasError) {
+    return (
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700 ring-1 ring-blue-100">
+        {user.username ? user.username.charAt(0).toUpperCase() : "U"}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={avatarUrl}
+      alt={user.username}
+      className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-slate-200"
+      onError={() => setHasError(true)}
+    />
+  );
+};
 
 const formatTrendLabel = (dateValue) => {
   if (!dateValue) {
@@ -51,6 +82,30 @@ const mapTrendData = (items = []) => (
     }))
     : []
 );
+
+const formatRelativeTime = (dateString) => {
+  if (!dateString) return "--";
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+
+  if (diffInSeconds < 60) return "vừa xong";
+  
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
+  
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} giờ trước`;
+  
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 30) return `${diffInDays} ngày trước`;
+  
+  const diffInMonths = Math.floor(diffInDays / 30);
+  if (diffInMonths < 12) return `${diffInMonths} tháng trước`;
+  
+  const diffInYears = Math.floor(diffInDays / 365);
+  return `${diffInYears} năm trước`;
+};
 
 const timeRangeOptions = [
   { label: "Hôm nay", days: 1 },
@@ -112,24 +167,18 @@ const analyticsSummaryCardsTemplate = [
 ];
 
 
-const fileTypeData = [
-  { name: "PDF", value: 4500, color: "#2563eb" },
-  { name: "DOCX", value: 1800, color: "#0891b2" },
-  { name: "TXT", value: 890, color: "#eab308" },
-  { name: "Khác", value: 250, color: "#7c3aed" },
-];
+const documentTypeColors = {
+  "PDF": "#2563eb",
+  "DOCX": "#0891b2",
+  "TXT": "#eab308",
+  "Khác": "#7c3aed"
+};
 
-const processStatusData = [
-  { name: "Thành công (Completed)", value: 293, percent: 42.8, color: "#16a34a" },
-  { name: "Đang xử lý (Processing)", value: 165, percent: 28.3, color: "#f59e0b" },
-  { name: "Thất bại (Failed)", value: 35, percent: 5.8, color: "#dc2626" },
-];
-
-const topUsers = [
-  { name: "Nguyễn Văn B", uploaded: 1350, summaries: 257, recent: "18 hôm nay", avatar: "N" },
-  { name: "Ngân Lục", uploaded: 800, summaries: 630, recent: "18 hôm nay", avatar: "N" },
-  { name: "Nguyễn Văn", uploaded: 456, summaries: 433, recent: "17 hôm nay", avatar: "V" },
-  { name: "Nhân Lục", uploaded: 254, summaries: 312, recent: "18 hôm nay", avatar: "L" },
+const defaultFileTypeData = [
+  { name: "PDF", value: 0, color: "#2563eb" },
+  { name: "DOCX", value: 0, color: "#0891b2" },
+  { name: "TXT", value: 0, color: "#eab308" },
+  { name: "Khác", value: 0, color: "#7c3aed" },
 ];
 
 const activityLogs = [
@@ -185,11 +234,18 @@ const AdminAnalyticsDashboard = () => {
   const [summaryTrendData, setSummaryTrendData] = useState([]);
   const [isTrendLoading, setIsTrendLoading] = useState(true);
   const [trendError, setTrendError] = useState("");
-  const totalProcess = useMemo(() => processStatusData.reduce((sum, item) => sum + item.value, 0), []);
 
   const [overviewData, setOverviewData] = useState(null);
   const [isOverviewLoading, setIsOverviewLoading] = useState(true);
   const [overviewError, setOverviewError] = useState("");
+
+  const [docTypeData, setDocTypeData] = useState(defaultFileTypeData);
+  const [isDocTypeLoading, setIsDocTypeLoading] = useState(true);
+  const [docTypeError, setDocTypeError] = useState("");
+
+  const [topUsersData, setTopUsersData] = useState([]);
+  const [isTopUsersLoading, setIsTopUsersLoading] = useState(true);
+  const [topUsersError, setTopUsersError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -245,6 +301,67 @@ const AdminAnalyticsDashboard = () => {
     };
 
     loadOverviewData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadDocTypes = async () => {
+      setIsDocTypeLoading(true);
+      setDocTypeError("");
+      try {
+        const data = await statisticsService.getDocumentTypes();
+        if (isMounted) {
+          const mappedData = data.map(item => ({
+            name: item.type,
+            value: item.count,
+            color: documentTypeColors[item.type] || "#cbd5e1"
+          }));
+          setDocTypeData(mappedData);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setDocTypeError(error.message || "Lỗi tải dữ liệu");
+        }
+      } finally {
+        if (isMounted) {
+          setIsDocTypeLoading(false);
+        }
+      }
+    };
+
+    loadDocTypes();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadTopUsers = async () => {
+      setIsTopUsersLoading(true);
+      setTopUsersError("");
+      try {
+        const data = await statisticsService.getTopActiveUsers();
+        if (isMounted) {
+          setTopUsersData(data);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setTopUsersError(error.message || "Lỗi tải dữ liệu");
+        }
+      } finally {
+        if (isMounted) {
+          setIsTopUsersLoading(false);
+        }
+      }
+    };
+
+    loadTopUsers();
 
     return () => {
       isMounted = false;
@@ -393,107 +510,149 @@ const AdminAnalyticsDashboard = () => {
             <div className="text-xs font-semibold text-slate-500">(Bar Chart)</div>
           </div>
           <div className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={fileTypeData} margin={{ top: 20, right: 8, left: -12, bottom: 0 }}>
-                <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: "#0f172a", fontSize: 12, fontWeight: 700 }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} tickLine={false} axisLine={false} />
-                <Tooltip cursor={{ fill: "#f1f5f9" }} formatter={(value) => [formatNumber(value), "Số lượng"]} />
-                <Bar dataKey="value" radius={[8, 8, 0, 0]} label={{ position: "top", fill: "#0f172a", fontSize: 11, fontWeight: 700 }}>
-                  {fileTypeData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {isDocTypeLoading ? (
+              <div className="flex h-full flex-col justify-end gap-3 rounded-2xl bg-slate-50 p-4">
+                <div className="flex h-full items-end justify-between gap-4 px-6 pb-2">
+                  {[1, 2, 3, 4].map((_, index) => (
+                    <div key={index} className="w-16 animate-pulse rounded-t-lg bg-slate-200" style={{ height: `${Math.max(20, Math.random() * 100)}%`, animationDelay: `${index * 0.15}s` }} />
+                  ))}
+                </div>
+                <div className="flex justify-between border-t border-slate-200 px-6 pt-3">
+                  {[1, 2, 3, 4].map((_, index) => (
+                    <div key={index} className="h-3 w-10 animate-pulse rounded bg-slate-200" style={{ animationDelay: `${index * 0.15}s` }} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={docTypeError ? defaultFileTypeData : docTypeData} margin={{ top: 20, right: 8, left: -12, bottom: 0 }}>
+                  <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fill: "#0f172a", fontSize: 12, fontWeight: 700 }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fill: "#64748b", fontSize: 11 }} tickLine={false} axisLine={false} />
+                  <Tooltip cursor={{ fill: "#f1f5f9" }} formatter={(value) => [formatNumber(value), "Số lượng"]} />
+                  <Bar 
+                    dataKey="value" 
+                    radius={[8, 8, 0, 0]} 
+                    label={{ position: "top", fill: "#0f172a", fontSize: 11, fontWeight: 700, formatter: (value) => formatNumber(value) }}
+                  >
+                    {(docTypeError ? defaultFileTypeData : docTypeData).map((entry) => <Cell key={entry.name} fill={entry.color} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </AnalyticsCard>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.05fr_1.25fr_0.9fr]">
-        <AnalyticsCard className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="text-sm font-black uppercase text-slate-900">Tỷ lệ xử lý tài liệu</div>
-            <div className="text-xs font-semibold text-slate-500">(Doughnut Chart)</div>
-          </div>
-          <div className="mt-3 grid items-center gap-3 sm:grid-cols-[1fr_auto]">
-            <div className="h-[210px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={processStatusData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={86} paddingAngle={2} stroke="#fff" strokeWidth={3}>
-                    {processStatusData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
-                  </Pie>
-                  <Tooltip formatter={(value, name) => [`${formatNumber(value)} lượt`, name]} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="space-y-2 text-xs font-semibold text-slate-600">
-              {processStatusData.map((item) => (
-                <div key={item.name} className="flex items-center gap-2 whitespace-nowrap">
-                  <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: item.color }} />
-                  <span>{item.name}</span>
-                  <span className="text-slate-400">{item.value} • {item.percent}%</span>
-                </div>
-              ))}
-              <div className="pt-1 text-slate-400">Tổng: {formatNumber(totalProcess)}</div>
-            </div>
-          </div>
-        </AnalyticsCard>
-
+      <div className="grid gap-4 xl:grid-cols-[1.8fr_1fr]">
         <AnalyticsCard className="overflow-hidden p-4">
           <div className="mb-3 text-sm font-black uppercase text-slate-900">Top người dùng hoạt động nhiều nhất</div>
           <div className="overflow-auto rounded-xl border border-slate-100">
             <table className="min-w-[560px] w-full text-left text-sm">
               <thead className="bg-slate-50 text-xs font-bold uppercase text-slate-500">
                 <tr>
-                  <th className="px-3 py-2">Tên người dùng</th>
+                  <th className="px-3 py-2">Người dùng</th>
                   <th className="px-3 py-2">Số tài liệu đã tải</th>
                   <th className="px-3 py-2">Số lượt tóm tắt</th>
                   <th className="px-3 py-2">Hoạt động gần nhất</th>
                 </tr>
               </thead>
               <tbody>
-                {topUsers.map((user) => (
-                  <tr key={user.name} className="border-t border-slate-100 transition hover:bg-blue-50/40">
-                    <td className="px-3 py-2">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700 ring-1 ring-blue-100">{user.avatar}</div>
-                        <span className="font-semibold text-slate-800">{user.name}</span>
-                      </div>
+                {isTopUsersLoading ? (
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <tr key={`skeleton-${index}`} className="border-t border-slate-100">
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-slate-200"></div>
+                          <div className="h-4 w-24 animate-pulse rounded bg-slate-200"></div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2"><div className="h-4 w-10 animate-pulse rounded bg-slate-200"></div></td>
+                      <td className="px-3 py-2"><div className="h-4 w-10 animate-pulse rounded bg-slate-200"></div></td>
+                      <td className="px-3 py-2"><div className="h-4 w-20 animate-pulse rounded bg-slate-200"></div></td>
+                    </tr>
+                  ))
+                ) : topUsersError || topUsersData.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-3 py-8 text-center text-sm font-semibold text-slate-500">
+                      Không có dữ liệu
                     </td>
-                    <td className="px-3 py-2 font-semibold text-slate-600">{formatNumber(user.uploaded)}</td>
-                    <td className="px-3 py-2 font-semibold text-slate-600">{formatNumber(user.summaries)}</td>
-                    <td className="px-3 py-2 text-slate-500">{user.recent}</td>
                   </tr>
-                ))}
+                ) : (
+                  topUsersData.map((user) => (
+                    <tr key={user.userId} className="border-t border-slate-100 transition hover:bg-blue-50/40">
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <UserAvatar user={user} />
+                          <span className="font-semibold text-slate-800">{user.username}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 font-semibold text-slate-600">{formatNumber(user.uploadedDocuments)}</td>
+                      <td className="px-3 py-2 font-semibold text-slate-600">{formatNumber(user.summaryCount)}</td>
+                      <td className="px-3 py-2 text-slate-500">{formatRelativeTime(user.lastActiveAt)}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </AnalyticsCard>
 
-        <div className="space-y-3">
-          <AnalyticsCard className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><CheckCircleOutlinedIcon fontSize="small" /></div>
-              <div>
-                <div className="text-sm font-semibold text-slate-600">Tỷ lệ thành công</div>
-                <div className="text-2xl font-black text-slate-950">92%</div>
+        <div className="space-y-4">
+          <AnalyticsCard className="flex items-center gap-4 p-5">
+            <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+              <CheckCircleOutlinedIcon />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[14px] font-[600] leading-[1.4] text-[#64748b]">Tỷ lệ thành công</div>
+              <div className="mt-0.5 flex items-center truncate text-sm font-semibold text-slate-800">
+                {isOverviewLoading ? (
+                  <span className="flex h-[28px] items-center gap-1.5">
+                    <span className="inline-block h-2.5 w-2.5 animate-bounce rounded-full bg-slate-300"></span>
+                    <span className="inline-block h-2.5 w-2.5 animate-bounce rounded-full bg-slate-300" style={{ animationDelay: "0.2s" }}></span>
+                    <span className="inline-block h-2.5 w-2.5 animate-bounce rounded-full bg-slate-300" style={{ animationDelay: "0.4s" }}></span>
+                  </span>
+                ) : overviewError || !overviewData ? "--" : (
+                  Number(overviewData.successRate || 0).toFixed(1) + "%"
+                )}
               </div>
             </div>
           </AnalyticsCard>
-          <AnalyticsCard className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-700"><HourglassBottomOutlinedIcon fontSize="small" /></div>
-              <div>
-                <div className="text-sm font-semibold text-slate-600">Thời gian xử lý (TB/Nhanh/Chậm)</div>
-                <div className="mt-1 text-xl font-black text-slate-950">12.5s / 4.1s / 35.8s</div>
+          
+          <AnalyticsCard className="flex items-center gap-4 p-5">
+            <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-700">
+              <HourglassBottomOutlinedIcon />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[14px] font-[600] leading-[1.4] text-[#64748b]">Thời gian xử lý trung bình</div>
+              <div className="mt-0.5 flex items-center truncate text-sm font-semibold text-slate-800">
+                {isOverviewLoading ? (
+                  <span className="flex h-[28px] items-center gap-1.5">
+                    <span className="inline-block h-2.5 w-2.5 animate-bounce rounded-full bg-slate-300"></span>
+                    <span className="inline-block h-2.5 w-2.5 animate-bounce rounded-full bg-slate-300" style={{ animationDelay: "0.2s" }}></span>
+                    <span className="inline-block h-2.5 w-2.5 animate-bounce rounded-full bg-slate-300" style={{ animationDelay: "0.4s" }}></span>
+                  </span>
+                ) : overviewError || !overviewData ? "--" : (
+                  Number(overviewData.averageProcessingTime || 0).toFixed(1) + "s"
+                )}
               </div>
             </div>
           </AnalyticsCard>
-          <AnalyticsCard className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700"><StarRoundedIcon fontSize="small" /></div>
-              <div>
-                <div className="text-sm font-semibold text-slate-600">Đánh giá trung bình từ người dùng</div>
-                <div className="mt-1 text-2xl font-black text-slate-950">4.7/5</div>
+          
+          <AnalyticsCard className="flex items-center gap-4 p-5">
+            <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+              <StarRoundedIcon />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[14px] font-[600] leading-[1.4] text-[#64748b]">Đánh giá trung bình từ người dùng</div>
+              <div className="mt-0.5 flex items-center truncate text-sm font-semibold text-slate-800">
+                {isOverviewLoading ? (
+                  <span className="flex h-[28px] items-center gap-1.5">
+                    <span className="inline-block h-2.5 w-2.5 animate-bounce rounded-full bg-slate-300"></span>
+                    <span className="inline-block h-2.5 w-2.5 animate-bounce rounded-full bg-slate-300" style={{ animationDelay: "0.2s" }}></span>
+                    <span className="inline-block h-2.5 w-2.5 animate-bounce rounded-full bg-slate-300" style={{ animationDelay: "0.4s" }}></span>
+                  </span>
+                ) : overviewError || !overviewData ? "--" : "--"}
               </div>
             </div>
           </AnalyticsCard>
