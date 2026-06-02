@@ -5,7 +5,7 @@ import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
-import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
+
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
@@ -371,40 +371,8 @@ const sidebarItems = [
   { key: "users", label: "Quản lý người dùng", icon: PeopleOutlinedIcon },
   { key: "documents", label: "Quản lý tài liệu", icon: FolderOpenOutlinedIcon },
   { key: "summary_history", label: "Lịch sử tóm tắt", icon: HistoryOutlinedIcon },
-  { key: "stats", label: "Thống kê", icon: BarChartOutlinedIcon },
   { key: "settings", label: "Cài đặt", icon: SettingsOutlinedIcon },
   { key: "logout", label: "Đăng xuất", icon: LogoutOutlinedIcon },
-];
-
-const statCards = [
-  {
-    key: "users",
-    label: "Tong nguoi dung",
-    value: "1,248",
-    sub: "+18 hom nay",
-    tone: "from-blue-600 to-sky-500",
-  },
-  {
-    key: "documents",
-    label: "Tong tai lieu",
-    value: "6,320",
-    sub: "+92 trong tuan",
-    tone: "from-sky-600 to-cyan-500",
-  },
-  {
-    key: "summaries",
-    label: "Tong luot tom tat",
-    value: "18,540",
-    sub: "+360 trong thang",
-    tone: "from-emerald-600 to-emerald-400",
-  },
-  {
-    key: "active",
-    label: "Nguoi dung dang hoat dong",
-    value: "312",
-    sub: "Cap nhat 5 phut truoc",
-    tone: "from-violet-600 to-purple-500",
-  },
 ];
 
 const toDateInputValue = (date) => {
@@ -1615,15 +1583,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const summaryHighlight = useMemo(
-    () => [
-      { label: "Ty le hoan thanh", value: "92%", detail: "Vuot muc quy" },
-      { label: "Thoi gian xu ly TB", value: "12s", detail: "-8% so voi thang" },
-      { label: "Do chinh xac", value: "4.7/5", detail: "Danh gia tu nguoi dung" },
-    ],
-    []
-  );
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white p-3 md:p-5">
       <style>{"@keyframes fadeUp{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}"}</style>
@@ -2251,8 +2210,6 @@ const AdminDashboard = () => {
             </section>
           ) : activeMenu === "summary_history" ? (
             <AdminSummaryHistory onNotify={setToast} />
-          ) : activeMenu === "stats" ? (
-            <AdminAnalyticsDashboard />
           ) : activeMenu === "documents" ? (
             <section className="mt-6 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -2631,80 +2588,7 @@ const AdminDashboard = () => {
               </div>
             </section>
           ) : (
-            <>
-              <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {statCards.map((card) => (
-                  <div
-                    key={card.key}
-                    className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-sm"
-                  >
-                    <div
-                      className={`inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r ${card.tone} px-3 py-1 text-xs font-semibold text-white`}
-                    >
-                      <AutoAwesomeOutlinedIcon fontSize="inherit" />
-                      Bao cao
-                    </div>
-                    <div className="mt-3 text-sm font-semibold text-slate-600">{card.label}</div>
-                    <div className="mt-1 text-2xl font-bold text-slate-900">{card.value}</div>
-                    <div className="mt-2 text-xs text-slate-500">{card.sub}</div>
-                  </div>
-                ))}
-              </section>
-
-              <section className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                        Hoat dong gan day
-                      </div>
-                      <div className="text-base font-bold text-slate-900">He thong dang van hanh on dinh</div>
-                    </div>
-                    <button
-                      type="button"
-                      className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
-                    >
-                      Xem tat ca
-                    </button>
-                  </div>
-
-                  <div className="mt-4 space-y-3">
-                    {[
-                      "Nguoi dung moi dang ky: 24",
-                      "Tai lieu moi tai len: 148",
-                      "Luot tom tat hoan tat: 312",
-                    ].map((item, index) => (
-                      <div
-                        key={item}
-                        className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600"
-                      >
-                        <span>{item}</span>
-                        <span className="text-xs font-semibold text-slate-500">{index + 1} gio truoc</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    Chat luong tom tat
-                  </div>
-                  <div className="mt-2 text-base font-bold text-slate-900">Hieu suat he thong</div>
-                  <div className="mt-4 space-y-3">
-                    {summaryHighlight.map((item) => (
-                      <div
-                        key={item.label}
-                        className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
-                      >
-                        <div className="text-xs font-semibold text-slate-500">{item.label}</div>
-                        <div className="mt-1 text-xl font-bold text-slate-900">{item.value}</div>
-                        <div className="mt-1 text-xs text-slate-500">{item.detail}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </section>
-            </>
+            <AdminAnalyticsDashboard />
           )}
         </main>
       </div>
