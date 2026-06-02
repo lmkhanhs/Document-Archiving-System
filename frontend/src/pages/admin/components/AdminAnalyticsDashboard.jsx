@@ -26,6 +26,7 @@ import {
   YAxis,
 } from "recharts";
 import { summaryStatisticsService } from "../../../services/summaryService";
+import { statisticsService } from "../../../services/statisticsService";
 
 const formatNumber = (value) => Number(value || 0).toLocaleString("vi-VN");
 
@@ -59,58 +60,52 @@ const timeRangeOptions = [
   { label: "1 năm", days: 365 },
 ];
 
-const analyticsSummaryCards = [
+const analyticsSummaryCardsTemplate = [
   {
     key: "users",
+    dataKey: "totalUsers",
+    format: "number",
     label: "Tổng số người dùng",
-    value: 1350,
-    suffix: "",
-    change: "+8.2% vs. trước",
     Icon: GroupsOutlinedIcon,
     tone: "bg-blue-50 text-blue-700",
   },
   {
     key: "documents",
+    dataKey: "totalDocuments",
+    format: "number",
     label: "Tổng số tài liệu",
-    value: 7100,
-    suffix: "",
-    change: "+12.3% vs. trước",
     Icon: FolderOpenOutlinedIcon,
     tone: "bg-cyan-50 text-cyan-700",
   },
   {
     key: "summaries",
+    dataKey: "totalSummaries",
+    format: "number",
     label: "Tổng số lượt tóm tắt",
-    value: 21500,
-    suffix: "",
-    change: "+15.9% vs. trước",
     Icon: AutoAwesomeOutlinedIcon,
     tone: "bg-teal-50 text-teal-700",
   },
   {
     key: "active",
+    dataKey: "activeUsers",
+    format: "number",
     label: "Người dùng đang hoạt động",
-    value: 345,
-    suffix: "",
-    change: "Cập nhật 1 phút trước",
     Icon: PersonOutlinedIcon,
     tone: "bg-violet-50 text-violet-700",
   },
   {
     key: "success",
+    dataKey: "successRate",
+    format: "percent",
     label: "Tỷ lệ thành công",
-    value: 92,
-    suffix: "%",
-    change: "-1% vs. trước",
     Icon: CheckCircleOutlinedIcon,
     tone: "bg-emerald-50 text-emerald-700",
   },
   {
     key: "time",
+    dataKey: "averageProcessingTime",
+    format: "time",
     label: "Thời gian xử lý trung bình",
-    value: 12.5,
-    suffix: "s",
-    change: "+0.5s vs. trước",
     Icon: HourglassBottomOutlinedIcon,
     tone: "bg-orange-50 text-orange-700",
   },
@@ -192,6 +187,10 @@ const AdminAnalyticsDashboard = () => {
   const [trendError, setTrendError] = useState("");
   const totalProcess = useMemo(() => processStatusData.reduce((sum, item) => sum + item.value, 0), []);
 
+  const [overviewData, setOverviewData] = useState(null);
+  const [isOverviewLoading, setIsOverviewLoading] = useState(true);
+  const [overviewError, setOverviewError] = useState("");
+
   useEffect(() => {
     let isMounted = true;
 
@@ -224,6 +223,34 @@ const AdminAnalyticsDashboard = () => {
     };
   }, [selectedTrendDays]);
 
+  useEffect(() => {
+    let isMounted = true;
+    const loadOverviewData = async () => {
+      setIsOverviewLoading(true);
+      setOverviewError("");
+      try {
+        const data = await statisticsService.getOverview();
+        if (isMounted) {
+          setOverviewData(data);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setOverviewError(error.message || "Lỗi tải dữ liệu");
+        }
+      } finally {
+        if (isMounted) {
+          setIsOverviewLoading(false);
+        }
+      }
+    };
+
+    loadOverviewData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleTrendRangeChange = (option) => {
     setSelectedRange(option.label);
     setCustomTrendDays(String(option.days));
@@ -244,8 +271,31 @@ const AdminAnalyticsDashboard = () => {
   return (
     <section className="mt-6 space-y-4 bg-slate-50/40">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
-        {analyticsSummaryCards.map((card) => {
+        {analyticsSummaryCardsTemplate.map((card) => {
           const Icon = card.Icon;
+          
+          let displayValue = (
+            <span className="flex items-center gap-1">
+              <span className="h-4 w-4 animate-bounce rounded-full bg-slate-300 inline-block"></span>
+              <span className="h-4 w-4 animate-bounce rounded-full bg-slate-300 inline-block" style={{ animationDelay: "0.2s" }}></span>
+              <span className="h-4 w-4 animate-bounce rounded-full bg-slate-300 inline-block" style={{ animationDelay: "0.4s" }}></span>
+            </span>
+          );
+
+          if (!isOverviewLoading) {
+            if (overviewError || !overviewData) {
+              displayValue = "--";
+            } else {
+              const rawValue = overviewData[card.dataKey];
+              if (card.format === "number") {
+                displayValue = formatNumber(rawValue);
+              } else if (card.format === "percent") {
+                displayValue = Number(rawValue || 0).toFixed(1) + "%";
+              } else if (card.format === "time") {
+                displayValue = Number(rawValue || 0).toFixed(1) + "s";
+              }
+            }
+          }
 
           return (
             <AnalyticsCard key={card.key} className="p-4 hover:-translate-y-0.5">
@@ -253,8 +303,8 @@ const AdminAnalyticsDashboard = () => {
                 <Icon fontSize="small" />
               </div>
               <div className="mt-3 min-h-[32px] text-xs font-semibold text-slate-600">{card.label}</div>
-              <div className="mt-2 text-2xl font-black text-slate-950">
-                {formatNumber(card.value)}{card.suffix}
+              <div className="mt-2 flex h-8 items-center text-2xl font-black text-slate-950">
+                {displayValue}
               </div>
             </AnalyticsCard>
           );
