@@ -5,6 +5,7 @@ import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
+import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
@@ -62,6 +63,7 @@ import RestoreUserDialog from "./components/RestoreUserDialog";
 import HardDeleteDialog from "./components/HardDeleteDialog";
 import AdminSummaryHistory from "./components/AdminSummaryHistory";
 import AdminAnalyticsDashboard from "./components/AdminAnalyticsDashboard";
+import AdminCountryManagement from "./components/AdminCountryManagement";
 import {
   CartesianGrid,
   Cell,
@@ -370,6 +372,7 @@ const sidebarItems = [
   { key: "dashboard", label: "Dashboard", icon: DashboardOutlinedIcon },
   { key: "users", label: "Quản lý người dùng", icon: PeopleOutlinedIcon },
   { key: "documents", label: "Quản lý tài liệu", icon: FolderOpenOutlinedIcon },
+  { key: "countries", label: "Quản lý quốc gia", icon: PublicOutlinedIcon },
   { key: "summary_history", label: "Lịch sử tóm tắt", icon: HistoryOutlinedIcon },
   { key: "settings", label: "Cài đặt", icon: SettingsOutlinedIcon },
   { key: "logout", label: "Đăng xuất", icon: LogoutOutlinedIcon },
@@ -1640,23 +1643,25 @@ const AdminDashboard = () => {
           <header className="flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-center">
             <div>
               <div className="text-xs font-bold uppercase tracking-[0.2em] text-blue-700">
-                {activeMenu === "stats" ? "THỐNG KÊ CHI TIẾT - HỆ THỐNG LƯU TRỮ TÀI LIỆU" : "Admin Dashboard"}
+                ADMIN DASHBOARD
               </div>
-              <div className={`${activeMenu === "stats" ? "text-2xl leading-tight" : "text-xl"} font-bold text-slate-800`}>
-                {activeMenu === "stats" ? "Phân tích hoạt động hệ thống" : "Hệ thống lưu trữ tài liệu"}
+              <div className="text-xl font-bold text-slate-800">
+                {activeMenu === "countries" ? "Quản lý quốc gia" : "Hệ thống lưu trữ tài liệu"}
               </div>
             </div>
 
             <div className="flex flex-1 flex-wrap items-center gap-2 lg:justify-end">
-              {activeMenu !== "users" && activeMenu !== "stats" && (
+              {activeMenu !== "users" && activeMenu !== "countries" && (
                 <div className="relative flex-1 min-w-[220px]">
                   <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder={activeMenu === "documents"
-                      ? "Tim theo ten tai lieu..."
-                      : "Tim kiem nguoi dung, tai lieu..."}
+                    placeholder={
+                      activeMenu === "documents"
+                        ? "Tìm theo tên tài liệu..."
+                        : "Tìm kiếm người dùng, tài liệu..."
+                    }
                     className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
                   />
                 </div>
@@ -2208,6 +2213,8 @@ const AdminDashboard = () => {
                 </>
               )}
             </section>
+          ) : activeMenu === "countries" ? (
+            <AdminCountryManagement />
           ) : activeMenu === "summary_history" ? (
             <AdminSummaryHistory onNotify={setToast} />
           ) : activeMenu === "documents" ? (
