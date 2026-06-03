@@ -33,7 +33,7 @@ public class CountryService {
 
     public CountryStatisticsResponse getStatistics() {
         long totalSupportedCountries = countryRepository.count();
-        long activeCountries = countryRepository.countByActiveTrue();
+        long activeCountries = countryRepository.countByActiveTrueAndIsDeletedFalse();
         long usedCountries = userRepository.countDistinctCountryUsedByUsers();
 
         int userCoverageRate = totalSupportedCountries == 0
@@ -59,7 +59,7 @@ public class CountryService {
     }
 
     public List<CountryResponse> getAllCountriesIsActive() {
-        return countryRepository.findAllByActiveTrue().stream()
+        return countryRepository.findAllByActiveTrueAndIsDeletedFalse().stream()
                 .map(countryMapper::toCountryResponse)
                 .collect(Collectors.toList());
     }
@@ -190,5 +190,15 @@ public class CountryService {
 
         country = countryRepository.save(country);
         return countryMapper.toAdminCountryResponse(country);
+    }
+
+    public void deleteAdminCountry(Long id) {
+        CountryEntity country = countryRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.COUNTRY_NOT_FOUND));
+
+        country.setIsDeleted(true);
+        country.setDeletedAt(java.time.LocalDateTime.now());
+
+        countryRepository.save(country);
     }
 }

@@ -2,6 +2,7 @@ package com.datn.dms.entities;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -39,4 +40,10 @@ public class CountryEntity extends BaseEntity {
     @Builder.Default
     @OneToMany(mappedBy = "country")
     List<UserEntity> users = new ArrayList<>();
+
+    @Builder.Default
+    @Column(columnDefinition = "boolean default false")
+    Boolean isDeleted = false;
+
+    LocalDateTime deletedAt;
 }

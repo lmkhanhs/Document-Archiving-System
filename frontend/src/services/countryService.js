@@ -28,6 +28,11 @@ const countryService = {
     return response.data;
   },
 
+  deleteCountry: async (id) => {
+    const response = await api.delete(`/countries/admin/${id}`);
+    return response.data;
+  },
+
   
   // Bạn có thể thêm các hàm gọi API liên quan đến country tại đây
   // ví dụ:

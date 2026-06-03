@@ -41,6 +41,7 @@ const AdminCountryManagement = () => {
   // Popup state
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [countryToDelete, setCountryToDelete] = useState(null);
 
   // Form State
   const [selectedCountry, setSelectedCountry] = useState(null);
@@ -184,7 +185,29 @@ const AdminCountryManagement = () => {
   };
   
   const handleOpenDelete = (country) => {
+    setCountryToDelete(country);
     setIsDeleteOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!countryToDelete) return;
+    setIsSubmitting(true);
+    try {
+      await countryService.deleteCountry(countryToDelete.id);
+      setSuccessMessage("Xóa quốc gia thành công");
+      setIsDeleteOpen(false);
+      setCountryToDelete(null);
+      setRefreshTrigger(prev => prev + 1);
+      
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    } catch (err) {
+      console.error("Lỗi khi xóa quốc gia:", err);
+      alert("Không thể xóa quốc gia");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -622,21 +645,34 @@ const AdminCountryManagement = () => {
         </div>
       )}
 
-      {/* Popup Xóa (Chưa hỗ trợ) */}
+      {/* Popup Xóa */}
       {isDeleteOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl animate-fade-in-up">
             <h2 className="text-lg font-bold text-slate-800">Xác nhận xóa</h2>
             <p className="mt-2 text-sm text-slate-600">
-              Tính năng xóa chưa được hỗ trợ.
+              Bạn có chắc chắn muốn xóa quốc gia này không?<br/>
+              Quốc gia sẽ bị xóa mềm và không còn hiển thị trong danh sách quản lý.
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button
                 type="button"
-                onClick={() => setIsDeleteOpen(false)}
+                onClick={() => {
+                  setIsDeleteOpen(false);
+                  setCountryToDelete(null);
+                }}
                 className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                disabled={isSubmitting}
               >
-                Đóng
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteConfirm}
+                className="flex items-center justify-center rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:opacity-70"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Đang xử lý..." : "Xóa quốc gia"}
               </button>
             </div>
           </div>
