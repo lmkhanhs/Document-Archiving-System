@@ -296,44 +296,46 @@ const AdminCountryManagement = () => {
         </div>
       )}
 
+
+
       {/* Thống kê */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-              <PublicOutlinedIcon fontSize="small" />
-            </div>
-            <div className="text-sm font-semibold text-slate-600">Tổng số quốc gia được hỗ trợ</div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200">
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+            <PublicOutlinedIcon fontSize="small" />
           </div>
-          <div className="mt-4 text-3xl font-bold text-slate-900">{statistics.totalSupportedCountries}</div>
+          <div className="mt-3 text-sm font-semibold text-slate-600">Tổng số quốc gia được hỗ trợ</div>
+          <div className="mt-1 text-2xl font-bold text-slate-900">{statistics.totalSupportedCountries}</div>
+          <div className="mt-2 text-xs text-slate-500">Toàn bộ quốc gia trên hệ thống</div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-              <CheckCircleOutlineOutlinedIcon fontSize="small" />
-            </div>
-            <div className="text-sm font-semibold text-slate-600">Quốc gia đang hoạt động</div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200">
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+            <CheckCircleOutlineOutlinedIcon fontSize="small" />
           </div>
-          <div className="mt-4 text-3xl font-bold text-slate-900">{statistics.activeCountries}</div>
+          <div className="mt-3 text-sm font-semibold text-slate-600">Quốc gia đang hoạt động</div>
+          <div className="mt-1 text-2xl font-bold text-slate-900">{statistics.activeCountries}</div>
+          <div className="mt-2 text-xs text-slate-500">Các quốc gia khả dụng</div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
-          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200">
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
             <TrendingUpOutlinedIcon fontSize="small" />
           </div>
-          <div className="text-sm font-semibold text-slate-600">Tỷ lệ phủ người dùng</div>
-          <div className="mt-2 text-3xl font-bold text-slate-900">{statistics.userCoverageRate}%</div>
+          <div className="mt-3 text-sm font-semibold text-slate-600">Tỷ lệ phủ người dùng</div>
+          <div className="mt-1 text-2xl font-bold text-slate-900">{statistics.userCoverageRate}%</div>
+          <div className="mt-2 text-xs text-slate-500">Dựa trên quốc gia đã chọn</div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
-          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200">
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
             <AccessTimeOutlinedIcon fontSize="small" />
           </div>
-          <div className="text-sm font-semibold text-slate-600">Quốc gia mới đăng ký</div>
-          <div className="mt-2 text-3xl font-bold text-slate-900">
+          <div className="mt-3 text-sm font-semibold text-slate-600">Quốc gia mới đăng ký</div>
+          <div className="mt-1 text-2xl font-bold text-slate-900">
             {statistics.latestRegisteredCountry ? statistics.latestRegisteredCountry.name : "N/A"}
           </div>
+          <div className="mt-2 text-xs text-slate-500">Cập nhật gần nhất</div>
         </div>
       </div>
 
@@ -401,14 +403,16 @@ const AdminCountryManagement = () => {
                   <th className="px-5 py-4 w-[20%]">Tên quốc gia</th>
                   <th className="px-5 py-4 w-[12%]">Số người<br/>dùng</th>
                   <th className="px-5 py-4 w-[15%]">Ngày tạo</th>
-                  <th className="px-5 py-4 w-[10%]">Trạng thái</th>
-                  <th className="px-5 py-4 text-right w-[10%]">Hành động</th>
+                  {!isTrashView && (
+                    <th className="px-5 py-4 w-[10%]">Trạng thái</th>
+                  )}
+                  <th className={`px-5 py-4 ${isTrashView ? 'text-center w-[20%]' : 'text-right w-[10%]'}`}>Hành động</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="px-5 py-8 text-center">
+                    <td colSpan={isTrashView ? 7 : 8} className="px-5 py-8 text-center">
                       <div className="flex justify-center items-center">
                         <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
                       </div>
@@ -416,7 +420,7 @@ const AdminCountryManagement = () => {
                   </tr>
                 ) : error ? (
                   <tr>
-                    <td colSpan={7} className="px-5 py-8 text-center text-rose-500 font-medium">
+                    <td colSpan={isTrashView ? 7 : 8} className="px-5 py-8 text-center text-rose-500 font-medium">
                       {error}
                     </td>
                   </tr>
@@ -456,22 +460,24 @@ const AdminCountryManagement = () => {
                             minute: '2-digit'
                           }).format(new Date(item.createdAt)) : '--'}
                         </td>
+                        {!isTrashView && (
+                          <td className="px-5 py-4">
+                            <span
+                              className={`font-semibold ${
+                                item.active === true ? "text-emerald-600" : "text-rose-600"
+                              }`}
+                            >
+                              {item.active === true ? "Hoạt động" : "Ngừng hoạt động"}
+                            </span>
+                          </td>
+                        )}
                         <td className="px-5 py-4">
-                          <span
-                            className={`font-semibold ${
-                              item.active === true ? "text-emerald-600" : "text-rose-600"
-                            }`}
-                          >
-                            {item.active === true ? "Hoạt động" : "Ngừng hoạt động"}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className={`flex items-center gap-2 ${isTrashView ? 'justify-center' : 'justify-end'}`}>
                             {isTrashView ? (
                               <button
                                 type="button"
                                 onClick={() => handleOpenRestore(item)}
-                                className="rounded-lg px-3 py-1.5 text-blue-600 transition hover:bg-blue-50 text-sm font-semibold border border-blue-100"
+                                className="rounded-lg px-4 py-2 text-blue-600 transition hover:bg-blue-50 text-sm font-semibold border border-blue-200 whitespace-nowrap"
                                 title="Khôi phục"
                               >
                                 Khôi phục
@@ -503,7 +509,7 @@ const AdminCountryManagement = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={7} className="px-5 py-8 text-center text-slate-500">
+                    <td colSpan={isTrashView ? 7 : 8} className="px-5 py-8 text-center text-slate-500">
                       Không có quốc gia nào
                     </td>
                   </tr>
