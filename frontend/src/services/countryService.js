@@ -33,7 +33,18 @@ const countryService = {
     return response.data;
   },
 
-  
+  getDeletedCountries: async (page = 0, size = 6, keyword = "") => {
+    const response = await api.get('/countries/admin/trash', {
+      params: { page, size, keyword }
+    });
+    return response.data;
+  },
+
+  restoreCountry: async (id) => {
+    const response = await api.patch(`/countries/admin/${id}/restore`);
+    return response.data;
+  },
+
   // Bạn có thể thêm các hàm gọi API liên quan đến country tại đây
   // ví dụ:
   // getAllCountries: async () => {

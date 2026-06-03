@@ -201,4 +201,22 @@ public class CountryService {
 
         countryRepository.save(country);
     }
+
+    public Page<AdminCountryResponse> getDeletedAdminCountries(int page, int size, String keyword) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CountryEntity> countryPage = countryRepository.searchDeletedAdminCountries(keyword, pageable);
+
+        return countryPage.map(countryMapper::toAdminCountryResponse);
+    }
+
+    public void restoreAdminCountry(Long id) {
+        CountryEntity country = countryRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.COUNTRY_NOT_FOUND));
+
+        country.setIsDeleted(false);
+        country.setDeletedAt(null);
+        country.setActive(true);
+
+        countryRepository.save(country);
+    }
 }

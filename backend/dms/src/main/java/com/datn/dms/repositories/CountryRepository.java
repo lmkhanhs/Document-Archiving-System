@@ -29,4 +29,8 @@ public interface CountryRepository extends JpaRepository<CountryEntity, Long> {
     @Query("SELECT c FROM CountryEntity c " +
             "WHERE c.isDeleted = false AND (:keyword IS NULL OR :keyword = '' OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(c.code) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<CountryEntity> searchAdminCountries(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT c FROM CountryEntity c " +
+            "WHERE c.isDeleted = true AND (:keyword IS NULL OR :keyword = '' OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(c.code) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<CountryEntity> searchDeletedAdminCountries(@Param("keyword") String keyword, Pageable pageable);
 }

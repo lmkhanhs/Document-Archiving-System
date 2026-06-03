@@ -42,6 +42,9 @@ const AdminCountryManagement = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [countryToDelete, setCountryToDelete] = useState(null);
+  const [isTrashView, setIsTrashView] = useState(false);
+  const [isRestoreOpen, setIsRestoreOpen] = useState(false);
+  const [countryToRestore, setCountryToRestore] = useState(null);
 
   // Form State
   const [selectedCountry, setSelectedCountry] = useState(null);
@@ -84,7 +87,9 @@ const AdminCountryManagement = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await countryService.getAdminCountries(page, size, keyword);
+        const response = isTrashView 
+          ? await countryService.getDeletedCountries(page, size, keyword)
+          : await countryService.getAdminCountries(page, size, keyword);
         if (response.code === 200 && response.data) {
           setCountries(response.data.content);
           setPagination({
@@ -108,7 +113,7 @@ const AdminCountryManagement = () => {
       }
     };
     fetchCountries();
-  }, [page, size, keyword, refreshTrigger]);
+  }, [page, size, keyword, refreshTrigger, isTrashView]);
 
   const extractCountryCodeFromFlag = (flagPath) => {
     if (!flagPath) return "--";
@@ -189,6 +194,13 @@ const AdminCountryManagement = () => {
     setIsDeleteOpen(true);
   };
 
+
+
+  const handleOpenRestore = (country) => {
+    setCountryToRestore(country);
+    setIsRestoreOpen(true);
+  };
+
   const handleDeleteConfirm = async () => {
     if (!countryToDelete) return;
     setIsSubmitting(true);
@@ -205,6 +217,27 @@ const AdminCountryManagement = () => {
     } catch (err) {
       console.error("Lỗi khi xóa quốc gia:", err);
       alert("Không thể xóa quốc gia");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRestoreConfirm = async () => {
+    if (!countryToRestore) return;
+    setIsSubmitting(true);
+    try {
+      await countryService.restoreCountry(countryToRestore.id);
+      setSuccessMessage("Khôi phục quốc gia thành công");
+      setIsRestoreOpen(false);
+      setCountryToRestore(null);
+      setRefreshTrigger(prev => prev + 1);
+      
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    } catch (err) {
+      console.error("Lỗi khi khôi phục quốc gia:", err);
+      alert("Không thể khôi phục quốc gia");
     } finally {
       setIsSubmitting(false);
     }
@@ -308,7 +341,7 @@ const AdminCountryManagement = () => {
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 p-5">
           <div className="text-base font-bold text-slate-800">
-            Danh sách Quốc gia (Quản trị hệ thống)
+            {isTrashView ? "Thùng rác: Quốc gia đã xóa" : "Danh sách Quốc gia (Quản trị hệ thống)"}
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative">
@@ -320,13 +353,40 @@ const AdminCountryManagement = () => {
                 className="w-[260px] rounded-xl border border-slate-200 bg-slate-50 py-2 pl-10 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
               />
             </div>
-            <button
-              type="button"
-              onClick={() => handleOpenForm()}
-              className="inline-flex items-center rounded-xl bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
-            >
-              + Add Country
-            </button>
+            {!isTrashView ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsTrashView(true);
+                    setPage(0);
+                  }}
+                  className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                  title="Thùng rác"
+                >
+                  <DeleteOutlineOutlinedIcon fontSize="small" className="mr-1" />
+                  Thùng rác
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleOpenForm()}
+                  className="inline-flex items-center rounded-xl bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
+                >
+                  + Add Country
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsTrashView(false);
+                  setPage(0);
+                }}
+                className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                Quay lại danh sách chính
+              </button>
+            )}
           </div>
         </div>
 
@@ -407,22 +467,35 @@ const AdminCountryManagement = () => {
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex items-center justify-end gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handleOpenForm(item)}
-                              className="rounded-lg p-1.5 text-blue-600 transition hover:bg-blue-50"
-                              title="Chỉnh sửa"
-                            >
-                              <EditOutlinedIcon fontSize="small" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleOpenDelete(item)}
-                              className="rounded-lg p-1.5 text-rose-600 transition hover:bg-rose-50"
-                              title="Xóa"
-                            >
-                              <DeleteOutlineOutlinedIcon fontSize="small" />
-                            </button>
+                            {isTrashView ? (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenRestore(item)}
+                                className="rounded-lg px-3 py-1.5 text-blue-600 transition hover:bg-blue-50 text-sm font-semibold border border-blue-100"
+                                title="Khôi phục"
+                              >
+                                Khôi phục
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenForm(item)}
+                                  className="rounded-lg p-1.5 text-blue-600 transition hover:bg-blue-50"
+                                  title="Chỉnh sửa"
+                                >
+                                  <EditOutlinedIcon fontSize="small" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenDelete(item)}
+                                  className="rounded-lg p-1.5 text-rose-600 transition hover:bg-rose-50"
+                                  title="Xóa"
+                                >
+                                  <DeleteOutlineOutlinedIcon fontSize="small" />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -673,6 +746,40 @@ const AdminCountryManagement = () => {
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Đang xử lý..." : "Xóa quốc gia"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Popup Khôi phục */}
+      {isRestoreOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl animate-fade-in-up">
+            <h2 className="text-lg font-bold text-slate-800">Xác nhận khôi phục</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Bạn có chắc chắn muốn khôi phục quốc gia này không?<br/>
+              Quốc gia sẽ được hiển thị lại trong danh sách quản lý.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRestoreOpen(false);
+                  setCountryToRestore(null);
+                }}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                disabled={isSubmitting}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={handleRestoreConfirm}
+                className="flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-70"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Đang xử lý..." : "Khôi phục"}
               </button>
             </div>
           </div>

@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -110,6 +111,33 @@ public class CountryController {
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .code(200)
                 .message("Delete country successfully")
+                .build());
+    }
+
+    @GetMapping("/admin/trash")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<ApiResponse<Page<AdminCountryResponse>>> getDeletedAdminCountries(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size,
+            @RequestParam(required = false) String keyword) {
+
+        Page<AdminCountryResponse> data = countryService.getDeletedAdminCountries(page, size, keyword);
+
+        return ResponseEntity.ok(ApiResponse.<Page<AdminCountryResponse>>builder()
+                .code(200)
+                .message("Get deleted countries successfully")
+                .data(data)
+                .build());
+    }
+
+    @PatchMapping("/admin/{id}/restore")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> restoreAdminCountry(
+            @PathVariable("id") Long id) {
+        countryService.restoreAdminCountry(id);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .code(200)
+                .message("Restore country successfully")
                 .build());
     }
 }
