@@ -58,4 +58,9 @@ public interface UserRepository extends JpaRepository<UserEntity,  Long> {
                    "    s.created_at as createdAt FROM summaries s LEFT JOIN files f ON s.file_id = f.id " +
                    ") as activities ORDER BY createdAt DESC LIMIT :limit", nativeQuery = true)
     List<com.datn.dms.dtos.statistics.response.RecentActivityProjection> getRecentActivities(@Param("limit") int limit);
+
+    Optional<UserEntity> findFirstByCountryIsNotNullOrderByCreatedAtDesc();
+
+    @Query("SELECT COUNT(DISTINCT u.country.id) FROM UserEntity u WHERE u.country IS NOT NULL")
+    long countDistinctCountryUsedByUsers();
 }

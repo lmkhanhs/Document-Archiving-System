@@ -3,6 +3,7 @@ package com.datn.dms.entities;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -27,7 +28,13 @@ public class CountryEntity extends BaseEntity {
 
     String name;
 
+    String code;
+
     String thumbnailUrl;
+
+    @Builder.Default
+    @Column(columnDefinition = "boolean default true")
+    Boolean active = true;
 
     @Builder.Default
     @OneToMany(mappedBy = "country")
