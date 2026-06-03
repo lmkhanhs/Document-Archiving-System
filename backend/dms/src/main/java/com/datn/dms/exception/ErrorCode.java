@@ -36,6 +36,8 @@ public enum ErrorCode {
 
     // Country
     COUNTRY_NOT_FOUND(1017, "Country not found", HttpStatus.NOT_FOUND),
+    COUNTRY_EXISTED(1019, "Country existed", HttpStatus.BAD_REQUEST),
+    COUNTRY_INVALID(1020, "Country data is invalid", HttpStatus.BAD_REQUEST),
 
     // Summary
     SUMMARY_NOT_FOUND(1018, "Summary not found", HttpStatus.NOT_FOUND);

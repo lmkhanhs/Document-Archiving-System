@@ -15,11 +15,18 @@ import com.datn.dms.entities.CountryEntity;
 @Repository
 public interface CountryRepository extends JpaRepository<CountryEntity, Long> {
     Optional<CountryEntity> findByName(String name);
+
     List<CountryEntity> findAllByActiveTrue();
+
     long countByActiveTrue();
+
     Optional<CountryEntity> findFirstByOrderByCreatedAtDesc();
 
+    boolean existsByCode(String code);
+
+    boolean existsByCodeAndIdNot(String code, Long id);
+
     @Query("SELECT c FROM CountryEntity c " +
-           "WHERE (:keyword IS NULL OR :keyword = '' OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(c.code) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+            "WHERE (:keyword IS NULL OR :keyword = '' OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(c.code) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<CountryEntity> searchAdminCountries(@Param("keyword") String keyword, Pageable pageable);
 }

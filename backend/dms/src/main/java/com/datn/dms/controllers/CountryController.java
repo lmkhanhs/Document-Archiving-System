@@ -6,6 +6,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,6 +37,7 @@ public class CountryController {
                 .data(countryService.getAllCountriesIsActive())
                 .build();
     }
+
     @GetMapping("/statistics")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse<CountryStatisticsResponse>> getStatistics() {
@@ -45,6 +49,7 @@ public class CountryController {
                 .data(statistics)
                 .build());
     }
+
     @GetMapping("/admin")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse<Page<AdminCountryResponse>>> getAdminCountries(
@@ -57,6 +62,41 @@ public class CountryController {
         return ResponseEntity.ok(ApiResponse.<Page<AdminCountryResponse>>builder()
                 .code(200)
                 .message("Get admin countries successfully")
+                .data(data)
+                .build());
+    }
+
+    @PostMapping("/admin")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<ApiResponse<AdminCountryResponse>> createAdminCountry(
+            @RequestParam("name") String name,
+            @RequestParam("code") String code,
+            @RequestParam(value = "active", required = false, defaultValue = "true") Boolean active,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+
+        AdminCountryResponse data = countryService.createAdminCountry(name, code, active, file);
+
+        return ResponseEntity.status(201).body(ApiResponse.<AdminCountryResponse>builder()
+                .code(201)
+                .message("Create country successfully")
+                .data(data)
+                .build());
+    }
+
+    @PutMapping("/admin/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<ApiResponse<AdminCountryResponse>> updateAdminCountry(
+            @PathVariable("id") Long id,
+            @RequestParam("name") String name,
+            @RequestParam("code") String code,
+            @RequestParam(value = "active", required = false, defaultValue = "true") Boolean active,
+            @RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file) {
+
+        AdminCountryResponse data = countryService.updateAdminCountry(id, name, code, active, file);
+
+        return ResponseEntity.status(200).body(ApiResponse.<AdminCountryResponse>builder()
+                .code(201)
+                .message("Update country successfully")
                 .data(data)
                 .build());
     }

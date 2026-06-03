@@ -13,6 +13,21 @@ const countryService = {
     return response.data;
   },
 
+  createCountry: async (data) => {
+    // data must be FormData
+    const response = await api.post('/countries/admin', data, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+    return response.data;
+  },
+
+  updateCountry: async (id, data) => {
+    const response = await api.put(`/countries/admin/${id}`, data, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+    return response.data;
+  },
+
   
   // Bạn có thể thêm các hàm gọi API liên quan đến country tại đây
   // ví dụ:
