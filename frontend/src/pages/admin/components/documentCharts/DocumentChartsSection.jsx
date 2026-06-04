@@ -24,16 +24,23 @@ const DocumentStatCard = ({ label, value, description, tone = "from-blue-600 to-
   </div>
 );
 
-const DocumentChartsSection = ({ documents = [], isLoading = false }) => {
+const DocumentChartsSection = ({
+  documents = [],
+  isLoading = false,
+  documentStats = null,
+  isDocumentStatsLoading = false,
+}) => {
   const chartDocuments = useMemo(() => getChartDocuments(documents), [documents]);
 
   const fileTypeData = useMemo(() => buildFileTypeData(chartDocuments), [chartDocuments]);
   const recentUploadData = useMemo(() => buildRecentUploadData(chartDocuments, 7), [chartDocuments]);
   const topUploadersData = useMemo(() => buildTopUploadersData(chartDocuments, 5), [chartDocuments]);
-  const documentStats = useMemo(() => ({
-    total: chartDocuments.length,
-    deleted: chartDocuments.filter((file) => Boolean(file?.isDeleted || file?.deletedAt || file?.removedAt || file?.trashedAt)).length,
+  const fallbackStats = useMemo(() => ({
+    totalDocuments: chartDocuments.length,
+    deletedDocuments: chartDocuments.filter((file) => Boolean(file?.isDeleted || file?.deletedAt || file?.removedAt || file?.trashedAt)).length,
   }), [chartDocuments]);
+
+  const resolvedStats = documentStats || fallbackStats;
 
   return (
     <div className="space-y-6">
@@ -47,16 +54,16 @@ const DocumentChartsSection = ({ documents = [], isLoading = false }) => {
       <div className="grid gap-4 md:grid-cols-2">
         <DocumentStatCard
           label="Tổng số tài liệu"
-          value={documentStats.total}
+          value={resolvedStats.totalDocuments}
           description="Tất cả tài liệu trong hệ thống"
-          isLoading={isLoading}
+          isLoading={isDocumentStatsLoading}
         />
         <DocumentStatCard
           label="Tài liệu đã xóa mềm"
-          value={documentStats.deleted}
+          value={resolvedStats.deletedDocuments}
           description="Tài liệu trong thùng rác"
           tone="from-amber-600 to-orange-500"
-          isLoading={isLoading}
+          isLoading={isDocumentStatsLoading}
         />
       </div>
 

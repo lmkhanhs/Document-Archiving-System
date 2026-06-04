@@ -40,4 +40,6 @@ public interface FileRepository extends JpaRepository<FileEntity, Long> {
 
 	@Query("SELECT f.name FROM FileEntity f")
 	List<String> findAllFileNames();
+
+	long countByIsDeletedTrue();
 }

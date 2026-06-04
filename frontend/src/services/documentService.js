@@ -244,3 +244,23 @@ export const getHomeDashboard = async ({
     throw new Error(error.response?.data?.message || "Không thể tải dữ liệu trang chủ");
   }
 };
+
+export const getDocumentTotalCount = async () => {
+  try {
+    const response = await api.get("/admin/documents/total-count");
+    const data = parseApiResponse(response, "Không thể tải tổng số tài liệu");
+    return Number(data?.totalDocuments) || 0;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message || "Không thể tải tổng số tài liệu");
+  }
+};
+
+export const getDocumentDeletedCount = async () => {
+  try {
+    const response = await api.get("/admin/documents/deleted-count");
+    const data = parseApiResponse(response, "Không thể tải số tài liệu đã xóa mềm");
+    return Number(data?.deletedDocuments) || 0;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message || "Không thể tải số tài liệu đã xóa mềm");
+  }
+};
