@@ -64,6 +64,7 @@ import HardDeleteDialog from "./components/HardDeleteDialog";
 import AdminSummaryHistory from "./components/AdminSummaryHistory";
 import AdminAnalyticsDashboard from "./components/AdminAnalyticsDashboard";
 import AdminCountryManagement from "./components/AdminCountryManagement";
+import DocumentChartsSection from "./components/documentCharts/DocumentChartsSection";
 import {
   CartesianGrid,
   Cell,
@@ -2219,6 +2220,11 @@ const AdminDashboard = () => {
             <AdminSummaryHistory onNotify={setToast} />
           ) : activeMenu === "documents" ? (
             <section className="mt-6 space-y-4">
+              <DocumentChartsSection
+                documents={normalizedDocuments}
+                isLoading={isDocLoading}
+              />
+
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">

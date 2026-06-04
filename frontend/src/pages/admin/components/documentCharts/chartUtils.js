@@ -1,0 +1,190 @@
+const FILE_TYPE_ORDER = ["DOCX", "PDF", "TXT", "ZIP", "Khác"];
+
+export const FILE_TYPE_COLORS = {
+  DOCX: "#2563eb",
+  PDF: "#ef4444",
+  TXT: "#facc15",
+  ZIP: "#38bdf8",
+  Khác: "#94a3b8",
+};
+
+export const DOCUMENT_STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
+
+export const mockDocuments = [
+  {
+    id: "mock-1",
+    name: "BaoCaoTongHop.docx",
+    typeLabel: "DOCX",
+    size: 128 * 1024,
+    createdAt: new Date().toISOString(),
+    ownerLabel: "admin",
+    ownerAvatar: "",
+  },
+  {
+    id: "mock-2",
+    name: "KeHoachDuAn.pdf",
+    typeLabel: "PDF",
+    size: 430 * 1024,
+    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    ownerLabel: "lewkhans@gmail.com",
+    ownerAvatar: "",
+  },
+  {
+    id: "mock-3",
+    name: "summary-10.txt",
+    typeLabel: "TXT",
+    size: 24 * 1024,
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    ownerLabel: "khanhlm250204@gmail.com",
+    ownerAvatar: "",
+  },
+  {
+    id: "mock-4",
+    name: "sakila-db.zip",
+    typeLabel: "ZIP",
+    size: 713 * 1024,
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    ownerLabel: "lewkhans@gmail.com",
+    ownerAvatar: "",
+  },
+  {
+    id: "mock-5",
+    name: "TaiLieuMauTomTat.docx",
+    typeLabel: "DOCX",
+    size: 96 * 1024,
+    createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    ownerLabel: "admin",
+    ownerAvatar: "",
+  },
+  {
+    id: "mock-6",
+    name: "data.json",
+    typeLabel: "JSON",
+    size: 58 * 1024,
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    ownerLabel: "lmkhanhs",
+    ownerAvatar: "",
+  },
+];
+
+const normalizeType = (file) => {
+  const rawType = String(file?.typeLabel || file?.fileType || file?.mimeType || "").toUpperCase();
+  const fileName = String(file?.name || file?.fileName || "");
+  const extension = fileName.includes(".") ? fileName.split(".").pop().toUpperCase() : "";
+  const type = rawType && rawType !== "—" ? rawType : extension;
+
+  if (type.includes("DOCX") || type.includes("WORD")) return "DOCX";
+  if (type.includes("PDF")) return "PDF";
+  if (type.includes("TXT") || type.includes("TEXT")) return "TXT";
+  if (type.includes("ZIP") || type.includes("RAR") || type.includes("7Z")) return "ZIP";
+  return "Khác";
+};
+
+const toDateKey = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const toShortDateLabel = (date) => `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+export const getAvatarLabel = (value) => {
+  const text = String(value || "").trim();
+  return text ? text.charAt(0).toUpperCase() : "A";
+};
+
+export const formatBytes = (bytes) => {
+  const value = Number(bytes) || 0;
+  if (value === 0) return "0 B";
+
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  const index = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
+  const size = value / (1024 ** index);
+  return `${size.toFixed(size >= 10 || index === 0 ? 0 : 2)} ${units[index]}`;
+};
+
+export const getChartDocuments = (documents = []) => (
+  Array.isArray(documents) && documents.length > 0 ? documents : mockDocuments
+);
+
+export const buildFileTypeData = (documents = []) => {
+  const total = documents.length;
+  const counts = FILE_TYPE_ORDER.reduce((acc, type) => ({ ...acc, [type]: 0 }), {});
+
+  documents.forEach((file) => {
+    counts[normalizeType(file)] += 1;
+  });
+
+  return FILE_TYPE_ORDER.map((type) => ({
+    name: type,
+    value: counts[type],
+    percent: total > 0 ? Math.round((counts[type] / total) * 100) : 0,
+    color: FILE_TYPE_COLORS[type],
+  }));
+};
+
+export const buildRecentUploadData = (documents = [], days = 7) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const buckets = Array.from({ length: days }).map((_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (days - 1 - index));
+    return {
+      key: toDateKey(date),
+      label: toShortDateLabel(date),
+      fullDate: date.toLocaleDateString("vi-VN"),
+      count: 0,
+    };
+  });
+
+  const bucketMap = new Map(buckets.map((item) => [item.key, item]));
+
+  documents.forEach((file) => {
+    const date = new Date(file?.createdAt || file?.uploadedAt || file?.createdDate || file?.created_at || "");
+    if (Number.isNaN(date.getTime())) return;
+    date.setHours(0, 0, 0, 0);
+    const bucket = bucketMap.get(toDateKey(date));
+    if (bucket) bucket.count += 1;
+  });
+
+  return buckets;
+};
+
+export const buildTopUploadersData = (documents = [], limit = 5) => {
+  const map = new Map();
+
+  documents.forEach((file) => {
+    const name = file?.ownerLabel || file?.ownerName || file?.username || "Không xác định";
+    const current = map.get(name) || {
+      name,
+      count: 0,
+      avatar: file?.ownerAvatar || "",
+      label: getAvatarLabel(name),
+    };
+    current.count += 1;
+    current.avatar = current.avatar || file?.ownerAvatar || "";
+    map.set(name, current);
+  });
+
+  return Array.from(map.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit);
+};
+
+export const buildStorageUsageData = (documents = [], limitBytes = DOCUMENT_STORAGE_LIMIT_BYTES) => {
+  const usedBytes = documents.reduce((sum, file) => sum + (Number(file?.size) || 0), 0);
+  const safeLimit = Number(limitBytes) > 0 ? Number(limitBytes) : DOCUMENT_STORAGE_LIMIT_BYTES;
+  const percent = Math.min(100, Math.round((usedBytes / safeLimit) * 100));
+
+  return {
+    usedBytes,
+    limitBytes: safeLimit,
+    percent,
+    chartData: [
+      { name: "Đã dùng", value: percent, color: "#2563eb" },
+      { name: "Còn lại", value: Math.max(0, 100 - percent), color: "#e2e8f0" },
+    ],
+  };
+};
