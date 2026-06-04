@@ -8,8 +8,6 @@ export const FILE_TYPE_COLORS = {
   Khác: "#94a3b8",
 };
 
-export const DOCUMENT_STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
-
 export const mockDocuments = [
   {
     id: "mock-1",
@@ -94,16 +92,6 @@ export const getAvatarLabel = (value) => {
   return text ? text.charAt(0).toUpperCase() : "A";
 };
 
-export const formatBytes = (bytes) => {
-  const value = Number(bytes) || 0;
-  if (value === 0) return "0 B";
-
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  const index = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
-  const size = value / (1024 ** index);
-  return `${size.toFixed(size >= 10 || index === 0 ? 0 : 2)} ${units[index]}`;
-};
-
 export const getChartDocuments = (documents = []) => (
   Array.isArray(documents) && documents.length > 0 ? documents : mockDocuments
 );
@@ -171,20 +159,4 @@ export const buildTopUploadersData = (documents = [], limit = 5) => {
   return Array.from(map.values())
     .sort((a, b) => b.count - a.count)
     .slice(0, limit);
-};
-
-export const buildStorageUsageData = (documents = [], limitBytes = DOCUMENT_STORAGE_LIMIT_BYTES) => {
-  const usedBytes = documents.reduce((sum, file) => sum + (Number(file?.size) || 0), 0);
-  const safeLimit = Number(limitBytes) > 0 ? Number(limitBytes) : DOCUMENT_STORAGE_LIMIT_BYTES;
-  const percent = Math.min(100, Math.round((usedBytes / safeLimit) * 100));
-
-  return {
-    usedBytes,
-    limitBytes: safeLimit,
-    percent,
-    chartData: [
-      { name: "Đã dùng", value: percent, color: "#2563eb" },
-      { name: "Còn lại", value: Math.max(0, 100 - percent), color: "#e2e8f0" },
-    ],
-  };
 };

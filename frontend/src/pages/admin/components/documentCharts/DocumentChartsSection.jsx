@@ -1,30 +1,42 @@
 import { useMemo } from "react";
 import DocumentFileTypeChart from "./DocumentFileTypeChart";
 import RecentUploadsChart from "./RecentUploadsChart";
-import StorageUsageChart from "./StorageUsageChart";
 import TopUploadersChart from "./TopUploadersChart";
 import {
-  DOCUMENT_STORAGE_LIMIT_BYTES,
   buildFileTypeData,
   buildRecentUploadData,
-  buildStorageUsageData,
   buildTopUploadersData,
   getChartDocuments,
 } from "./chartUtils";
 
-const DocumentChartsSection = ({ documents = [], isLoading = false, storageLimitBytes = DOCUMENT_STORAGE_LIMIT_BYTES }) => {
+const DocumentStatCard = ({ label, value, description, tone = "from-blue-600 to-sky-500", isLoading }) => (
+  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md">
+    <div className={`inline-flex items-center rounded-2xl bg-gradient-to-r px-3 py-1 text-xs font-semibold text-white ${tone}`}>
+      Báo cáo
+    </div>
+    <div className="mt-3 text-sm font-semibold text-slate-600">{label}</div>
+    {isLoading ? (
+      <div className="mt-2 h-9 w-20 animate-pulse rounded-lg bg-slate-200" />
+    ) : (
+      <div className="mt-1 text-3xl font-black text-slate-900">{Number(value || 0).toLocaleString("vi-VN")}</div>
+    )}
+    <div className="mt-2 text-xs text-slate-500">{description}</div>
+  </div>
+);
+
+const DocumentChartsSection = ({ documents = [], isLoading = false }) => {
   const chartDocuments = useMemo(() => getChartDocuments(documents), [documents]);
 
   const fileTypeData = useMemo(() => buildFileTypeData(chartDocuments), [chartDocuments]);
   const recentUploadData = useMemo(() => buildRecentUploadData(chartDocuments, 7), [chartDocuments]);
   const topUploadersData = useMemo(() => buildTopUploadersData(chartDocuments, 5), [chartDocuments]);
-  const storageUsageData = useMemo(
-    () => buildStorageUsageData(chartDocuments, storageLimitBytes),
-    [chartDocuments, storageLimitBytes]
-  );
+  const documentStats = useMemo(() => ({
+    total: chartDocuments.length,
+    deleted: chartDocuments.filter((file) => Boolean(file?.isDeleted || file?.deletedAt || file?.removedAt || file?.trashedAt)).length,
+  }), [chartDocuments]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-6">
       <div>
         <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
           Biểu đồ quản lý tài liệu
@@ -32,11 +44,28 @@ const DocumentChartsSection = ({ documents = [], isLoading = false, storageLimit
         <div className="text-lg font-bold text-slate-900">Tổng quan dữ liệu lưu trữ</div>
       </div>
 
+      <div className="grid gap-4 md:grid-cols-2">
+        <DocumentStatCard
+          label="Tổng số tài liệu"
+          value={documentStats.total}
+          description="Tất cả tài liệu trong hệ thống"
+          isLoading={isLoading}
+        />
+        <DocumentStatCard
+          label="Tài liệu đã xóa mềm"
+          value={documentStats.deleted}
+          description="Tài liệu trong thùng rác"
+          tone="from-amber-600 to-orange-500"
+          isLoading={isLoading}
+        />
+      </div>
+
       <div className="grid items-stretch gap-6 md:grid-cols-2">
         <DocumentFileTypeChart data={fileTypeData} isLoading={isLoading} />
-        <StorageUsageChart data={storageUsageData} isLoading={isLoading} />
         <RecentUploadsChart data={recentUploadData} isLoading={isLoading} />
-        <TopUploadersChart data={topUploadersData} isLoading={isLoading} />
+        <div className="md:col-span-2">
+          <TopUploadersChart data={topUploadersData} isLoading={isLoading} />
+        </div>
       </div>
     </div>
   );
