@@ -4,6 +4,8 @@ import RecentUploadsChart from "./RecentUploadsChart";
 import TopUploadersChart from "./TopUploadersChart";
 import {
   buildFileTypeData,
+  buildFileTypeRatioData,
+  buildRecentUploadApiData,
   buildRecentUploadData,
   buildTopUploadersData,
   getChartDocuments,
@@ -28,12 +30,22 @@ const DocumentChartsSection = ({
   documents = [],
   isLoading = false,
   documentStats = null,
+  fileTypeRatio = [],
+  recentUploadStats = [],
+  selectedRecentUploadDays = 7,
+  onRecentUploadDaysChange,
   isDocumentStatsLoading = false,
+  isRecentUploadsLoading = false,
+  recentUploadsError = "",
 }) => {
   const chartDocuments = useMemo(() => getChartDocuments(documents), [documents]);
 
-  const fileTypeData = useMemo(() => buildFileTypeData(chartDocuments), [chartDocuments]);
-  const recentUploadData = useMemo(() => buildRecentUploadData(chartDocuments, 7), [chartDocuments]);
+  const fallbackFileTypeData = useMemo(() => buildFileTypeData(chartDocuments), [chartDocuments]);
+  const apiFileTypeData = useMemo(() => buildFileTypeRatioData(fileTypeRatio), [fileTypeRatio]);
+  const fileTypeData = apiFileTypeData.length > 0 ? apiFileTypeData : fallbackFileTypeData;
+  const fallbackRecentUploadData = useMemo(() => buildRecentUploadData(chartDocuments, selectedRecentUploadDays), [chartDocuments, selectedRecentUploadDays]);
+  const apiRecentUploadData = useMemo(() => buildRecentUploadApiData(recentUploadStats), [recentUploadStats]);
+  const recentUploadData = apiRecentUploadData.length > 0 ? apiRecentUploadData : fallbackRecentUploadData;
   const topUploadersData = useMemo(() => buildTopUploadersData(chartDocuments, 5), [chartDocuments]);
   const fallbackStats = useMemo(() => ({
     totalDocuments: chartDocuments.length,
@@ -44,13 +56,6 @@ const DocumentChartsSection = ({
 
   return (
     <div className="space-y-6">
-      <div>
-        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-          Biểu đồ quản lý tài liệu
-        </div>
-        <div className="text-lg font-bold text-slate-900">Tổng quan dữ liệu lưu trữ</div>
-      </div>
-
       <div className="grid gap-4 md:grid-cols-2">
         <DocumentStatCard
           label="Tổng số tài liệu"
@@ -68,8 +73,14 @@ const DocumentChartsSection = ({
       </div>
 
       <div className="grid items-stretch gap-6 md:grid-cols-2">
-        <DocumentFileTypeChart data={fileTypeData} isLoading={isLoading} />
-        <RecentUploadsChart data={recentUploadData} isLoading={isLoading} />
+        <DocumentFileTypeChart data={fileTypeData} isLoading={isDocumentStatsLoading} />
+        <RecentUploadsChart
+          data={recentUploadData}
+          isLoading={isRecentUploadsLoading}
+          error={recentUploadsError}
+          selectedDays={selectedRecentUploadDays}
+          onDaysChange={onRecentUploadDaysChange}
+        />
         <div className="md:col-span-2">
           <TopUploadersChart data={topUploadersData} isLoading={isLoading} />
         </div>

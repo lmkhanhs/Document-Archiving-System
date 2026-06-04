@@ -3,10 +3,18 @@ const FILE_TYPE_ORDER = ["DOCX", "PDF", "TXT", "ZIP", "Khác"];
 export const FILE_TYPE_COLORS = {
   DOCX: "#2563eb",
   PDF: "#ef4444",
-  TXT: "#facc15",
+  XLSX: "#16a34a",
   ZIP: "#38bdf8",
+  SQL: "#8b5cf6",
+  JSON: "#f97316",
+  TXT: "#facc15",
+  IMAGE: "#ec4899",
+  MP3: "#06b6d4",
+  MP4: "#7c3aed",
   Khác: "#94a3b8",
 };
+
+const FILE_TYPE_PALETTE = ["#2563eb", "#ef4444", "#16a34a", "#38bdf8", "#8b5cf6", "#f97316", "#facc15", "#ec4899", "#06b6d4", "#94a3b8"];
 
 export const mockDocuments = [
   {
@@ -112,6 +120,20 @@ export const buildFileTypeData = (documents = []) => {
   }));
 };
 
+export const buildFileTypeRatioData = (items = []) => (
+  Array.isArray(items)
+    ? items.map((item, index) => {
+      const name = item?.type || item?.name || "Khác";
+      return {
+        name,
+        value: Number(item?.count) || 0,
+        percent: Number(item?.percentage) || 0,
+        color: FILE_TYPE_COLORS[name] || FILE_TYPE_PALETTE[index % FILE_TYPE_PALETTE.length],
+      };
+    })
+    : []
+);
+
 export const buildRecentUploadData = (documents = [], days = 7) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -139,6 +161,17 @@ export const buildRecentUploadData = (documents = [], days = 7) => {
 
   return buckets;
 };
+
+export const buildRecentUploadApiData = (items = []) => (
+  Array.isArray(items)
+    ? items.map((item) => ({
+      key: item?.date || "",
+      label: item?.date || "",
+      fullDate: item?.date || "",
+      count: Number(item?.count) || 0,
+    }))
+    : []
+);
 
 export const buildTopUploadersData = (documents = [], limit = 5) => {
   const map = new Map();

@@ -14,7 +14,13 @@ const ManagerDocument = ({
   isDocLoading,
   docError,
   documentStats,
+  fileTypeRatio,
+  recentUploadStats,
+  selectedRecentUploadDays,
+  setSelectedRecentUploadDays,
   isDocumentStatsLoading,
+  isRecentUploadsLoading,
+  recentUploadsError,
   documentsView,
   search,
   fileTypeFilter,
@@ -40,7 +46,13 @@ const ManagerDocument = ({
       documents={normalizedDocuments}
       isLoading={isDocLoading}
       documentStats={documentStats}
+      fileTypeRatio={fileTypeRatio}
+      recentUploadStats={recentUploadStats}
+      selectedRecentUploadDays={selectedRecentUploadDays}
+      onRecentUploadDaysChange={setSelectedRecentUploadDays}
       isDocumentStatsLoading={isDocumentStatsLoading}
+      isRecentUploadsLoading={isRecentUploadsLoading}
+      recentUploadsError={recentUploadsError}
     />
 
     <div className="flex flex-wrap items-center justify-between gap-3">

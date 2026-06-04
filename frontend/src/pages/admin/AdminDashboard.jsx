@@ -55,7 +55,12 @@ import {
   searchAdminFiles,
   softDeleteAdminFile,
 } from "../../services/adminDocumentService";
-import { getDocumentDeletedCount, getDocumentTotalCount } from "../../services/documentService";
+import {
+  getDocumentDeletedCount,
+  getDocumentFileTypeRatio,
+  getDocumentRecentUploads,
+  getDocumentTotalCount,
+} from "../../services/documentService";
 import DeletedUsersPage from "./components/DeletedUsersPage";
 import RestoreUserDialog from "./components/RestoreUserDialog";
 import HardDeleteDialog from "./components/HardDeleteDialog";
@@ -446,7 +451,12 @@ const AdminDashboard = () => {
   const [docError, setDocError] = useState("");
   const [docReloadKey, setDocReloadKey] = useState(0);
   const [documentStats, setDocumentStats] = useState({ totalDocuments: 0, deletedDocuments: 0 });
+  const [fileTypeRatio, setFileTypeRatio] = useState([]);
+  const [recentUploadStats, setRecentUploadStats] = useState([]);
+  const [selectedRecentUploadDays, setSelectedRecentUploadDays] = useState(7);
   const [isDocumentStatsLoading, setIsDocumentStatsLoading] = useState(false);
+  const [isRecentUploadsLoading, setIsRecentUploadsLoading] = useState(false);
+  const [recentUploadsError, setRecentUploadsError] = useState("");
   const [documentsView, setDocumentsView] = useState("all");
   const [fileTypeFilter, setFileTypeFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("");
@@ -835,10 +845,12 @@ const AdminDashboard = () => {
     Promise.all([
       getDocumentTotalCount().catch(() => 0),
       getDocumentDeletedCount().catch(() => 0),
+      getDocumentFileTypeRatio().catch(() => []),
     ])
-      .then(([totalDocuments, deletedDocuments]) => {
+      .then(([totalDocuments, deletedDocuments, nextFileTypeRatio]) => {
         if (isMounted) {
           setDocumentStats({ totalDocuments, deletedDocuments });
+          setFileTypeRatio(nextFileTypeRatio);
         }
       })
       .finally(() => {
@@ -851,6 +863,38 @@ const AdminDashboard = () => {
       isMounted = false;
     };
   }, [activeMenu, docReloadKey]);
+
+  useEffect(() => {
+    if (activeMenu !== "documents") {
+      return undefined;
+    }
+
+    let isMounted = true;
+    setIsRecentUploadsLoading(true);
+    setRecentUploadsError("");
+
+    getDocumentRecentUploads(selectedRecentUploadDays)
+      .then((data) => {
+        if (isMounted) {
+          setRecentUploadStats(data);
+        }
+      })
+      .catch((error) => {
+        if (isMounted) {
+          setRecentUploadStats([]);
+          setRecentUploadsError(error.message || "Không thể tải dữ liệu");
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsRecentUploadsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeMenu, docReloadKey, selectedRecentUploadDays]);
 
   useEffect(() => {
     if (activeMenu !== "documents") {
@@ -2253,7 +2297,13 @@ const AdminDashboard = () => {
               isDocLoading={isDocLoading}
               docError={docError}
               documentStats={documentStats}
+              fileTypeRatio={fileTypeRatio}
+              recentUploadStats={recentUploadStats}
+              selectedRecentUploadDays={selectedRecentUploadDays}
+              setSelectedRecentUploadDays={setSelectedRecentUploadDays}
               isDocumentStatsLoading={isDocumentStatsLoading}
+              isRecentUploadsLoading={isRecentUploadsLoading}
+              recentUploadsError={recentUploadsError}
               documentsView={documentsView}
               search={search}
               setSearch={setSearch}

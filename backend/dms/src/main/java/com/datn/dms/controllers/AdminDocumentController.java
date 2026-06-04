@@ -5,12 +5,14 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.datn.dms.dtos.ApiResponse;
 import com.datn.dms.dtos.documents.response.DeletedDocumentCountResponse;
 import com.datn.dms.dtos.documents.response.FileTypeRatioResponse;
+import com.datn.dms.dtos.documents.response.RecentUploadsResponse;
 import com.datn.dms.dtos.documents.response.TotalDocumentCountResponse;
 import com.datn.dms.services.AdminDocumentService;
 
@@ -59,6 +61,20 @@ public class AdminDocumentController {
                 .code(200)
                 .message("Get file type ratio successfully")
                 .data(ratios)
+                .build());
+    }
+
+    @GetMapping("/recent-uploads")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<ApiResponse<List<RecentUploadsResponse>>> getRecentUploads(
+            @RequestParam(name = "days", defaultValue = "7") int days) {
+        
+        List<RecentUploadsResponse> recentUploads = adminDocumentService.getRecentUploads(days);
+        
+        return ResponseEntity.ok(ApiResponse.<List<RecentUploadsResponse>>builder()
+                .code(200)
+                .message("Get recent uploads successfully")
+                .data(recentUploads)
                 .build());
     }
 }

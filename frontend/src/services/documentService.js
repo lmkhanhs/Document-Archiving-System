@@ -264,3 +264,25 @@ export const getDocumentDeletedCount = async () => {
     throw new Error(error.response?.data?.message || error.message || "Không thể tải số tài liệu đã xóa mềm");
   }
 };
+
+export const getDocumentFileTypeRatio = async () => {
+  try {
+    const response = await api.get("/admin/documents/file-type-ratio");
+    const data = parseApiResponse(response, "Không thể tải tỷ lệ định dạng file");
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message || "Không thể tải tỷ lệ định dạng file");
+  }
+};
+
+export const getDocumentRecentUploads = async (days = 7) => {
+  try {
+    const response = await api.get("/admin/documents/recent-uploads", {
+      params: { days },
+    });
+    const data = parseApiResponse(response, "Không thể tải dữ liệu tài liệu tải lên gần đây");
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message || "Không thể tải dữ liệu tài liệu tải lên gần đây");
+  }
+};

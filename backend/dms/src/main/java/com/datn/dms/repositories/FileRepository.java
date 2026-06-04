@@ -1,5 +1,6 @@
 package com.datn.dms.repositories;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,4 +46,7 @@ public interface FileRepository extends JpaRepository<FileEntity, Long> {
 
 	@Query("SELECT f.type, COUNT(f) FROM FileEntity f WHERE f.isDeleted = false GROUP BY f.type")
 	List<Object[]> countFilesByType();
+
+	@Query("SELECT f.createdAt FROM FileEntity f WHERE f.isDeleted = false AND f.createdAt >= :startDate")
+	List<LocalDateTime> findCreatedAtAfter(@Param("startDate") LocalDateTime startDate);
 }

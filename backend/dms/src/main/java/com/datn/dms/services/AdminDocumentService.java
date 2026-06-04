@@ -1,5 +1,8 @@
 package com.datn.dms.services;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,6 +11,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import com.datn.dms.dtos.documents.response.FileTypeRatioResponse;
+import com.datn.dms.dtos.documents.response.RecentUploadsResponse;
 import com.datn.dms.repositories.FileRepository;
 
 import lombok.AccessLevel;
@@ -73,18 +77,7 @@ public class AdminDocumentService {
 
         long otherPercentage = finalTotalCount == 0 ? 0 : Math.round((otherCount * 100.0) / finalTotalCount);
 
-        List<FileTypeRatioResponse> result = new ArrayList<>();
-        for (int i = 0; i < 4; i++) {
-            if (i < top4.size()) {
-                result.add(top4.get(i));
-            } else {
-                result.add(FileTypeRatioResponse.builder()
-                        .type("---")
-                        .count(0L)
-                        .percentage(0L)
-                        .build());
-            }
-        }
+        List<FileTypeRatioResponse> result = new ArrayList<>(top4);
         
         result.add(FileTypeRatioResponse.builder()
                 .type("Khác")
@@ -119,5 +112,39 @@ public class AdminDocumentService {
         if (lowerMime.contains("audio/")) return "MP3";
 
         return "Khác";
+    }
+
+    public List<RecentUploadsResponse> getRecentUploads(int days) {
+        if (days < 1) days = 7;
+        if (days > 30) days = 30;
+
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(days - 1);
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+
+        List<LocalDateTime> createdDates = fileRepository.findCreatedAtAfter(startDateTime);
+        
+        Map<LocalDate, Long> countsByDate = new HashMap<>();
+        for (LocalDateTime dt : createdDates) {
+            if (dt != null) {
+                LocalDate date = dt.toLocalDate();
+                countsByDate.put(date, countsByDate.getOrDefault(date, 0L) + 1);
+            }
+        }
+
+        List<RecentUploadsResponse> result = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM");
+
+        for (int i = 0; i < days; i++) {
+            LocalDate currentDate = startDate.plusDays(i);
+            long count = countsByDate.getOrDefault(currentDate, 0L);
+            
+            result.add(RecentUploadsResponse.builder()
+                    .date(currentDate.format(formatter))
+                    .count(count)
+                    .build());
+        }
+
+        return result;
     }
 }
