@@ -42,4 +42,7 @@ public interface FileRepository extends JpaRepository<FileEntity, Long> {
 	List<String> findAllFileNames();
 
 	long countByIsDeletedTrue();
+
+	@Query("SELECT f.type, COUNT(f) FROM FileEntity f WHERE f.isDeleted = false GROUP BY f.type")
+	List<Object[]> countFilesByType();
 }

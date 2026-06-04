@@ -1,5 +1,7 @@
 package com.datn.dms.controllers;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.datn.dms.dtos.ApiResponse;
 import com.datn.dms.dtos.documents.response.DeletedDocumentCountResponse;
+import com.datn.dms.dtos.documents.response.FileTypeRatioResponse;
 import com.datn.dms.dtos.documents.response.TotalDocumentCountResponse;
 import com.datn.dms.services.AdminDocumentService;
 
@@ -44,6 +47,18 @@ public class AdminDocumentController {
                 .code(200)
                 .message("Get deleted documents successfully")
                 .data(new DeletedDocumentCountResponse(deletedDocuments))
+                .build());
+    }
+
+    @GetMapping("/file-type-ratio")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<ApiResponse<List<FileTypeRatioResponse>>> getFileTypeRatio() {
+        List<FileTypeRatioResponse> ratios = adminDocumentService.getFileTypeRatio();
+        
+        return ResponseEntity.ok(ApiResponse.<List<FileTypeRatioResponse>>builder()
+                .code(200)
+                .message("Get file type ratio successfully")
+                .data(ratios)
                 .build());
     }
 }
