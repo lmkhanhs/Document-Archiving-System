@@ -451,6 +451,10 @@ const AdminDashboard = () => {
   const [isDocLoading, setIsDocLoading] = useState(false);
   const [docError, setDocError] = useState("");
   const [docReloadKey, setDocReloadKey] = useState(0);
+  const [docCurrentPage, setDocCurrentPage] = useState(0);
+  const [docPageSize, setDocPageSize] = useState(10);
+  const [docTotalPages, setDocTotalPages] = useState(0);
+  const [docTotalElements, setDocTotalElements] = useState(0);
   const [documentStats, setDocumentStats] = useState({ totalDocuments: 0, deletedDocuments: 0 });
   const [fileTypeRatio, setFileTypeRatio] = useState([]);
   const [recentUploadStats, setRecentUploadStats] = useState([]);
@@ -952,11 +956,20 @@ const AdminDashboard = () => {
           const payload = shouldSearch
             ? await searchAdminFiles({ fileName: keyword, uploader })
             : isTrashView
-              ? await getAdminTrashFiles()
-              : await getAdminFiles();
-          const data = extractDocumentCollection(payload);
+              ? await getAdminTrashFiles(docCurrentPage, docPageSize)
+              : await getAdminFiles(docCurrentPage, docPageSize);
+
           if (isMounted) {
-            setDocuments(data);
+            if (!shouldSearch && payload && typeof payload.totalElements === "number") {
+              setDocuments(payload.content || []);
+              setDocTotalPages(payload.totalPages || 0);
+              setDocTotalElements(payload.totalElements || 0);
+            } else {
+              const data = extractDocumentCollection(payload);
+              setDocuments(data);
+              setDocTotalPages(1);
+              setDocTotalElements(data.length);
+            }
           }
         } catch (error) {
           if (isMounted) {
@@ -975,7 +988,11 @@ const AdminDashboard = () => {
       isMounted = false;
       clearTimeout(debounceTimer);
     };
-  }, [activeMenu, docReloadKey, documentsView, ownerFilter, search]);
+  }, [activeMenu, docReloadKey, documentsView, ownerFilter, search, docCurrentPage, docPageSize]);
+
+  useEffect(() => {
+    setDocCurrentPage(0);
+  }, [documentsView, docPageSize]);
 
   const handleLogout = async () => {
     if (isLoggingOut) {
@@ -2361,6 +2378,12 @@ const AdminDashboard = () => {
               formatFileSize={formatFileSize}
               formatDateTime={formatDateTime}
               documentStatusBadgeMap={documentStatusBadgeMap}
+              currentPage={docCurrentPage}
+              pageSize={docPageSize}
+              totalPages={docTotalPages}
+              totalElements={docTotalElements}
+              onPageChange={setDocCurrentPage}
+              onPageSizeChange={setDocPageSize}
             />
           ) : (
             <AdminAnalyticsDashboard />

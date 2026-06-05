@@ -446,6 +446,18 @@ public class FileService {
                 .toList();
     }
 
+    public org.springframework.data.domain.Page<FileResponse> getFileAdminPaged(int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<FileEntity> entityPage = fileRepository.findAllByIsDeletedFalseOrderByCreatedAtDesc(pageable);
+        return entityPage.map(fileMapper::toFileResponse);
+    }
+
+    public org.springframework.data.domain.Page<FileResponse> getTrashFilesAdminPaged(int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<FileEntity> entityPage = fileRepository.findAllByIsDeletedTrueOrderByCreatedAtDesc(pageable);
+        return entityPage.map(fileMapper::toFileResponse);
+    }
+
     public List<FileResponse> searchFilesAdmin(String fileName, String uploader) {
         String nameQuery = (fileName != null && !fileName.isBlank()) ? fileName.trim() : null;
         String uploaderQuery = (uploader != null && !uploader.isBlank()) ? uploader.trim() : null;

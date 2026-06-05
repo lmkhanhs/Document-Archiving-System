@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,7 +29,11 @@ public interface FileRepository extends JpaRepository<FileEntity, Long> {
 
 	List<FileEntity> findAllByIsDeletedFalseOrderByCreatedAtDesc();
 
+	Page<FileEntity> findAllByIsDeletedFalseOrderByCreatedAtDesc(Pageable pageable);
+
 	List<FileEntity> findAllByIsDeletedTrueOrderByCreatedAtDesc();
+
+	Page<FileEntity> findAllByIsDeletedTrueOrderByCreatedAtDesc(Pageable pageable);
 
 	Optional<FileEntity> findByIdAndIsDeletedFalse(Long id);
 	

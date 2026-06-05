@@ -8,6 +8,104 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import DocumentChartsSection from "./documentCharts/DocumentChartsSection";
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
+
+const PaginationBar = ({
+  currentPage,
+  pageSize,
+  totalPages,
+  totalElements,
+  onPageChange,
+  onPageSizeChange,
+}) => {
+  if (totalElements <= 0) {
+    return null;
+  }
+
+  const start = currentPage * pageSize + 1;
+  const end = Math.min((currentPage + 1) * pageSize, totalElements);
+
+  const maxVisiblePages = 5;
+  let startPage = Math.max(0, currentPage - Math.floor(maxVisiblePages / 2));
+  let endPage = Math.min(totalPages, startPage + maxVisiblePages);
+  if (endPage - startPage < maxVisiblePages) {
+    startPage = Math.max(0, endPage - maxVisiblePages);
+  }
+  const pageNumbers = [];
+  for (let i = startPage; i < endPage; i++) {
+    pageNumbers.push(i);
+  }
+
+  return (
+    <div className="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+      <div className="text-sm text-slate-500">
+        Hiển thị{" "}
+        <span className="font-semibold text-slate-700">{start}-{end}</span>{" "}
+        trên{" "}
+        <span className="font-semibold text-slate-700">{totalElements}</span>{" "}
+        tài liệu
+      </div>
+
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          disabled={currentPage === 0}
+          onClick={() => onPageChange(currentPage - 1)}
+          className={`rounded-lg border px-3 py-1.5 text-sm font-semibold transition ${
+            currentPage === 0
+              ? "cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300"
+              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+          }`}
+        >
+          Trước
+        </button>
+
+        {pageNumbers.map((pageNum) => (
+          <button
+            type="button"
+            key={pageNum}
+            onClick={() => onPageChange(pageNum)}
+            className={`rounded-lg border px-3 py-1.5 text-sm font-semibold transition ${
+              pageNum === currentPage
+                ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            {pageNum + 1}
+          </button>
+        ))}
+
+        <button
+          type="button"
+          disabled={currentPage >= totalPages - 1}
+          onClick={() => onPageChange(currentPage + 1)}
+          className={`rounded-lg border px-3 py-1.5 text-sm font-semibold transition ${
+            currentPage >= totalPages - 1
+              ? "cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300"
+              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+          }`}
+        >
+          Sau
+        </button>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <select
+          value={pageSize}
+          onChange={(event) => onPageSizeChange(Number(event.target.value))}
+          className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+        >
+          {PAGE_SIZE_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt} / trang
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+};
+
 const ManagerDocument = ({
   normalizedDocuments,
   filteredDocuments,
@@ -42,6 +140,12 @@ const ManagerDocument = ({
   formatFileSize,
   formatDateTime,
   documentStatusBadgeMap,
+  currentPage,
+  pageSize,
+  totalPages,
+  totalElements,
+  onPageChange,
+  onPageSizeChange,
 }) => (
   <section className="mt-6 space-y-4">
     <DocumentChartsSection
@@ -125,13 +229,13 @@ const ManagerDocument = ({
     <div className="rounded-2xl border border-slate-200 bg-white p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="text-sm text-slate-600">
-          {filteredDocuments.length} {documentsView === "trash" ? "tai lieu trong thung rac" : "tai lieu"}
+          {totalElements} {documentsView === "trash" ? "tài liệu trong thùng rác" : "tài liệu"}
         </div>
       </div>
 
       {isDocLoading && (
         <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm font-semibold text-slate-500">
-          Dang tai danh sach tai lieu...
+          Đang tải danh sách tài liệu...
         </div>
       )}
 
@@ -143,7 +247,7 @@ const ManagerDocument = ({
 
       {!isDocLoading && !docError && filteredDocuments.length === 0 && (
         <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm font-semibold text-slate-500">
-          {documentsView === "trash" ? "Thùng rác đang trống" : "Chưa có tài liệu nào"}
+          {documentsView === "trash" ? "Thùng rác đang trống" : "Không có tài liệu nào"}
         </div>
       )}
 
@@ -158,7 +262,7 @@ const ManagerDocument = ({
                     <th className="px-4 py-3">Tên tài liệu</th>
                     <th className="px-4 py-3">Chủ sở hữu</th>
                     <th className="px-4 py-3">Loại file</th>
-                    <th className="px-4 py-3">ích thước</th>
+                    <th className="px-4 py-3">Kích thước</th>
                     <th className="px-4 py-3">Ngày upload</th>
                     <th className="px-4 py-3">Trạng thái</th>
                     {documentsView === "trash" && (
@@ -433,6 +537,15 @@ const ManagerDocument = ({
               );
             })}
           </div>
+
+          <PaginationBar
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            totalElements={totalElements}
+            onPageChange={onPageChange}
+            onPageSizeChange={onPageSizeChange}
+          />
         </>
       )}
     </div>

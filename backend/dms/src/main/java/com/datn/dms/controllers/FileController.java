@@ -144,21 +144,25 @@ public class FileController {
     
     @GetMapping("/admin")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ApiResponse<List<FileResponse>> getFileAdmin() {
-        return ApiResponse.<List<FileResponse>>builder()
+    public ApiResponse<org.springframework.data.domain.Page<FileResponse>> getFileAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.<org.springframework.data.domain.Page<FileResponse>>builder()
                 .code(HttpStatus.OK.value())
                 .message("Get all files successfully")
-                .data(fileService.getFileAdmin())
+                .data(fileService.getFileAdminPaged(page, size))
                 .build();
     }
 
     @GetMapping("/admin/trash")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ApiResponse<List<FileResponse>> getTrashFilesAdmin() {
-        return ApiResponse.<List<FileResponse>>builder()
+    public ApiResponse<org.springframework.data.domain.Page<FileResponse>> getTrashFilesAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.<org.springframework.data.domain.Page<FileResponse>>builder()
                 .code(HttpStatus.OK.value())
                 .message("Get all trash files successfully")
-                .data(fileService.getTrashFilesAdmin())
+                .data(fileService.getTrashFilesAdminPaged(page, size))
                 .build();
     }
 

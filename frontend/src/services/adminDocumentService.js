@@ -14,18 +14,22 @@ const parseApiResponse = (response, fallbackMessage) => {
   return result.data;
 };
 
-export const getAdminFiles = async () => {
+export const getAdminFiles = async (page = 0, size = 10) => {
   try {
-    const response = await api.get("/files/admin");
+    const response = await api.get("/files/admin", {
+      params: { page, size },
+    });
     return parseApiResponse(response, "Khong the tai danh sach tai lieu");
   } catch (error) {
     throw new Error(error.response?.data?.message || "Khong the tai danh sach tai lieu");
   }
 };
 
-export const getAdminTrashFiles = async () => {
+export const getAdminTrashFiles = async (page = 0, size = 10) => {
   try {
-    const response = await api.get("/files/admin/trash");
+    const response = await api.get("/files/admin/trash", {
+      params: { page, size },
+    });
     return parseApiResponse(response, "Khong the tai danh sach tai lieu da xoa");
   } catch (error) {
     throw new Error(error.response?.data?.message || "Khong the tai danh sach tai lieu da xoa");
