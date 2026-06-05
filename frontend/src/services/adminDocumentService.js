@@ -99,3 +99,12 @@ export const downloadAdminFile = async (fileId) => {
     throw new Error(error.response?.data?.message || "Khong the tai tai lieu");
   }
 };
+
+export const getTopUploaders = async () => {
+  try {
+    const response = await api.get("/admin/documents/top-uploaders");
+    return parseApiResponse(response, "Khong the tai danh sach nguoi dung tai len nhieu nhat");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Khong the tai danh sach nguoi dung tai len nhieu nhat");
+  }
+};

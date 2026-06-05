@@ -1,3 +1,5 @@
+import { API_ORIGIN } from "../../../../services/api";
+
 const FILE_TYPE_ORDER = ["DOCX", "PDF", "TXT", "ZIP", "Khác"];
 
 export const FILE_TYPE_COLORS = {
@@ -193,3 +195,21 @@ export const buildTopUploadersData = (documents = [], limit = 5) => {
     .sort((a, b) => b.count - a.count)
     .slice(0, limit);
 };
+
+export const buildTopUploadersApiData = (items = []) => (
+  Array.isArray(items)
+    ? items.map((item) => {
+      const name = item?.username || item?.email || "Không xác định";
+      let avatar = item?.avatarUrl || "";
+      if (avatar && !avatar.startsWith("http")) {
+        avatar = `${API_ORIGIN}${avatar.startsWith("/") ? "" : "/"}${avatar}`;
+      }
+      return {
+        name,
+        count: Number(item?.documentCount) || 0,
+        avatar,
+        label: getAvatarLabel(name),
+      };
+    })
+    : []
+);

@@ -7,6 +7,7 @@ import {
   buildFileTypeRatioData,
   buildRecentUploadApiData,
   buildRecentUploadData,
+  buildTopUploadersApiData,
   buildTopUploadersData,
   getChartDocuments,
 } from "./chartUtils";
@@ -36,7 +37,9 @@ const DocumentChartsSection = ({
   onRecentUploadDaysChange,
   isDocumentStatsLoading = false,
   isRecentUploadsLoading = false,
+  isTopUploadersLoading = false,
   recentUploadsError = "",
+  topUploaders = [],
 }) => {
   const chartDocuments = useMemo(() => getChartDocuments(documents), [documents]);
 
@@ -46,7 +49,7 @@ const DocumentChartsSection = ({
   const fallbackRecentUploadData = useMemo(() => buildRecentUploadData(chartDocuments, selectedRecentUploadDays), [chartDocuments, selectedRecentUploadDays]);
   const apiRecentUploadData = useMemo(() => buildRecentUploadApiData(recentUploadStats), [recentUploadStats]);
   const recentUploadData = apiRecentUploadData.length > 0 ? apiRecentUploadData : fallbackRecentUploadData;
-  const topUploadersData = useMemo(() => buildTopUploadersData(chartDocuments, 5), [chartDocuments]);
+  const topUploadersData = useMemo(() => buildTopUploadersApiData(topUploaders), [topUploaders]);
   const fallbackStats = useMemo(() => ({
     totalDocuments: chartDocuments.length,
     deletedDocuments: chartDocuments.filter((file) => Boolean(file?.isDeleted || file?.deletedAt || file?.removedAt || file?.trashedAt)).length,
@@ -82,7 +85,7 @@ const DocumentChartsSection = ({
           onDaysChange={onRecentUploadDaysChange}
         />
         <div className="md:col-span-2">
-          <TopUploadersChart data={topUploadersData} isLoading={isLoading} />
+          <TopUploadersChart data={topUploadersData} isLoading={isTopUploadersLoading} />
         </div>
       </div>
     </div>

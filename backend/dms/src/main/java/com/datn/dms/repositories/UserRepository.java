@@ -2,6 +2,7 @@ package com.datn.dms.repositories;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -63,4 +64,11 @@ public interface UserRepository extends JpaRepository<UserEntity,  Long> {
 
     @Query("SELECT COUNT(DISTINCT u.country.id) FROM UserEntity u WHERE u.country IS NOT NULL")
     long countDistinctCountryUsedByUsers();
+
+    @Query("SELECT new com.datn.dms.dtos.documents.response.TopUploaderResponse(u.id, u.username, u.email, u.thumbnailUrl, COUNT(f)) " +
+           "FROM UserEntity u JOIN u.files f " +
+           "WHERE f.isDeleted = false " +
+           "GROUP BY u.id, u.username, u.email, u.thumbnailUrl " +
+           "ORDER BY COUNT(f) DESC")
+    List<com.datn.dms.dtos.documents.response.TopUploaderResponse> getTopUploaders(Pageable pageable);
 }

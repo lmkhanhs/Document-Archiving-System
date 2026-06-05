@@ -20,7 +20,9 @@ const ManagerDocument = ({
   setSelectedRecentUploadDays,
   isDocumentStatsLoading,
   isRecentUploadsLoading,
+  isTopUploadersLoading,
   recentUploadsError,
+  topUploaders,
   documentsView,
   search,
   fileTypeFilter,
@@ -52,7 +54,9 @@ const ManagerDocument = ({
       onRecentUploadDaysChange={setSelectedRecentUploadDays}
       isDocumentStatsLoading={isDocumentStatsLoading}
       isRecentUploadsLoading={isRecentUploadsLoading}
+      isTopUploadersLoading={isTopUploadersLoading}
       recentUploadsError={recentUploadsError}
+      topUploaders={topUploaders}
     />
 
     <div className="flex flex-wrap items-center justify-between gap-3">

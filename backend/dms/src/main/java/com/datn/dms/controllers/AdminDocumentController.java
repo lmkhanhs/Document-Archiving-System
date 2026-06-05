@@ -13,6 +13,7 @@ import com.datn.dms.dtos.ApiResponse;
 import com.datn.dms.dtos.documents.response.DeletedDocumentCountResponse;
 import com.datn.dms.dtos.documents.response.FileTypeRatioResponse;
 import com.datn.dms.dtos.documents.response.RecentUploadsResponse;
+import com.datn.dms.dtos.documents.response.TopUploaderResponse;
 import com.datn.dms.dtos.documents.response.TotalDocumentCountResponse;
 import com.datn.dms.services.AdminDocumentService;
 
@@ -75,6 +76,18 @@ public class AdminDocumentController {
                 .code(200)
                 .message("Get recent uploads successfully")
                 .data(recentUploads)
+                .build());
+    }
+
+    @GetMapping("/top-uploaders")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<ApiResponse<List<TopUploaderResponse>>> getTopUploaders() {
+        List<TopUploaderResponse> topUploaders = adminDocumentService.getTopUploaders();
+        
+        return ResponseEntity.ok(ApiResponse.<List<TopUploaderResponse>>builder()
+                .code(200)
+                .message("Get top uploaders successfully")
+                .data(topUploaders)
                 .build());
     }
 }

@@ -54,6 +54,7 @@ import {
   restoreAdminFile,
   searchAdminFiles,
   softDeleteAdminFile,
+  getTopUploaders,
 } from "../../services/adminDocumentService";
 import {
   getDocumentDeletedCount,
@@ -457,6 +458,9 @@ const AdminDashboard = () => {
   const [isDocumentStatsLoading, setIsDocumentStatsLoading] = useState(false);
   const [isRecentUploadsLoading, setIsRecentUploadsLoading] = useState(false);
   const [recentUploadsError, setRecentUploadsError] = useState("");
+  const [topUploaders, setTopUploaders] = useState([]);
+  const [isTopUploadersLoading, setIsTopUploadersLoading] = useState(false);
+  const [topUploadersError, setTopUploadersError] = useState("");
   const [documentsView, setDocumentsView] = useState("all");
   const [fileTypeFilter, setFileTypeFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("");
@@ -895,6 +899,38 @@ const AdminDashboard = () => {
       isMounted = false;
     };
   }, [activeMenu, docReloadKey, selectedRecentUploadDays]);
+
+  useEffect(() => {
+    if (activeMenu !== "documents") {
+      return undefined;
+    }
+
+    let isMounted = true;
+    setIsTopUploadersLoading(true);
+    setTopUploadersError("");
+
+    getTopUploaders()
+      .then((data) => {
+        if (isMounted) {
+          setTopUploaders(data);
+        }
+      })
+      .catch((error) => {
+        if (isMounted) {
+          setTopUploaders([]);
+          setTopUploadersError(error.message || "Không thể tải dữ liệu");
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsTopUploadersLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeMenu, docReloadKey]);
 
   useEffect(() => {
     if (activeMenu !== "documents") {
@@ -2303,7 +2339,9 @@ const AdminDashboard = () => {
               setSelectedRecentUploadDays={setSelectedRecentUploadDays}
               isDocumentStatsLoading={isDocumentStatsLoading}
               isRecentUploadsLoading={isRecentUploadsLoading}
+              isTopUploadersLoading={isTopUploadersLoading}
               recentUploadsError={recentUploadsError}
+              topUploaders={topUploaders}
               documentsView={documentsView}
               search={search}
               setSearch={setSearch}

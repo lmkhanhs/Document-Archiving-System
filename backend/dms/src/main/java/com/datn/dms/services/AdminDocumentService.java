@@ -8,11 +8,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.datn.dms.dtos.documents.response.FileTypeRatioResponse;
 import com.datn.dms.dtos.documents.response.RecentUploadsResponse;
+import com.datn.dms.dtos.documents.response.TopUploaderResponse;
 import com.datn.dms.repositories.FileRepository;
+import com.datn.dms.repositories.UserRepository;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +26,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AdminDocumentService {
     FileRepository fileRepository;
+    UserRepository userRepository;
 
     public long getTotalDocuments() {
         return fileRepository.count();
@@ -146,5 +150,17 @@ public class AdminDocumentService {
         }
 
         return result;
+    }
+
+    public List<TopUploaderResponse> getTopUploaders() {
+        List<TopUploaderResponse> topUploaders = userRepository.getTopUploaders(PageRequest.of(0, 5));
+        
+        for (TopUploaderResponse uploader : topUploaders) {
+            if (uploader.getUsername() == null || uploader.getUsername().isBlank()) {
+                uploader.setUsername(uploader.getEmail());
+            }
+        }
+        
+        return topUploaders;
     }
 }
