@@ -2577,12 +2577,17 @@ const AdminDashboard = () => {
                 )}
 
                 {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.PDF && docPreviewState.objectUrl && (
-                  <iframe
-                    title="PDF Preview"
-                    src={`${docPreviewState.objectUrl}#toolbar=1&navpanes=0&view=FitH`}
+                  <object
+                    data={`${docPreviewState.objectUrl}#navpanes=0&view=FitH`}
+                    type="application/pdf"
                     className="h-full w-full rounded-xl border border-slate-200 bg-white"
                     style={{ minHeight: 0 }}
-                  />
+                  >
+                    <div className="grid h-full place-items-center text-sm text-slate-500">
+                      Trình duyệt không hỗ trợ xem PDF.
+                      <a href={docPreviewState.objectUrl} download className="mt-2 text-blue-600 underline">Tải xuống file</a>
+                    </div>
+                  </object>
                 )}
 
                 {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.IMAGE && docPreviewState.objectUrl && (
@@ -2602,12 +2607,17 @@ const AdminDashboard = () => {
                 )}
 
                 {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.OFFICE && docPreviewState.objectUrl && (
-                  <iframe
-                    title="Office Preview"
-                    src={`${docPreviewState.objectUrl}#toolbar=1&navpanes=0&view=FitH`}
+                  <object
+                    data={`${docPreviewState.objectUrl}#navpanes=0&view=FitH`}
+                    type="application/pdf"
                     className="h-full w-full rounded-xl border border-slate-200 bg-white"
                     style={{ minHeight: 0 }}
-                  />
+                  >
+                    <div className="grid h-full place-items-center text-sm text-slate-500">
+                      Trình duyệt không hỗ trợ xem file.
+                      <a href={docPreviewState.objectUrl} download className="mt-2 text-blue-600 underline">Tải xuống file</a>
+                    </div>
+                  </object>
                 )}
               </div>
             )}

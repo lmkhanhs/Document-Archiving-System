@@ -496,6 +496,17 @@ const MyDocuments = () => {
     }
   }, [previewState.objectUrl]);
 
+  // Dispatch resize when summary panel toggles so embedded PDF viewer recalculates layout
+  useEffect(() => {
+    if (previewState.open && !previewState.loading) {
+      const timer = setTimeout(() => {
+        window.dispatchEvent(new Event("resize"));
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [summaryState.open, previewState.open, previewState.loading]);
+
   const allDocuments = useMemo(() => {
     const merged = [...folders, ...files];
 
@@ -1682,13 +1693,17 @@ const MyDocuments = () => {
                     )}
 
                     {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.PDF && previewState.objectUrl && (
-                      <iframe
-                        key={`pdf-${summaryState.open}`}
-                        title="PDF Preview"
-                        src={`${previewState.objectUrl}#toolbar=1&navpanes=0&view=FitH`}
+                      <object
+                        data={`${previewState.objectUrl}#navpanes=0&view=FitH`}
+                        type="application/pdf"
                         className="h-full w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                         style={{ minHeight: 0 }}
-                      />
+                      >
+                        <div className="grid h-full place-items-center text-sm text-slate-500 dark:text-slate-400">
+                          Trình duyệt không hỗ trợ xem PDF.
+                          <a href={previewState.objectUrl} download className="mt-2 text-blue-600 underline">Tải xuống file</a>
+                        </div>
+                      </object>
                     )}
 
                     {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.IMAGE && previewState.objectUrl && (
@@ -1708,13 +1723,17 @@ const MyDocuments = () => {
                     )}
 
                     {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.OFFICE && previewState.objectUrl && (
-                      <iframe
-                        key={`office-${summaryState.open}`}
-                        title="Office Preview"
-                        src={`${previewState.objectUrl}#toolbar=1&navpanes=0&view=FitH`}
+                      <object
+                        data={`${previewState.objectUrl}#navpanes=0&view=FitH`}
+                        type="application/pdf"
                         className="h-full w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                         style={{ minHeight: 0 }}
-                      />
+                      >
+                        <div className="grid h-full place-items-center text-sm text-slate-500 dark:text-slate-400">
+                          Trình duyệt không hỗ trợ xem file.
+                          <a href={previewState.objectUrl} download className="mt-2 text-blue-600 underline">Tải xuống file</a>
+                        </div>
+                      </object>
                     )}
                   </div>
 
