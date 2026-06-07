@@ -308,24 +308,88 @@ public class FileService {
 
         String fileName = originalPath.getFileName().toString();
         String extension = getFileExtension(fileName).toLowerCase();
+        String extNoDot = extension.replace(".", "");
 
-        Path targetPath = originalPath;
-        MediaType mediaType = MediaType.APPLICATION_PDF;
+        // ── Image files: return original with correct MIME type ──
+        Set<String> imageExtensions = Set.of("png", "jpg", "jpeg", "gif", "webp", "bmp", "svg");
+        if (imageExtensions.contains(extNoDot)) {
+            Resource resource;
+            try {
+                resource = new UrlResource(originalPath.toUri());
+            } catch (MalformedURLException ex) {
+                throw new AppException(ErrorCode.FILE_PATH_INVALID);
+            }
+            MediaType imageType;
+            try {
+                String mimeStr = Files.probeContentType(originalPath);
+                imageType = mimeStr != null ? MediaType.parseMediaType(mimeStr) : MediaType.APPLICATION_OCTET_STREAM;
+            } catch (Exception ex) {
+                imageType = MediaType.APPLICATION_OCTET_STREAM;
+            }
+            return ResponseEntity.ok().contentType(imageType).body(resource);
+        }
 
-        // Nếu file không phải PDF, tiến hành convert và lấy/lưu file pdf từ bộ nhớ đệm (cache)
-        if (!extension.equals(".pdf")) {
-            String pdfFileName = fileName.substring(0, fileName.lastIndexOf('.')) + ".pdf";
-            targetPath = originalPath.getParent().resolve(pdfFileName);
+        // ── Text / code files: return original with text/plain ──
+        Set<String> textExtensions = Set.of(
+                "txt", "md", "json", "js", "jsx", "ts", "tsx", "html", "css", "scss", "less",
+                "xml", "yml", "yaml", "java", "py", "go", "c", "cpp", "h", "hpp", "sql", "log", "csv"
+        );
+        if (textExtensions.contains(extNoDot)) {
+            Resource resource;
+            try {
+                resource = new UrlResource(originalPath.toUri());
+            } catch (MalformedURLException ex) {
+                throw new AppException(ErrorCode.FILE_PATH_INVALID);
+            }
+            return ResponseEntity.ok()
+                    .contentType(new MediaType("text", "plain", java.nio.charset.StandardCharsets.UTF_8))
+                    .body(resource);
+        }
 
-            if (!Files.exists(targetPath)) {
-                try {
-                    String fromFormat = extension.replace(".", "");
-                    com.convertapi.client.ConvertApi.convert(fromFormat, "pdf",
-                            new com.convertapi.client.Param("file", originalPath)
-                    ).get().saveFile(targetPath).get();
-                } catch (Exception ex) {
-                    throw new AppException(ErrorCode.FILE_STORE_FAILED);
-                }
+        // ── PDF files: return original directly ──
+        if (extension.equals(".pdf")) {
+            Resource resource;
+            try {
+                resource = new UrlResource(originalPath.toUri());
+            } catch (MalformedURLException ex) {
+                throw new AppException(ErrorCode.FILE_PATH_INVALID);
+            }
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(resource);
+        }
+
+        // ── Office files (doc, docx, xls, xlsx, ppt, pptx): convert to PDF via ConvertAPI ──
+        Set<String> officeExtensions = Set.of("doc", "docx", "xls", "xlsx", "ppt", "pptx");
+        if (!officeExtensions.contains(extNoDot)) {
+            // Unsupported format — return as download with original MIME
+            Resource resource;
+            try {
+                resource = new UrlResource(originalPath.toUri());
+            } catch (MalformedURLException ex) {
+                throw new AppException(ErrorCode.FILE_PATH_INVALID);
+            }
+            MediaType fallbackType;
+            try {
+                fallbackType = MediaType.parseMediaType(fileEntity.getType());
+            } catch (Exception ex) {
+                fallbackType = MediaType.APPLICATION_OCTET_STREAM;
+            }
+            return ResponseEntity.ok().contentType(fallbackType).body(resource);
+        }
+
+        // Convert Office → PDF
+        String pdfFileName = fileName.substring(0, fileName.lastIndexOf('.')) + ".pdf";
+        Path targetPath = originalPath.getParent().resolve(pdfFileName);
+
+        if (!Files.exists(targetPath)) {
+            try {
+                String fromFormat = extNoDot;
+                com.convertapi.client.ConvertApi.convert(fromFormat, "pdf",
+                        new com.convertapi.client.Param("file", originalPath)
+                ).get().saveFile(targetPath).get();
+            } catch (Exception ex) {
+                System.err.println("[PREVIEW] ConvertAPI failed for file: " + fileEntity.getName()
+                        + " (id=" + fileEntity.getId() + ", ext=" + extNoDot + "): " + ex.getMessage());
+                throw new AppException(ErrorCode.FILE_STORE_FAILED);
             }
         }
 
@@ -337,7 +401,7 @@ public class FileService {
         }
 
         return ResponseEntity.ok()
-                .contentType(mediaType)
+                .contentType(MediaType.APPLICATION_PDF)
                 .body(resource);
     }
 

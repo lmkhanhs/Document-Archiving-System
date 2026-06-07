@@ -88,7 +88,22 @@ export const previewAdminFile = async (fileId) => {
       contentType: response.headers?.["content-type"] || "",
     };
   } catch (error) {
-    throw new Error(error.response?.data?.message || "Khong the xem truoc tai lieu");
+    let message = "Khong the xem truoc tai lieu";
+    try {
+      const blob = error.response?.data;
+      if (blob instanceof Blob) {
+        const text = await blob.text();
+        const json = JSON.parse(text);
+        if (json.message) {
+          message = json.message;
+        }
+      } else if (error.response?.data?.message) {
+        message = error.response.data.message;
+      }
+    } catch {
+      // ignore
+    }
+    throw new Error(message);
   }
 };
 

@@ -217,7 +217,23 @@ export const previewDocument = async (fileId) => {
       contentType: response.headers?.["content-type"] || "",
     };
   } catch (error) {
-    throw new Error(error.response?.data?.message || "Không thể xem trước file");
+    // When responseType is "blob", the error body is a Blob — parse it to get the real message
+    let message = "Không thể xem trước file";
+    try {
+      const blob = error.response?.data;
+      if (blob instanceof Blob) {
+        const text = await blob.text();
+        const json = JSON.parse(text);
+        if (json.message) {
+          message = json.message;
+        }
+      } else if (error.response?.data?.message) {
+        message = error.response.data.message;
+      }
+    } catch {
+      // ignore parse errors — keep default message
+    }
+    throw new Error(message);
   }
 };
 
