@@ -185,11 +185,17 @@ const detectPreviewKind = ({ name = "", mimeType = "" }) => {
   const extension = getFileExtension(name);
   const mime = String(mimeType).toLowerCase();
 
-  if (mime.includes("pdf") || extension === "pdf") {
+  // Prioritize mimeType from the response — backend converts Office files to PDF,
+  // so the actual content-type is application/pdf even if the filename is .docx
+  if (mime.includes("pdf")) {
     return PREVIEW_KIND.PDF;
   }
 
-  if (mime.startsWith("image/") || ["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"].includes(extension)) {
+  if (extension === "pdf") {
+    return PREVIEW_KIND.PDF;
+  }
+
+  if (mime.startsWith("image/") || IMAGE_EXTENSIONS.has(extension)) {
     return PREVIEW_KIND.IMAGE;
   }
 
@@ -1560,14 +1566,14 @@ const MyDocuments = () => {
       )}
 
       {previewState.open && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-3 backdrop-blur-sm transition-opacity">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-2 sm:p-3 backdrop-blur-sm transition-opacity">
           <div
             className={`relative flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl transition-all duration-300 ${
               previewWindowState.minimized
                 ? "h-16 max-w-xl self-end"
                 : previewWindowState.maximized
-                  ? "h-[95vh] max-w-none"
-                  : "h-[90vh] max-w-6xl"
+                  ? "h-[98vh] w-[98vw] max-w-none"
+                  : "h-[92vh] max-w-7xl"
             }`}
           >
             {/* ── Fixed Header ── always visible ── */}
@@ -1651,11 +1657,11 @@ const MyDocuments = () => {
 
             {/* ── Content Area ── viewer + optional summary panel ── */}
             {!previewWindowState.minimized && (
-              <div className="relative min-h-0 flex-1 bg-slate-50 dark:bg-slate-900/50 p-3">
+              <div className="relative min-h-0 flex-1 bg-slate-50 dark:bg-slate-900/50 p-2 sm:p-3">
                 <div className="relative flex h-full gap-3">
                   {/* PDF / Image / Text / Office Viewer */}
                   <div
-                    className={`min-w-0 rounded-xl transition-all duration-300 ${
+                    className={`min-w-0 h-full rounded-xl transition-all duration-300 ${
                       summaryState.open
                         ? summaryPanelState.maximized
                           ? "lg:w-[58%]"
@@ -1677,14 +1683,16 @@ const MyDocuments = () => {
 
                     {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.PDF && previewState.objectUrl && (
                       <iframe
+                        key={`pdf-${summaryState.open}`}
                         title="PDF Preview"
-                        src={previewState.objectUrl}
+                        src={`${previewState.objectUrl}#toolbar=1&navpanes=0&view=FitH`}
                         className="h-full w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                        style={{ minHeight: 0 }}
                       />
                     )}
 
                     {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.IMAGE && previewState.objectUrl && (
-                      <div className="grid h-full place-items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+                      <div className="grid h-full place-items-center overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
                         <img
                           src={previewState.objectUrl}
                           alt={previewState.name}
@@ -1694,35 +1702,31 @@ const MyDocuments = () => {
                     )}
 
                     {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.TEXT && (
-                      <pre className="h-full overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-xs text-slate-700 dark:text-slate-300">
+                      <pre className="h-full overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-xs leading-relaxed text-slate-700 dark:text-slate-300">
                         {previewState.textContent}
                       </pre>
                     )}
 
                     {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.OFFICE && previewState.objectUrl && (
-                      <div className="h-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
-                        <iframe
-                          title="Office Preview"
-                          src={previewState.objectUrl}
-                          className="h-full w-full rounded-lg bg-white"
-                        />
-                      </div>
+                      <iframe
+                        key={`office-${summaryState.open}`}
+                        title="Office Preview"
+                        src={`${previewState.objectUrl}#toolbar=1&navpanes=0&view=FitH`}
+                        className="h-full w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                        style={{ minHeight: 0 }}
+                      />
                     )}
                   </div>
 
                   {/* Summary Panel (content only — no separate header) */}
                   <aside
-                    className={`overflow-hidden rounded-2xl border bg-white dark:bg-slate-800 shadow-xl transition-all duration-300 ${
+                    className={`overflow-hidden rounded-2xl border shadow-xl transition-all duration-300 ${
                       summaryState.open
-                        ? "translate-x-0 border-slate-200 dark:border-slate-700 opacity-100"
-                        : "pointer-events-none w-0 translate-x-4 border-transparent opacity-0"
-                    } ${
-                      summaryState.open
-                        ? summaryPanelState.maximized
-                          ? "lg:w-[42%]"
-                          : "lg:w-[32%]"
-                        : ""
-                    } absolute right-0 top-0 z-10 h-full w-[88%] max-w-sm lg:static lg:h-auto lg:max-w-none`}
+                        ? `translate-x-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 opacity-100 absolute right-0 top-0 z-10 h-full w-[88%] max-w-sm lg:static lg:h-auto lg:max-w-none ${
+                            summaryPanelState.maximized ? "lg:w-[42%]" : "lg:w-[32%]"
+                          }`
+                        : "pointer-events-none w-0 translate-x-4 border-transparent opacity-0 absolute right-0 top-0 z-10 h-full"
+                    }`}
                   >
                     {/* Summary panel sub-header (lightweight — file context only) */}
                     <div className="flex shrink-0 items-center justify-between border-b border-slate-200 dark:border-slate-700 px-4 py-3">

@@ -2503,8 +2503,8 @@ const AdminDashboard = () => {
               docPreviewWindowState.minimized
                 ? "h-16 max-w-xl self-end"
                 : docPreviewWindowState.maximized
-                  ? "h-[95vh] max-w-none"
-                  : "h-[90vh] max-w-6xl"
+                  ? "h-[98vh] w-[98vw] max-w-none"
+                  : "h-[92vh] max-w-7xl"
             } ${docPreviewWindowState.hovered ? "ring-2 ring-slate-300/80" : ""}`}
           >
             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
@@ -2579,13 +2579,14 @@ const AdminDashboard = () => {
                 {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.PDF && docPreviewState.objectUrl && (
                   <iframe
                     title="PDF Preview"
-                    src={docPreviewState.objectUrl}
+                    src={`${docPreviewState.objectUrl}#toolbar=1&navpanes=0&view=FitH`}
                     className="h-full w-full rounded-xl border border-slate-200 bg-white"
+                    style={{ minHeight: 0 }}
                   />
                 )}
 
                 {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.IMAGE && docPreviewState.objectUrl && (
-                  <div className="grid h-full place-items-center rounded-xl border border-slate-200 bg-white p-3">
+                  <div className="grid h-full place-items-center overflow-auto rounded-xl border border-slate-200 bg-white p-3">
                     <img
                       src={docPreviewState.objectUrl}
                       alt={docPreviewState.file?.name || "preview"}
@@ -2595,19 +2596,18 @@ const AdminDashboard = () => {
                 )}
 
                 {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.TEXT && (
-                  <pre className="h-full overflow-auto rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-700">
+                  <pre className="h-full overflow-auto rounded-xl border border-slate-200 bg-white p-4 text-xs leading-relaxed text-slate-700">
                     {docPreviewState.textContent || "Khong co noi dung"}
                   </pre>
                 )}
 
                 {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.OFFICE && docPreviewState.objectUrl && (
-                  <div className="h-full rounded-xl border border-slate-200 bg-white p-2">
-                    <iframe
-                      title="Office Preview"
-                      src={docPreviewState.objectUrl}
-                      className="h-full w-full rounded-lg"
-                    />
-                  </div>
+                  <iframe
+                    title="Office Preview"
+                    src={`${docPreviewState.objectUrl}#toolbar=1&navpanes=0&view=FitH`}
+                    className="h-full w-full rounded-xl border border-slate-200 bg-white"
+                    style={{ minHeight: 0 }}
+                  />
                 )}
               </div>
             )}
