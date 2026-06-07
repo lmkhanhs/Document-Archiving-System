@@ -7,7 +7,7 @@ import Register from "../pages/auth/Register";
 import MyDocuments from "../pages/documents/MyDocuments";
 import Trash from "../pages/documents/Trash";
 import Summarize from "../pages/documents/Summarize";
-import AdminDashboard from "../pages/admin/AdminDashboard";
+import AdminDashboard from "../pages/Admin/AdminDashboard";
 import Settings from "../pages/Settings";
 import { getRoles } from "../services/authService";
 

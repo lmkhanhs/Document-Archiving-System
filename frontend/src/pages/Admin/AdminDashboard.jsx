@@ -464,10 +464,9 @@ const AdminDashboard = () => {
   const [recentUploadsError, setRecentUploadsError] = useState("");
   const [topUploaders, setTopUploaders] = useState([]);
   const [isTopUploadersLoading, setIsTopUploadersLoading] = useState(false);
-  const [topUploadersError, setTopUploadersError] = useState("");
   const [documentsView, setDocumentsView] = useState("all");
   const [fileTypeFilter, setFileTypeFilter] = useState("all");
-  const [ownerFilter, setOwnerFilter] = useState("");
+  const [ownerFilter] = useState("");
   const [docDetail, setDocDetail] = useState(null);
   const [docPreviewState, setDocPreviewState] = useState({
     open: false,
@@ -683,7 +682,7 @@ const AdminDashboard = () => {
     return () => {
       isMounted = false;
     };
-  }, [activeMenu, statsReloadKey]);
+  }, [activeMenu, statsReloadKey, trendDateRange.start, trendDateRange.end]);
 
   useEffect(() => {
     if (activeMenu !== "users") {
@@ -911,7 +910,6 @@ const AdminDashboard = () => {
 
     let isMounted = true;
     setIsTopUploadersLoading(true);
-    setTopUploadersError("");
 
     getTopUploaders()
       .then((data) => {
@@ -919,10 +917,9 @@ const AdminDashboard = () => {
           setTopUploaders(data);
         }
       })
-      .catch((error) => {
+      .catch(() => {
         if (isMounted) {
           setTopUploaders([]);
-          setTopUploadersError(error.message || "Không thể tải dữ liệu");
         }
       })
       .finally(() => {
@@ -1601,25 +1598,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDocDownloadSummary = async (file) => {
-    if (!file) {
-      setToast("Khong tim thay tai lieu");
-      return;
-    }
-
-    if (file.summaryUrl) {
-      window.open(resolveFileUrl(file.summaryUrl), "_blank", "noopener");
-      return;
-    }
-
-    if (file.summary) {
-      const blob = new Blob([file.summary], { type: "text/plain;charset=utf-8" });
-      downloadBlob(blob, `${file.name || "summary"}.txt`);
-      return;
-    }
-
-    setToast("Chua co ket qua tom tat");
-  };
 
   const handleDocDownloadCurrentSummary = () => {
     if (docSummaryState.summaries.length === 0) {
