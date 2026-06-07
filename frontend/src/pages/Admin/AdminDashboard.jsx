@@ -267,7 +267,7 @@ const getFileIconMeta = ({ name = "", mimeType = "" }) => {
   }
 
   if (WORD_EXTENSIONS.has(extension) || mime.includes("word")) {
-    return { Icon: ArticleOutlinedIcon, className: "text-blue-600" };
+    return { Icon: ArticleOutlinedIcon, className: "text-blue-600 dark:text-blue-400" };
   }
 
   if (EXCEL_EXTENSIONS.has(extension) || mime.includes("excel") || mime.includes("spreadsheet")) {
@@ -283,10 +283,10 @@ const getFileIconMeta = ({ name = "", mimeType = "" }) => {
   }
 
   if (TEXT_EXTENSIONS.has(extension) || mime.startsWith("text/") || mime.includes("json")) {
-    return { Icon: CodeOutlinedIcon, className: "text-slate-600" };
+    return { Icon: CodeOutlinedIcon, className: "text-slate-600 dark:text-slate-400 dark:text-slate-500" };
   }
 
-  return { Icon: DescriptionOutlinedIcon, className: "text-blue-600" };
+  return { Icon: DescriptionOutlinedIcon, className: "text-blue-600 dark:text-blue-400" };
 };
 
 const resolveFileUrl = (fileUrl) => {
@@ -364,13 +364,13 @@ const statusBadgeMap = {
 };
 
 const roleBadgeMap = {
-  ADMIN: "bg-blue-50 text-blue-700 border-blue-200",
-  USER: "bg-slate-50 text-slate-700 border-slate-200",
+  ADMIN: "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200",
+  USER: "bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 border-slate-200",
 };
 
 const documentStatusBadgeMap = {
   ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  DELETED: "bg-amber-50 text-amber-700 border-amber-200",
+  DELETED: "bg-amber-50 dark:bg-amber-900/20 text-amber-700 border-amber-200",
 };
 
 const sidebarItems = [
@@ -1691,19 +1691,19 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white p-3 md:p-5">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-3 md:p-5">
       <style>{"@keyframes fadeUp{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}"}</style>
-      <div className="mx-auto flex min-h-[calc(100vh-24px)] max-w-[1500px] overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_20px_65px_rgba(27,78,163,0.12)] md:flex-row">
-        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 bg-slate-50/70 p-4 md:w-20 md:border-b-0 md:border-r lg:w-64">
+      <div className="mx-auto flex min-h-[calc(100vh-24px)] max-w-[1500px] overflow-hidden rounded-3xl border border-blue-100 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-[0_20px_65px_rgba(27,78,163,0.12)] dark:shadow-none md:flex-row">
+        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50/70 dark:bg-slate-800/40 p-4 md:w-20 md:border-b-0 md:border-r lg:w-64">
           <div className="flex items-center gap-3 px-1">
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-tr from-blue-700 to-sky-500 text-lg font-extrabold text-white">
               A
             </div>
             <div className="hidden lg:block">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700 dark:text-blue-400">
                 Admin Suite
               </div>
-              <div className="text-sm font-bold text-slate-700">Text Summary Control</div>
+              <div className="text-sm font-bold text-slate-700 dark:text-slate-200">Text Summary Control</div>
             </div>
           </div>
 
@@ -1720,7 +1720,7 @@ const AdminDashboard = () => {
                   className={`group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-semibold transition ${
                     isActive
                       ? "bg-blue-800 text-white shadow-sm ring-1 ring-blue-700"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-100"
                   }`}
                 >
                   <ItemIcon fontSize="small" />
@@ -1730,26 +1730,26 @@ const AdminDashboard = () => {
             })}
           </nav>
 
-          <div className="mt-auto rounded-2xl border border-blue-100 bg-white p-3">
-            <div className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+          <div className="mt-auto rounded-2xl border border-blue-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
               Tổng quan
             </div>
-            <div className="mt-2 text-sm font-semibold text-slate-700">
+            <div className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
               Chào mừng trở lại, {userName}
             </div>
-            <div className="mt-1 text-xs text-slate-500">
+            <div className="mt-1 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
               Chương trình giám sát hệ thống tóm tắt
             </div>
           </div>
         </aside>
 
         <main className="flex-1 p-4 md:p-6">
-          <header className="flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-center">
+          <header className="flex flex-col gap-4 border-b border-slate-100 dark:border-slate-700/50 pb-4 lg:flex-row lg:items-center">
             <div>
-              <div className="text-xs font-bold uppercase tracking-[0.2em] text-blue-700">
+              <div className="text-xs font-bold uppercase tracking-[0.2em] text-blue-700 dark:text-blue-400">
                 ADMIN DASHBOARD
               </div>
-              <div className="text-xl font-bold text-slate-800">
+              <div className="text-xl font-bold text-slate-800 dark:text-slate-100">
                 {activeMenu === "countries" ? "Quản lý quốc gia" : "Hệ thống lưu trữ tài liệu"}
               </div>
             </div>
@@ -1757,7 +1757,7 @@ const AdminDashboard = () => {
             <div className="flex flex-1 flex-wrap items-center gap-2 lg:justify-end">
               {activeMenu !== "users" && activeMenu !== "countries" && activeMenu !== "documents" && (
                 <div className="relative flex-1 min-w-[220px]">
-                  <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
@@ -1766,17 +1766,17 @@ const AdminDashboard = () => {
                         ? "Tìm theo tên tài liệu..."
                         : "Tìm kiếm người dùng, tài liệu..."
                     }
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 py-3 pl-11 pr-4 text-sm text-slate-700 dark:text-slate-200 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50 focus:bg-white dark:focus:bg-slate-800"
                   />
                 </div>
               )}
 
-              <div className="relative flex items-center gap-2 rounded-xl border border-slate-200 px-2 py-1.5">
+              <div className="relative flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 px-2 py-1.5">
                 <button
                   ref={userTriggerRef}
                   type="button"
                   onClick={handleUserMenuToggle}
-                  className="flex items-center gap-2 rounded-xl px-1.5 py-1 transition hover:bg-slate-50"
+                  className="flex items-center gap-2 rounded-xl px-1.5 py-1 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
                 >
                   {avatarUrl ? (
                     <img
@@ -1786,19 +1786,19 @@ const AdminDashboard = () => {
                       className="h-8 w-8 rounded-full border border-slate-200 object-cover"
                     />
                   ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-600">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">
                       {avatarLabel}
                     </div>
                   )}
                   <div className="text-left">
-                    <div className="text-sm font-semibold text-slate-800">{userName}</div>
-                    <div className="text-xs text-slate-500">Quản trị hệ thống</div>
+                    <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">{userName}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Quản trị hệ thống</div>
                   </div>
                 </button>
                 {isAdmin && isUserMenuOpen && (
                   <div
                     ref={userMenuRef}
-                    className="absolute right-0 top-full z-40 mt-2 w-64 animate-[fadeUp_160ms_ease-out] rounded-2xl border border-slate-200 bg-white p-2 shadow-xl"
+                    className="absolute right-0 top-full z-40 mt-2 w-64 animate-[fadeUp_160ms_ease-out] rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 shadow-xl"
                   >
                     {[
                       {
@@ -1826,7 +1826,7 @@ const AdminDashboard = () => {
                           key={item.key}
                           type="button"
                           onClick={item.onClick}
-                          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
                         >
                           <ItemIcon fontSize="small" />
                           {item.label}
@@ -1842,7 +1842,7 @@ const AdminDashboard = () => {
           {activeMenu === "users" ? (
             <section className="mt-6 space-y-4">
               <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
                   Quản lý tài khoản
                 </div>
                 <div className="text-lg font-bold text-slate-900">Danh sách người dùng</div>
@@ -1883,25 +1883,25 @@ const AdminDashboard = () => {
                     ].map((card) => (
                       <div
                         key={card.key}
-                        className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200"
+                        className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200"
                       >
                         <div className={`inline-flex items-center rounded-2xl bg-gradient-to-r px-3 py-1 text-xs font-semibold text-white ${card.tone}`}>
                           Báo cáo
                         </div>
-                        <div className="mt-3 text-sm font-semibold text-slate-600">{card.label}</div>
+                        <div className="mt-3 text-sm font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">{card.label}</div>
                         {isDashboardLoading ? (
                           <div className="mt-1 h-8 w-16 animate-pulse rounded-lg bg-slate-200" />
                         ) : (
                           <div className="mt-1 text-2xl font-bold text-slate-900">{card.value}</div>
                         )}
-                        <div className="mt-2 text-xs text-slate-500">{card.sub}</div>
+                        <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">{card.sub}</div>
                       </div>
                     ))}
                   </div>
 
                   <div className="grid gap-4 lg:grid-cols-2">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
+                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
                         Trạng thái tài khoản
                       </div>
                       <div className="mt-1 text-base font-bold text-slate-900">Phân bổ ACTIVE / LOCKED / DELETED</div>
@@ -1935,8 +1935,8 @@ const AdminDashboard = () => {
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
+                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
                         Vai trò người dùng
                       </div>
                       <div className="mt-1 text-base font-bold text-slate-900">Phân bố ADMIN / USER</div>
@@ -1971,27 +1971,27 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
                           Tăng trưởng người dùng
                         </div>
                         <div className="mt-1 text-base font-bold text-slate-900">Số lượng đăng ký theo thời gian</div>
                       </div>
 
                       <div className="flex flex-wrap items-end gap-2">
-                        <label className="flex flex-col text-xs font-semibold text-slate-500">
+                        <label className="flex flex-col text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">
                           Từ ngày
                           <input
                             type="date"
                             value={trendDateRange.start}
                             onChange={(event) => handleTrendStartChange(event.target.value)}
                             max={trendDateRange.end}
-                            className="mt-1 rounded-lg border border-slate-200 px-2 py-1.5 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-300"
+                            className="mt-1 rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50"
                           />
                         </label>
-                        <label className="flex flex-col text-xs font-semibold text-slate-500">
+                        <label className="flex flex-col text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">
                           Đến ngày
                           <input
                             type="date"
@@ -1999,7 +1999,7 @@ const AdminDashboard = () => {
                             onChange={(event) => handleTrendEndChange(event.target.value)}
                             min={trendDateRange.start}
                             max={toDateInputValue(today)}
-                            className="mt-1 rounded-lg border border-slate-200 px-2 py-1.5 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-300"
+                            className="mt-1 rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50"
                           />
                         </label>
                       </div>
@@ -2008,7 +2008,7 @@ const AdminDashboard = () => {
                     <div className="mt-4 h-[280px] w-full">
                       {isGrowthLoading ? (
                         <div className="flex h-full flex-col justify-end gap-1 px-4">
-                          <div className="h-full animate-pulse rounded-lg bg-slate-100" />
+                          <div className="h-full animate-pulse rounded-lg bg-slate-100 dark:bg-slate-700" />
                         </div>
                       ) : (
                         <ResponsiveContainer width="100%" height="100%">
@@ -2031,27 +2031,27 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
                     <div className="flex flex-wrap items-center gap-3 lg:flex-nowrap lg:justify-between">
                       <div className="relative w-full lg:max-w-[520px] lg:flex-1">
-                        <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                         <input
                           value={search}
                           onChange={(event) => setSearch(event.target.value)}
                           placeholder="Tìm theo username hoặc email..."
-                          className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
+                          className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 py-2.5 pl-11 pr-4 text-sm text-slate-700 dark:text-slate-200 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50 focus:bg-white dark:focus:bg-slate-800"
                         />
                       </div>
 
                       <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:justify-end">
-                        <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-1">
+                        <div className="inline-flex rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1">
                           <button
                             type="button"
                             onClick={() => setUsersView("active")}
                             className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
                               usersView === "active"
                                 ? "bg-blue-600 text-white"
-                                : "text-slate-600 hover:bg-slate-100"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 dark:bg-slate-700"
                             }`}
                           >
                             Đang hoạt động
@@ -2062,7 +2062,7 @@ const AdminDashboard = () => {
                             className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
                               usersView === "deleted"
                                 ? "bg-slate-900 text-white"
-                                : "text-slate-600 hover:bg-slate-100"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 dark:bg-slate-700"
                             }`}
                           >
                             Người dùng đã xóa
@@ -2072,7 +2072,7 @@ const AdminDashboard = () => {
                         <select
                           value={roleFilter}
                           onChange={(event) => setRoleFilter(event.target.value)}
-                          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+                          className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50"
                         >
                           <option value="all">Tất cả vai trò</option>
                           <option value="ADMIN">ADMIN</option>
@@ -2082,7 +2082,7 @@ const AdminDashboard = () => {
                         <select
                           value={statusFilter}
                           onChange={(event) => setStatusFilter(event.target.value)}
-                          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+                          className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50"
                         >
                           <option value="all">Tất cả trạng thái</option>
                           <option value="ACTIVE">ACTIVE</option>
@@ -2092,22 +2092,22 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="text-sm text-slate-600">
+                    <div className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-500">
                       {filteredUsers.length} nguoi dung
                     </div>
                     <button
                       type="button"
                       onClick={() => setUserReloadKey((prev) => prev + 1)}
-                      className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                      className="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
                     >
                       F5
                     </button>
                   </div>
 
                   {isUserLoading && (
-                    <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm font-semibold text-slate-500">
+                    <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 dark:bg-slate-800/50 px-4 py-6 text-center text-sm font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">
                       Dang tai danh sach nguoi dung...
                     </div>
                   )}
@@ -2119,7 +2119,7 @@ const AdminDashboard = () => {
                   )}
 
                   {!isUserLoading && !userError && filteredUsers.length === 0 && (
-                    <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-6 text-center text-sm font-semibold text-slate-500">
+                    <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 dark:bg-slate-800/50 px-4 py-6 text-center text-sm font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">
                       Không tìm thấy người dùng nào phù hợp.
                     </div>
                   )}
@@ -2128,7 +2128,7 @@ const AdminDashboard = () => {
                     <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
                       <div className="overflow-auto">
                         <table className="min-w-[960px] w-full text-left">
-                          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                          <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 dark:text-slate-500">
                             <tr>
                               <th className="px-4 py-3">Avatar</th>
                               <th className="px-4 py-3">Username</th>
@@ -2143,7 +2143,7 @@ const AdminDashboard = () => {
                             {filteredUsers.map((user) => (
                               <tr
                                 key={user.id}
-                                className="border-t border-slate-100 text-sm text-slate-700 transition hover:bg-blue-50/40"
+                                className="border-t border-slate-100 dark:border-slate-700/50 text-sm text-slate-700 dark:text-slate-200 transition hover:bg-blue-50/40"
                               >
                                 <td className="px-4 py-3">
                                   {user.thumbnailUrl ? (
@@ -2156,15 +2156,15 @@ const AdminDashboard = () => {
                                       className="h-9 w-9 rounded-full border border-slate-200 object-cover"
                                     />
                                   ) : (
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-600">
+                                    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">
                                       {getAvatarLabel(user.username || user.email)}
                                     </div>
                                   )}
                                 </td>
-                                <td className="px-4 py-3 font-semibold text-slate-800">
+                                <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">
                                   {user.username || "—"}
                                 </td>
-                                <td className="px-4 py-3 text-slate-600">
+                                <td className="px-4 py-3 text-slate-600 dark:text-slate-400 dark:text-slate-500">
                                   {user.email || "—"}
                                 </td>
                                 <td className="px-4 py-3">
@@ -2185,7 +2185,7 @@ const AdminDashboard = () => {
                                     {user.status}
                                   </span>
                                 </td>
-                                <td className="px-4 py-3 text-slate-600">
+                                <td className="px-4 py-3 text-slate-600 dark:text-slate-400 dark:text-slate-500">
                                   {formatDate(user.createdAt || user.createdDate || user.created_at)}
                                 </td>
                                 <td className="px-4 py-3">
@@ -2193,7 +2193,7 @@ const AdminDashboard = () => {
                                     <button
                                       type="button"
                                       onClick={() => setDetailUser(user)}
-                                      className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
+                                      className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-slate-600 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700/50 dark:bg-slate-700"
                                       title="Xem chi tiet"
                                       aria-label="Xem chi tiet"
                                     >
@@ -2202,7 +2202,7 @@ const AdminDashboard = () => {
                                     <button
                                       type="button"
                                       onClick={() => handleRoleDialogOpen(user)}
-                                      className="rounded-lg border border-slate-200 p-2 text-blue-600 transition hover:bg-blue-50"
+                                      className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-blue-600 dark:text-blue-400 transition hover:bg-blue-50"
                                       title="Cap nhat vai tro"
                                       aria-label="Cap nhat vai tro"
                                     >
@@ -2211,7 +2211,7 @@ const AdminDashboard = () => {
                                     <button
                                       type="button"
                                       onClick={() => handleToggleStatus(user)}
-                                      className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
+                                      className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-amber-600 transition hover:bg-amber-50"
                                       title={user.active ? "Khoa tai khoan" : "Mo khoa tai khoan"}
                                       aria-label={user.active ? "Khoa tai khoan" : "Mo khoa tai khoan"}
                                     >
@@ -2224,7 +2224,7 @@ const AdminDashboard = () => {
                                     <button
                                       type="button"
                                       onClick={() => handleSoftDeleteOpen(user)}
-                                      className="rounded-lg border border-slate-200 p-2 text-amber-600 transition hover:bg-amber-50"
+                                      className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-amber-600 transition hover:bg-amber-50"
                                       title="Xoa mem"
                                       aria-label="Xoa mem"
                                     >
@@ -2243,27 +2243,27 @@ const AdminDashboard = () => {
                 </>
               ) : (
                 <>
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
                     <div className="flex flex-wrap items-center gap-3 lg:flex-nowrap lg:justify-between">
                       <div className="relative w-full lg:max-w-[520px] lg:flex-1">
-                        <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <SearchOutlinedIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                         <input
                           value={search}
                           onChange={(event) => setSearch(event.target.value)}
                           placeholder="Tìm theo username hoặc email..."
-                          className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
+                          className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 py-2.5 pl-11 pr-4 text-sm text-slate-700 dark:text-slate-200 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50 focus:bg-white dark:focus:bg-slate-800"
                         />
                       </div>
 
                       <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:justify-end">
-                        <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-1">
+                        <div className="inline-flex rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1">
                           <button
                             type="button"
                             onClick={() => setUsersView("active")}
                             className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
                               usersView === "active"
                                 ? "bg-blue-600 text-white"
-                                : "text-slate-600 hover:bg-slate-100"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 dark:bg-slate-700"
                             }`}
                           >
                             Đang hoạt động
@@ -2274,7 +2274,7 @@ const AdminDashboard = () => {
                             className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
                               usersView === "deleted"
                                 ? "bg-slate-900 text-white"
-                                : "text-slate-600 hover:bg-slate-100"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 dark:bg-slate-700"
                             }`}
                           >
                             Người dùng đã xóa
@@ -2284,7 +2284,7 @@ const AdminDashboard = () => {
                         <select
                           value={roleFilter}
                           onChange={(event) => setRoleFilter(event.target.value)}
-                          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+                          className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50"
                         >
                           <option value="all">Tất cả vai trò</option>
                           <option value="ADMIN">ADMIN</option>
@@ -2294,7 +2294,7 @@ const AdminDashboard = () => {
                         <select
                           value={statusFilter}
                           onChange={(event) => setStatusFilter(event.target.value)}
-                          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+                          className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50"
                         >
                           <option value="all">Tất cả trạng thái</option>
                           <option value="ACTIVE">ACTIVE</option>
@@ -2370,23 +2370,23 @@ const AdminDashboard = () => {
       </div>
 
       {detailUser && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 dark:bg-black/70 p-3">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-2xl">
             <div className="flex items-start justify-between">
               <div>
-                <div className="text-lg font-semibold text-slate-800">Chi tiết người dùng</div>
-                <div className="mt-1 text-sm text-slate-500">Thông tin tài khoản</div>
+                <div className="text-lg font-semibold text-slate-800 dark:text-slate-100">Chi tiết người dùng</div>
+                <div className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">Thông tin tài khoản</div>
               </div>
               <button
                 type="button"
                 onClick={() => setDetailUser(null)}
-                className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
               >
                 Đóng
               </button>
             </div>
 
-            <div className="mt-4 space-y-3 text-sm text-slate-700">
+            <div className="mt-4 space-y-3 text-sm text-slate-700 dark:text-slate-200">
               <div className="flex items-center gap-3">
                 {detailUser.thumbnailUrl ? (
                   <img
@@ -2395,42 +2395,42 @@ const AdminDashboard = () => {
                     className="h-12 w-12 rounded-full border border-slate-200 object-cover"
                   />
                 ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-sm font-semibold text-slate-600">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-slate-100 dark:bg-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">
                     {getAvatarLabel(detailUser.username || detailUser.email)}
                   </div>
                 )}
                 <div>
-                  <div className="text-base font-semibold text-slate-800">
+                  <div className="text-base font-semibold text-slate-800 dark:text-slate-100">
                     {detailUser.username || "—"}
                   </div>
-                  <div className="text-xs text-slate-500">ID: {detailUser.id}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">ID: {detailUser.id}</div>
                 </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  <div className="text-xs text-slate-500">Email</div>
-                  <div className="font-semibold text-slate-700">{detailUser.email || "—"}</div>
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Email</div>
+                  <div className="font-semibold text-slate-700 dark:text-slate-200">{detailUser.email || "—"}</div>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  <div className="text-xs text-slate-500">Số điện thoại</div>
-                  <div className="font-semibold text-slate-700">{detailUser.phone || "—"}</div>
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Số điện thoại</div>
+                  <div className="font-semibold text-slate-700 dark:text-slate-200">{detailUser.phone || "—"}</div>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  <div className="text-xs text-slate-500">Vai trò</div>
-                  <div className="font-semibold text-slate-700">{detailUser.role}</div>
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Vai trò</div>
+                  <div className="font-semibold text-slate-700 dark:text-slate-200">{detailUser.role}</div>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  <div className="text-xs text-slate-500">Trạng thái</div>
-                  <div className="font-semibold text-slate-700">{detailUser.status}</div>
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Trạng thái</div>
+                  <div className="font-semibold text-slate-700 dark:text-slate-200">{detailUser.status}</div>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 sm:col-span-2">
-                  <div className="text-xs text-slate-500">Địa chỉ</div>
-                  <div className="font-semibold text-slate-700">{detailUser.address || "—"}</div>
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 sm:col-span-2">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Địa chỉ</div>
+                  <div className="font-semibold text-slate-700 dark:text-slate-200">{detailUser.address || "—"}</div>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 sm:col-span-2">
-                  <div className="text-xs text-slate-500">Ngày tạo</div>
-                  <div className="font-semibold text-slate-700">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 sm:col-span-2">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Ngày tạo</div>
+                  <div className="font-semibold text-slate-700 dark:text-slate-200">
                     {formatDate(detailUser.createdAt || detailUser.createdDate || detailUser.created_at)}
                   </div>
                 </div>
@@ -2441,52 +2441,52 @@ const AdminDashboard = () => {
       )}
 
       {docDetail && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3">
-          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 dark:bg-black/70 p-3">
+          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-2xl">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="text-lg font-semibold text-slate-800">Chi tiet tai lieu</div>
-                <div className="mt-1 text-sm text-slate-500">Thong tin file</div>
+                <div className="text-lg font-semibold text-slate-800 dark:text-slate-100">Chi tiet tai lieu</div>
+                <div className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">Thong tin file</div>
               </div>
               <button
                 type="button"
                 onClick={() => setDocDetail(null)}
-                className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50"
+                className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-slate-600 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
                 aria-label="Dong"
               >
                 <CloseOutlinedIcon fontSize="small" />
               </button>
             </div>
 
-            <div className="mt-4 space-y-3 text-sm text-slate-700">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                <div className="text-xs text-slate-500">Ten tai lieu</div>
-                <div className="font-semibold text-slate-800">{docDetail.name}</div>
+            <div className="mt-4 space-y-3 text-sm text-slate-700 dark:text-slate-200">
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2">
+                <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Ten tai lieu</div>
+                <div className="font-semibold text-slate-800 dark:text-slate-100">{docDetail.name}</div>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  <div className="text-xs text-slate-500">Chu so huu</div>
-                  <div className="font-semibold text-slate-700">{docDetail.ownerLabel}</div>
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Chu so huu</div>
+                  <div className="font-semibold text-slate-700 dark:text-slate-200">{docDetail.ownerLabel}</div>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  <div className="text-xs text-slate-500">Loai file</div>
-                  <div className="font-semibold text-slate-700">{docDetail.typeLabel}</div>
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Loai file</div>
+                  <div className="font-semibold text-slate-700 dark:text-slate-200">{docDetail.typeLabel}</div>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  <div className="text-xs text-slate-500">Kich thuoc</div>
-                  <div className="font-semibold text-slate-700">{formatFileSize(docDetail.size)}</div>
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Kich thuoc</div>
+                  <div className="font-semibold text-slate-700 dark:text-slate-200">{formatFileSize(docDetail.size)}</div>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  <div className="text-xs text-slate-500">Ngay upload</div>
-                  <div className="font-semibold text-slate-700">{formatDateTime(docDetail.createdAt)}</div>
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Ngay upload</div>
+                  <div className="font-semibold text-slate-700 dark:text-slate-200">{formatDateTime(docDetail.createdAt)}</div>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 sm:col-span-2">
-                  <div className="text-xs text-slate-500">Trang thai</div>
-                  <div className="font-semibold text-slate-700">{docDetail.status}</div>
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 sm:col-span-2">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Trang thai</div>
+                  <div className="font-semibold text-slate-700 dark:text-slate-200">{docDetail.status}</div>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 sm:col-span-2">
-                  <div className="text-xs text-slate-500">Duong dan</div>
-                  <div className="break-all font-semibold text-slate-700">{docDetail.resolvedUrl || "—"}</div>
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 sm:col-span-2">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Duong dan</div>
+                  <div className="break-all font-semibold text-slate-700 dark:text-slate-200">{docDetail.resolvedUrl || "—"}</div>
                 </div>
               </div>
             </div>
@@ -2495,25 +2495,25 @@ const AdminDashboard = () => {
       )}
 
       {docPreviewState.open && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 p-3">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-3">
           <div
             onMouseEnter={() => setDocPreviewWindowState((prev) => ({ ...prev, hovered: true }))}
             onMouseLeave={() => setDocPreviewWindowState((prev) => ({ ...prev, hovered: false }))}
-            className={`relative flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl transition-all ${
+            className={`relative flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl transition-all ${
               docPreviewWindowState.minimized
                 ? "h-16 max-w-xl self-end"
                 : docPreviewWindowState.maximized
                   ? "h-[98vh] w-[98vw] max-w-none"
                   : "h-[92vh] max-w-7xl"
-            } ${docPreviewWindowState.hovered ? "ring-2 ring-slate-300/80" : ""}`}
+            } ${docPreviewWindowState.hovered ? "ring-2 ring-slate-300/80 dark:ring-slate-600/80" : ""}`}
           >
-            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-4 py-3">
               <div>
-                <div className="text-sm font-semibold text-slate-800">Xem truoc file</div>
-                <div className="text-xs text-slate-500">{docPreviewState.file?.name}</div>
+                <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">Xem truoc file</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">{docPreviewState.file?.name}</div>
               </div>
               <div
-                className={`flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 transition-all duration-200 ${
+                className={`flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1 transition-all duration-200 ${
                   docPreviewWindowState.hovered
                     ? "translate-y-0 opacity-100"
                     : "pointer-events-none -translate-y-1 opacity-0"
@@ -2522,7 +2522,7 @@ const AdminDashboard = () => {
                 <button
                   type="button"
                   onClick={() => setDocPreviewWindowState((prev) => ({ ...prev, minimized: true, hovered: false }))}
-                  className="rounded-md p-1 text-slate-600 transition hover:bg-slate-100"
+                  className="rounded-md p-1 text-slate-600 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700/50 dark:bg-slate-700"
                   aria-label="Minimize preview"
                   title="Thu nho"
                 >
@@ -2534,7 +2534,7 @@ const AdminDashboard = () => {
                     ...prev,
                     maximized: !prev.maximized,
                   }))}
-                  className="rounded-md p-1 text-slate-600 transition hover:bg-slate-100"
+                  className="rounded-md p-1 text-slate-600 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700/50 dark:bg-slate-700"
                   aria-label="Toggle maximize preview"
                   title={docPreviewWindowState.maximized ? "Khoi phuc" : "Phong to"}
                 >
@@ -2547,7 +2547,7 @@ const AdminDashboard = () => {
                 <button
                   type="button"
                   onClick={handleDocPreviewClose}
-                  className="rounded-md p-1 text-slate-600 transition hover:bg-red-100 hover:text-red-700"
+                  className="rounded-md p-1 text-slate-600 dark:text-slate-400 transition hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400"
                   aria-label="Close preview"
                   title="Dong"
                 >
@@ -2557,21 +2557,21 @@ const AdminDashboard = () => {
             </div>
 
             {!docPreviewWindowState.minimized && (
-              <div className="relative min-h-0 flex-1 bg-slate-50 p-3">
+              <div className="relative min-h-0 flex-1 bg-slate-50 dark:bg-slate-800/50 p-3">
                 <div
-                  className={`pointer-events-none absolute inset-0 bg-slate-500/10 transition-opacity duration-200 ${
+                  className={`pointer-events-none absolute inset-0 bg-slate-500/10 dark:bg-slate-400/10 transition-opacity duration-200 ${
                     docPreviewWindowState.hovered ? "opacity-100" : "opacity-0"
                   }`}
                 />
 
                 {docPreviewState.loading && (
-                  <div className="grid h-full place-items-center rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-600">
+                  <div className="grid h-full place-items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">
                     Dang tai noi dung...
                   </div>
                 )}
 
                 {!docPreviewState.loading && docPreviewState.error && (
-                  <div className="grid h-full place-items-center rounded-xl border border-amber-100 bg-amber-50 text-sm font-semibold text-amber-800">
+                  <div className="grid h-full place-items-center rounded-xl border border-amber-100 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/20 text-sm font-semibold text-amber-800 dark:text-amber-400">
                     {docPreviewState.error}
                   </div>
                 )}
@@ -2580,18 +2580,18 @@ const AdminDashboard = () => {
                   <object
                     data={`${docPreviewState.objectUrl}#navpanes=0&view=FitH`}
                     type="application/pdf"
-                    className="h-full w-full rounded-xl border border-slate-200 bg-white"
+                    className="h-full w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                     style={{ minHeight: 0 }}
                   >
-                    <div className="grid h-full place-items-center text-sm text-slate-500">
+                    <div className="grid h-full place-items-center text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
                       Trình duyệt không hỗ trợ xem PDF.
-                      <a href={docPreviewState.objectUrl} download className="mt-2 text-blue-600 underline">Tải xuống file</a>
+                      <a href={docPreviewState.objectUrl} download className="mt-2 text-blue-600 dark:text-blue-400 underline">Tải xuống file</a>
                     </div>
                   </object>
                 )}
 
                 {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.IMAGE && docPreviewState.objectUrl && (
-                  <div className="grid h-full place-items-center overflow-auto rounded-xl border border-slate-200 bg-white p-3">
+                  <div className="grid h-full place-items-center overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
                     <img
                       src={docPreviewState.objectUrl}
                       alt={docPreviewState.file?.name || "preview"}
@@ -2601,7 +2601,7 @@ const AdminDashboard = () => {
                 )}
 
                 {!docPreviewState.loading && !docPreviewState.error && docPreviewState.kind === PREVIEW_KIND.TEXT && (
-                  <pre className="h-full overflow-auto rounded-xl border border-slate-200 bg-white p-4 text-xs leading-relaxed text-slate-700">
+                  <pre className="h-full overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-xs leading-relaxed text-slate-700 dark:text-slate-200">
                     {docPreviewState.textContent || "Khong co noi dung"}
                   </pre>
                 )}
@@ -2610,12 +2610,12 @@ const AdminDashboard = () => {
                   <object
                     data={`${docPreviewState.objectUrl}#navpanes=0&view=FitH`}
                     type="application/pdf"
-                    className="h-full w-full rounded-xl border border-slate-200 bg-white"
+                    className="h-full w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                     style={{ minHeight: 0 }}
                   >
-                    <div className="grid h-full place-items-center text-sm text-slate-500">
+                    <div className="grid h-full place-items-center text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
                       Trình duyệt không hỗ trợ xem file.
-                      <a href={docPreviewState.objectUrl} download className="mt-2 text-blue-600 underline">Tải xuống file</a>
+                      <a href={docPreviewState.objectUrl} download className="mt-2 text-blue-600 dark:text-blue-400 underline">Tải xuống file</a>
                     </div>
                   </object>
                 )}
@@ -2624,14 +2624,14 @@ const AdminDashboard = () => {
 
             {docPreviewWindowState.minimized && (
               <div className="flex items-center justify-between px-4 py-2.5">
-                <div className="truncate text-sm font-semibold text-slate-700">
+                <div className="truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
                   {docPreviewState.file?.name}
                 </div>
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => setDocPreviewWindowState((prev) => ({ ...prev, minimized: false }))}
-                    className="rounded-md p-1 text-slate-600 transition hover:bg-slate-100"
+                    className="rounded-md p-1 text-slate-600 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700/50 dark:bg-slate-700"
                     title="Mo lai"
                   >
                     <CropSquareOutlinedIcon fontSize="small" />
@@ -2639,7 +2639,7 @@ const AdminDashboard = () => {
                   <button
                     type="button"
                     onClick={handleDocPreviewClose}
-                    className="rounded-md p-1 text-slate-600 transition hover:bg-red-100 hover:text-red-700"
+                    className="rounded-md p-1 text-slate-600 dark:text-slate-400 transition hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400"
                     title="Dong"
                   >
                     <CloseOutlinedIcon fontSize="small" />
@@ -2652,17 +2652,17 @@ const AdminDashboard = () => {
       )}
 
       {docSummaryState.open && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 p-3">
-          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-3">
+          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-2xl">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="text-lg font-semibold text-slate-800">Ket qua tom tat</div>
-                <div className="mt-1 text-sm text-slate-500">{docSummaryState.file?.name}</div>
+                <div className="text-lg font-semibold text-slate-800 dark:text-slate-100">Ket qua tom tat</div>
+                <div className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">{docSummaryState.file?.name}</div>
               </div>
               <button
                 type="button"
                 onClick={handleDocSummaryClose}
-                className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-50"
+                className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-slate-600 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
                 aria-label="Dong"
               >
                 <CloseOutlinedIcon fontSize="small" />
@@ -2671,16 +2671,16 @@ const AdminDashboard = () => {
 
             <div className="mt-4 space-y-3">
               {(docSummaryState.status === "connecting" || docSummaryState.status === "processing") && (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-600">
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-4 text-sm font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">
                   {docSummaryState.status === "connecting" ? "Dang ket noi AI..." : "Dang tom tat..."}
                 </div>
               )}
 
               {docSummaryState.status === "processing" && docSummaryState.progress.total > 0 && (
                 <div>
-                  <div className="mb-2 flex items-center justify-between text-xs font-semibold text-slate-600">
+                  <div className="mb-2 flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">
                     <span>Tien trinh xu ly</span>
-                    <span className="text-blue-600">
+                    <span className="text-blue-600 dark:text-blue-400">
                       {Math.round((docSummaryState.progress.current / docSummaryState.progress.total) * 100)}%
                     </span>
                   </div>
@@ -2699,18 +2699,18 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              <div className="max-h-[60vh] overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+              <div className="max-h-[60vh] overflow-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 text-sm text-slate-700 dark:text-slate-200">
                 {docSummaryState.summaries.length > 0 ? (
                   docSummaryState.summaries.map((text, idx) => (
                     <div
                       key={`${text.slice(0, 12)}-${idx}`}
-                      className="relative mb-3 pl-5 leading-relaxed text-slate-700 before:absolute before:left-0 before:top-2 before:h-2 before:w-2 before:rounded-full before:bg-blue-500"
+                      className="relative mb-3 pl-5 leading-relaxed text-slate-700 dark:text-slate-200 before:absolute before:left-0 before:top-2 before:h-2 before:w-2 before:rounded-full before:bg-blue-500"
                     >
                       {text}
                     </div>
                   ))
                 ) : (
-                  <div className="text-sm text-slate-500">Chua co ket qua tom tat.</div>
+                  <div className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">Chua co ket qua tom tat.</div>
                 )}
                 <div ref={docSummaryEndRef} />
               </div>
@@ -2734,7 +2734,7 @@ const AdminDashboard = () => {
               <button
                 type="button"
                 onClick={handleDocSummaryClose}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
               >
                 Dong
               </button>
@@ -2744,10 +2744,10 @@ const AdminDashboard = () => {
       )}
 
       {docRestoreDialog.open && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 p-3">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
-            <div className="text-lg font-semibold text-slate-800">Khoi phuc tai lieu</div>
-            <div className="mt-2 text-sm text-slate-600">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-3">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-2xl">
+            <div className="text-lg font-semibold text-slate-800 dark:text-slate-100">Khoi phuc tai lieu</div>
+            <div className="mt-2 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-500">
               Ban co muon khoi phuc tai lieu nay khong?
             </div>
 
@@ -2755,7 +2755,7 @@ const AdminDashboard = () => {
               <button
                 type="button"
                 onClick={closeDocRestoreDialog}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
               >
                 Huy
               </button>
@@ -2773,12 +2773,12 @@ const AdminDashboard = () => {
       )}
 
       {docDeleteDialog.open && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 p-3">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
-            <div className="text-lg font-semibold text-slate-800">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-3">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-2xl">
+            <div className="text-lg font-semibold text-slate-800 dark:text-slate-100">
               {docDeleteDialog.mode === "hard" ? "Xoa vinh vien" : "Xoa mem tai lieu"}
             </div>
-            <div className="mt-2 text-sm text-slate-600">
+            <div className="mt-2 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-500">
               {docDeleteDialog.mode === "hard"
                 ? "Canh bao: Hanh dong nay se xoa vinh vien tai lieu khoi he thong va khong the khoi phuc."
                 : "Ban co chac muon dua tai lieu nay vao thung rac khong?"}
@@ -2788,7 +2788,7 @@ const AdminDashboard = () => {
               <button
                 type="button"
                 onClick={closeDocDeleteDialog}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
               >
                 Huy
               </button>
@@ -2812,17 +2812,17 @@ const AdminDashboard = () => {
       )}
 
       {roleDialog.open && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
-            <div className="text-lg font-semibold text-slate-800">Cap nhat vai tro</div>
-            <div className="mt-1 text-sm text-slate-500">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 dark:bg-black/70 p-3">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-2xl">
+            <div className="text-lg font-semibold text-slate-800 dark:text-slate-100">Cap nhat vai tro</div>
+            <div className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
               {roleDialog.user?.username || "Nguoi dung"}
             </div>
 
             <select
               value={roleDialog.role}
               onChange={(event) => setRoleDialog((prev) => ({ ...prev, role: event.target.value }))}
-              className="mt-4 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-blue-300"
+              className="mt-4 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 outline-none focus:border-blue-300 dark:focus:border-blue-500/50"
             >
               <option value="ADMIN">ADMIN</option>
               <option value="USER">USER</option>
@@ -2832,7 +2832,7 @@ const AdminDashboard = () => {
               <button
                 type="button"
                 onClick={handleRoleDialogClose}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
               >
                 Huy
               </button>
@@ -2850,10 +2850,10 @@ const AdminDashboard = () => {
       )}
 
       {softDeleteDialog.open && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-3">
-          <div className="w-full max-w-md animate-[fadeUp_160ms_ease-out] rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
-            <div className="text-lg font-semibold text-slate-800">Xoa mem nguoi dung</div>
-            <div className="mt-2 text-sm text-slate-600">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 dark:bg-black/70 p-3">
+          <div className="w-full max-w-md animate-[fadeUp_160ms_ease-out] rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-2xl">
+            <div className="text-lg font-semibold text-slate-800 dark:text-slate-100">Xoa mem nguoi dung</div>
+            <div className="mt-2 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-500">
               Ban co chac muon xoa mem nguoi dung nay khong?
             </div>
 
@@ -2861,7 +2861,7 @@ const AdminDashboard = () => {
               <button
                 type="button"
                 onClick={handleSoftDeleteClose}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
               >
                 Huy
               </button>

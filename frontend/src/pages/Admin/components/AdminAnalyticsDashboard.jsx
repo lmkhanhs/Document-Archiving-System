@@ -122,7 +122,7 @@ const analyticsSummaryCardsTemplate = [
     format: "number",
     label: "Tổng số người dùng",
     Icon: GroupsOutlinedIcon,
-    tone: "bg-blue-50 text-blue-700",
+    tone: "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400",
   },
   {
     key: "documents",
@@ -183,7 +183,7 @@ const defaultFileTypeData = [
 
 const badgeClassMap = {
   SUCCESS: "border-emerald-100 bg-emerald-50 text-emerald-700",
-  WARNING: "border-amber-100 bg-amber-50 text-amber-700",
+  WARNING: "border-amber-100 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/20 text-amber-700",
   ERROR: "border-rose-100 bg-rose-50 text-rose-700",
 };
 
@@ -200,7 +200,7 @@ const activityIconMap = {
 };
 
 const AnalyticsCard = ({ children, className = "" }) => (
-  <div className={`rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md ${className}`}>
+  <div className={`rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm transition hover:shadow-md ${className}`}>
     {children}
   </div>
 );
@@ -211,7 +211,7 @@ const AnalyticsTooltip = ({ active, payload, label }) => {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-lg">
+    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-lg">
       <div>{label}</div>
       <div className="mt-1 text-blue-700">{formatNumber(payload[0]?.value)} lượt</div>
     </div>
@@ -442,7 +442,7 @@ const AdminAnalyticsDashboard = () => {
               <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.tone}`}>
                 <Icon fontSize="small" />
               </div>
-              <div className="mt-3 min-h-[32px] text-xs font-semibold text-slate-600">{card.label}</div>
+              <div className="mt-3 min-h-[32px] text-xs font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">{card.label}</div>
               <div className="mt-2 flex h-8 items-center text-2xl font-black text-slate-950">
                 {displayValue}
               </div>
@@ -455,7 +455,7 @@ const AdminAnalyticsDashboard = () => {
         <AnalyticsCard className="p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-base font-bold text-slate-900">Báo cáo: Xu hướng tóm tắt theo thời gian</div>
-            <div className="flex flex-wrap items-center gap-1 rounded-xl bg-slate-50 p-1 text-xs font-semibold text-slate-600">
+            <div className="flex flex-wrap items-center gap-1 rounded-xl bg-slate-50 dark:bg-slate-800/50 p-1 text-xs font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">
               {timeRangeOptions.slice(1, 3).map((item) => (
                 <button
                   key={item.label}
@@ -463,32 +463,32 @@ const AdminAnalyticsDashboard = () => {
                   onClick={() => handleTrendRangeChange(item)}
                   className={`rounded-lg px-3 py-1.5 transition ${
                     selectedRange === item.label
-                      ? "border border-blue-200 bg-blue-50 text-blue-700 shadow-sm"
-                      : "hover:bg-white hover:text-slate-900"
+                      ? "border border-blue-200 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 shadow-sm"
+                      : "hover:bg-white hover:text-slate-900 dark:hover:text-slate-100"
                   }`}
                 >
                   {item.days} ngày
                 </button>
               ))}
-              <label className="flex items-center gap-1 rounded-lg bg-white px-2 py-1 text-slate-600 ring-1 ring-slate-200">
+              <label className="flex items-center gap-1 rounded-lg bg-white px-2 py-1 text-slate-600 dark:text-slate-400 ring-1 ring-slate-200">
                 <input
                   type="number"
                   min="1"
                   value={customTrendDays}
                   onChange={handleCustomTrendDaysChange}
-                  className="w-14 bg-transparent text-center text-xs font-bold text-slate-700 outline-none"
+                  className="w-14 bg-transparent text-center text-xs font-bold text-slate-700 dark:text-slate-200 outline-none"
                   aria-label="Số ngày tùy chọn"
                 />
                 <span>ngày</span>
               </label>
-              <span className="px-1 text-lg leading-none text-slate-500">...</span>
+              <span className="px-1 text-lg leading-none text-slate-500 dark:text-slate-400 dark:text-slate-500">...</span>
             </div>
           </div>
 
           <div className="mt-4 h-[260px] w-full">
             {isTrendLoading ? (
-              <div className="flex h-full flex-col justify-end gap-3 rounded-2xl bg-slate-50 p-4">
-                <div className="h-full animate-pulse rounded-xl bg-slate-100" />
+              <div className="flex h-full flex-col justify-end gap-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-4">
+                <div className="h-full animate-pulse rounded-xl bg-slate-100 dark:bg-slate-700" />
                 <div className="grid grid-cols-7 gap-2">
                   {Array.from({ length: 7 }).map((_, index) => (
                     <div key={index} className="h-2 animate-pulse rounded bg-slate-200" />
@@ -496,7 +496,7 @@ const AdminAnalyticsDashboard = () => {
                 </div>
               </div>
             ) : trendError || summaryTrendData.length === 0 ? (
-              <div className="grid h-full place-items-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm font-semibold text-slate-500">
+              <div className="grid h-full place-items-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">
                 Không có dữ liệu
               </div>
             ) : (
@@ -530,17 +530,17 @@ const AdminAnalyticsDashboard = () => {
         <AnalyticsCard className="p-4">
           <div className="mb-3 flex items-center justify-between">
             <div className="text-sm font-black uppercase text-slate-900">Phân tích loại tài liệu</div>
-            <div className="text-xs font-semibold text-slate-500">(Bar Chart)</div>
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">(Bar Chart)</div>
           </div>
           <div className="h-[280px]">
             {isDocTypeLoading ? (
-              <div className="flex h-full flex-col justify-end gap-3 rounded-2xl bg-slate-50 p-4">
+              <div className="flex h-full flex-col justify-end gap-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-4">
                 <div className="flex h-full items-end justify-between gap-4 px-6 pb-2">
                   {[1, 2, 3, 4].map((_, index) => (
                     <div key={index} className="w-16 animate-pulse rounded-t-lg bg-slate-200" style={{ height: `${Math.max(20, Math.random() * 100)}%`, animationDelay: `${index * 0.15}s` }} />
                   ))}
                 </div>
-                <div className="flex justify-between border-t border-slate-200 px-6 pt-3">
+                <div className="flex justify-between border-t border-slate-200 dark:border-slate-700 px-6 pt-3">
                   {[1, 2, 3, 4].map((_, index) => (
                     <div key={index} className="h-3 w-10 animate-pulse rounded bg-slate-200" style={{ animationDelay: `${index * 0.15}s` }} />
                   ))}
@@ -572,7 +572,7 @@ const AdminAnalyticsDashboard = () => {
           <div className="mb-3 text-sm font-black uppercase text-slate-900">Top người dùng hoạt động nhiều nhất</div>
           <div className="overflow-auto rounded-xl border border-slate-100">
             <table className="min-w-[560px] w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs font-bold uppercase text-slate-500">
+              <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs font-bold uppercase text-slate-500 dark:text-slate-400 dark:text-slate-500">
                 <tr>
                   <th className="px-3 py-2">Người dùng</th>
                   <th className="px-3 py-2">Số tài liệu đã tải</th>
@@ -583,7 +583,7 @@ const AdminAnalyticsDashboard = () => {
               <tbody>
                 {isTopUsersLoading ? (
                   Array.from({ length: 5 }).map((_, index) => (
-                    <tr key={`skeleton-${index}`} className="border-t border-slate-100">
+                    <tr key={`skeleton-${index}`} className="border-t border-slate-100 dark:border-slate-700/50">
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-2">
                           <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-slate-200"></div>
@@ -597,22 +597,22 @@ const AdminAnalyticsDashboard = () => {
                   ))
                 ) : topUsersError || topUsersData.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-3 py-8 text-center text-sm font-semibold text-slate-500">
+                    <td colSpan={4} className="px-3 py-8 text-center text-sm font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">
                       Không có dữ liệu
                     </td>
                   </tr>
                 ) : (
                   topUsersData.map((user) => (
-                    <tr key={user.userId} className="border-t border-slate-100 transition hover:bg-blue-50/40">
+                    <tr key={user.userId} className="border-t border-slate-100 dark:border-slate-700/50 transition hover:bg-blue-50/40">
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-2">
                           <UserAvatar user={user} />
-                          <span className="font-semibold text-slate-800">{user.username}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-100">{user.username}</span>
                         </div>
                       </td>
-                      <td className="px-3 py-2 font-semibold text-slate-600">{formatNumber(user.uploadedDocuments)}</td>
-                      <td className="px-3 py-2 font-semibold text-slate-600">{formatNumber(user.summaryCount)}</td>
-                      <td className="px-3 py-2 text-slate-500">{formatRelativeTime(user.lastActiveAt)}</td>
+                      <td className="px-3 py-2 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">{formatNumber(user.uploadedDocuments)}</td>
+                      <td className="px-3 py-2 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">{formatNumber(user.summaryCount)}</td>
+                      <td className="px-3 py-2 text-slate-500 dark:text-slate-400 dark:text-slate-500">{formatRelativeTime(user.lastActiveAt)}</td>
                     </tr>
                   ))
                 )}
@@ -628,7 +628,7 @@ const AdminAnalyticsDashboard = () => {
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-[14px] font-[600] leading-[1.4] text-[#64748b]">Tỷ lệ thành công</div>
-              <div className="mt-0.5 flex items-center truncate text-sm font-semibold text-slate-800">
+              <div className="mt-0.5 flex items-center truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
                 {isOverviewLoading ? (
                   <span className="flex h-[28px] items-center gap-1.5">
                     <span className="inline-block h-2.5 w-2.5 animate-bounce rounded-full bg-slate-300"></span>
@@ -648,7 +648,7 @@ const AdminAnalyticsDashboard = () => {
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-[14px] font-[600] leading-[1.4] text-[#64748b]">Thời gian xử lý trung bình</div>
-              <div className="mt-0.5 flex items-center truncate text-sm font-semibold text-slate-800">
+              <div className="mt-0.5 flex items-center truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
                 {isOverviewLoading ? (
                   <span className="flex h-[28px] items-center gap-1.5">
                     <span className="inline-block h-2.5 w-2.5 animate-bounce rounded-full bg-slate-300"></span>
@@ -663,12 +663,12 @@ const AdminAnalyticsDashboard = () => {
           </AnalyticsCard>
           
           <AnalyticsCard className="flex items-center gap-4 p-5">
-            <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+            <div className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-700">
               <StarRoundedIcon />
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-[14px] font-[600] leading-[1.4] text-[#64748b]">Đánh giá trung bình từ người dùng</div>
-              <div className="mt-0.5 flex items-center truncate text-sm font-semibold text-slate-800">
+              <div className="mt-0.5 flex items-center truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
                 {isOverviewLoading ? (
                   <span className="flex h-[28px] items-center gap-1.5">
                     <span className="inline-block h-2.5 w-2.5 animate-bounce rounded-full bg-slate-300"></span>
@@ -695,24 +695,24 @@ const AdminAnalyticsDashboard = () => {
               </div>
             ))
           ) : activitiesError || activitiesData.length === 0 ? (
-            <div className="col-span-full py-6 text-center text-sm font-semibold text-slate-500">
+            <div className="col-span-full py-6 text-center text-sm font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">
               Không có hoạt động gần đây
             </div>
           ) : (
             activitiesData.map((log) => {
               const Icon = activityIconMap[log.status] || activityIconMap["SUCCESS"];
-              const toneClass = log.status === "SUCCESS" ? "bg-emerald-50 text-emerald-700" : log.status === "WARNING" ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-700";
+              const toneClass = log.status === "SUCCESS" ? "bg-emerald-50 text-emerald-700" : log.status === "WARNING" ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700" : "bg-rose-50 text-rose-700";
 
               return (
-                <div key={log.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-white px-3 py-2 text-sm transition hover:bg-slate-50">
+                <div key={log.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-white px-3 py-2 text-sm transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50">
                   <div className="flex min-w-0 items-center gap-3">
                     <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${toneClass}`}>
                       <Icon fontSize="small" />
                     </div>
-                    <div className="truncate font-semibold text-slate-700" title={log.title}>{log.title}</div>
+                    <div className="truncate font-semibold text-slate-700 dark:text-slate-200" title={log.title}>{log.title}</div>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <span className="text-xs font-semibold text-slate-500">{formatRelativeTime(log.createdAt)}</span>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">{formatRelativeTime(log.createdAt)}</span>
                     <span className={`rounded-full border px-2 py-0.5 text-[11px] font-bold ${badgeClassMap[log.status] || badgeClassMap["SUCCESS"]}`}>
                       {badgeLabelMap[log.status] || "Thành công"}
                     </span>

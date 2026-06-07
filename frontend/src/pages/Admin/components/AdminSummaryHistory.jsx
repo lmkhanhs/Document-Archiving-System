@@ -86,8 +86,8 @@ const TrendTooltip = ({ active, payload, label }) => {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-lg">
-      <div className="font-bold text-slate-800">{label}</div>
+    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm shadow-lg">
+      <div className="font-bold text-slate-800 dark:text-slate-100">{label}</div>
       <div className="mt-1 font-semibold text-blue-700">
         Tóm tắt: {formatStatValue(payload[0]?.value)} lượt
       </div>
@@ -125,7 +125,7 @@ const statusLabelMap = {
 
 const statusClassMap = {
   COMPLETED: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  PROCESSING: "border-amber-200 bg-amber-50 text-amber-700",
+  PROCESSING: "border-amber-200 bg-amber-50 dark:bg-amber-900/20 text-amber-700",
   FAILED: "border-rose-200 bg-rose-50 text-rose-700",
 };
 
@@ -139,7 +139,7 @@ const getStatusLabel = (status, errorMessage) => {
   return label;
 };
 
-const getStatusClass = (status) => statusClassMap[status] || "border-slate-200 bg-slate-50 text-slate-600";
+const getStatusClass = (status) => statusClassMap[status] || "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 dark:text-slate-500";
 
 const formatHistoryTime = (dateValue) => {
   if (!dateValue) {
@@ -212,7 +212,7 @@ const UserCell = ({ username, thumbnailUrl }) => {
           {fallbackLetter}
         </div>
       )}
-      <span className="font-semibold text-slate-700">{displayName}</span>
+      <span className="font-semibold text-slate-700 dark:text-slate-200">{displayName}</span>
     </div>
   );
 };
@@ -500,7 +500,7 @@ const AdminSummaryHistory = ({ onNotify }) => {
   return (
     <section className="mt-6 space-y-4">
       <div>
-        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
           QUẢN LÝ LỊCH SỬ TÓM TẮT
         </div>
         <div className="text-lg font-bold text-slate-900">Quản lý lịch sử tóm tắt</div>
@@ -510,17 +510,17 @@ const AdminSummaryHistory = ({ onNotify }) => {
         {summaryStats.map((card) => (
           <div
             key={card.key}
-            className="group relative rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+            className="group relative rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
           >
             <div className={`inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r px-3 py-1 text-xs font-semibold text-white ${card.tone}`}>
               <AutoAwesomeOutlinedIcon fontSize="inherit" />
               Báo cáo
             </div>
-            <div className="mt-3 text-sm font-semibold text-slate-600">{card.label}</div>
+            <div className="mt-3 text-sm font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">{card.label}</div>
             {isStatisticsLoading ? (
               <>
                 <div className="mt-2 h-8 w-24 animate-pulse rounded-lg bg-slate-200" />
-                <div className="mt-3 h-3 w-20 animate-pulse rounded bg-slate-100" />
+                <div className="mt-3 h-3 w-20 animate-pulse rounded bg-slate-100 dark:bg-slate-700" />
               </>
             ) : (
               <>
@@ -528,12 +528,12 @@ const AdminSummaryHistory = ({ onNotify }) => {
                   {card.value}
                   {card.loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />}
                 </div>
-                <div className="mt-2 text-xs text-slate-500">{card.sub}</div>
+                <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">{card.sub}</div>
               </>
             )}
 
             {card.tooltip && (
-              <div className="pointer-events-none absolute right-4 top-10 z-10 w-28 rounded-xl border border-slate-200 bg-slate-50 p-2 text-xs font-semibold text-slate-600 opacity-100 shadow-sm transition md:opacity-0 md:group-hover:opacity-100">
+              <div className="pointer-events-none absolute right-4 top-10 z-10 w-28 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-2 text-xs font-semibold text-slate-600 dark:text-slate-400 opacity-100 shadow-sm transition md:opacity-0 md:group-hover:opacity-100">
                 {card.tooltip.map((item) => (
                   <div key={item}>{item}</div>
                 ))}
@@ -544,12 +544,12 @@ const AdminSummaryHistory = ({ onNotify }) => {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[3fr_2fr]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-base font-bold text-slate-900">
               Báo cáo: Xu hướng tóm tắt theo thời gian
             </div>
-            <div className="flex items-center gap-1 rounded-xl bg-slate-50 p-1 text-xs font-semibold text-slate-600">
+            <div className="flex items-center gap-1 rounded-xl bg-slate-50 dark:bg-slate-800/50 p-1 text-xs font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">
               <button
                 type="button"
                 onClick={() => {
@@ -558,8 +558,8 @@ const AdminSummaryHistory = ({ onNotify }) => {
                 }}
                 className={`rounded-lg px-3 py-1.5 transition ${
                   selectedTrendDays === 7
-                    ? "border border-blue-200 bg-blue-50 text-blue-700 shadow-sm"
-                    : "hover:bg-white hover:text-slate-900"
+                    ? "border border-blue-200 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 shadow-sm"
+                    : "hover:bg-white hover:text-slate-900 dark:hover:text-slate-100"
                 }`}
               >
                 7 ngày
@@ -572,31 +572,31 @@ const AdminSummaryHistory = ({ onNotify }) => {
                 }}
                 className={`rounded-lg px-3 py-1.5 transition ${
                   selectedTrendDays === 30
-                    ? "border border-blue-200 bg-blue-50 text-blue-700 shadow-sm"
-                    : "hover:bg-white hover:text-slate-900"
+                    ? "border border-blue-200 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 shadow-sm"
+                    : "hover:bg-white hover:text-slate-900 dark:hover:text-slate-100"
                 }`}
               >
                 30 ngày
               </button>
-              <label className="flex items-center gap-1 rounded-lg bg-white px-2 py-1 text-slate-600 ring-1 ring-slate-200">
+              <label className="flex items-center gap-1 rounded-lg bg-white px-2 py-1 text-slate-600 dark:text-slate-400 ring-1 ring-slate-200">
                 <input
                   type="number"
                   min="1"
                   value={customTrendDays}
                   onChange={handleTrendDaysChange}
-                  className="w-14 bg-transparent text-center text-xs font-bold text-slate-700 outline-none"
+                  className="w-14 bg-transparent text-center text-xs font-bold text-slate-700 dark:text-slate-200 outline-none"
                   aria-label="Số ngày tùy chọn"
                 />
                 <span>ngày</span>
               </label>
-              <MoreHorizOutlinedIcon fontSize="small" className="mx-1 text-slate-500" />
+              <MoreHorizOutlinedIcon fontSize="small" className="mx-1 text-slate-500 dark:text-slate-400 dark:text-slate-500" />
             </div>
           </div>
 
           <div className="mt-4 h-[260px] w-full">
             {isTrendLoading ? (
-              <div className="flex h-full flex-col justify-end gap-3 rounded-2xl bg-slate-50 p-4">
-                <div className="h-full animate-pulse rounded-xl bg-slate-100" />
+              <div className="flex h-full flex-col justify-end gap-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 p-4">
+                <div className="h-full animate-pulse rounded-xl bg-slate-100 dark:bg-slate-700" />
                 <div className="grid grid-cols-7 gap-2">
                   {Array.from({ length: 7 }).map((_, index) => (
                     <div key={index} className="h-2 animate-pulse rounded bg-slate-200" />
@@ -604,7 +604,7 @@ const AdminSummaryHistory = ({ onNotify }) => {
                 </div>
               </div>
             ) : trendError || trendData.length === 0 ? (
-              <div className="grid h-full place-items-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm font-semibold text-slate-500">
+              <div className="grid h-full place-items-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">
                 Không có dữ liệu
               </div>
             ) : (
@@ -635,7 +635,7 @@ const AdminSummaryHistory = ({ onNotify }) => {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
           <div className="text-base font-bold text-slate-900">Báo cáo: Tỷ lệ loại đầu vào</div>
           <div className="mt-4 grid min-h-[260px] items-center gap-4 sm:grid-cols-[1fr_auto]">
             {isInputTypeLoading ? (
@@ -643,7 +643,7 @@ const AdminSummaryHistory = ({ onNotify }) => {
                 <div className="h-36 w-36 rounded-full border-[26px] border-slate-200" />
               </div>
             ) : inputTypeError || inputTypeTotal === 0 ? (
-              <div className="grid min-h-[230px] place-items-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm font-semibold text-slate-500 sm:col-span-2">
+              <div className="grid min-h-[230px] place-items-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm font-semibold text-slate-500 dark:text-slate-400 sm:col-span-2">
                 Không có dữ liệu
               </div>
             ) : (
@@ -676,15 +676,15 @@ const AdminSummaryHistory = ({ onNotify }) => {
 
                   <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
-                      <DescriptionOutlinedIcon className="text-blue-600" fontSize="small" />
-                      <div className="mt-1 text-sm font-bold text-slate-700">Tổng: {formatStatValue(inputTypeTotal)}</div>
+                      <DescriptionOutlinedIcon className="text-blue-600 dark:text-blue-400" fontSize="small" />
+                      <div className="mt-1 text-sm font-bold text-slate-700 dark:text-slate-200">Tổng: {formatStatValue(inputTypeTotal)}</div>
                     </div>
                   </div>
-                  <div className="absolute right-2 top-8 text-xs font-semibold text-slate-700">≈ {formatStatValue(inputTypeStatistics.textPercent)}%<br />Text</div>
-                  <div className="absolute left-2 top-12 text-xs font-semibold text-slate-700">≈ {formatStatValue(inputTypeStatistics.filePercent)}%<br />File</div>
+                  <div className="absolute right-2 top-8 text-xs font-semibold text-slate-700 dark:text-slate-200">≈ {formatStatValue(inputTypeStatistics.textPercent)}%<br />Text</div>
+                  <div className="absolute left-2 top-12 text-xs font-semibold text-slate-700 dark:text-slate-200">≈ {formatStatValue(inputTypeStatistics.filePercent)}%<br />File</div>
                 </div>
 
-                <div className="space-y-3 pr-2 text-sm font-semibold text-slate-700">
+                <div className="space-y-3 pr-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                   {inputTypeData.map((item) => (
                     <div key={item.name} className="flex items-center gap-2 whitespace-nowrap">
                       <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: item.color }} />
@@ -698,40 +698,40 @@ const AdminSummaryHistory = ({ onNotify }) => {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
             Ngày bắt đầu
             <div className="relative mt-1">
-              <CalendarTodayOutlinedIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fontSize="small" />
+              <CalendarTodayOutlinedIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" fontSize="small" />
               <input
                 type="date"
                 value={historyFilters.startDate}
                 onChange={(event) => handleHistoryFilterChange("startDate", event.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-3 text-sm font-medium text-slate-600 outline-none transition focus:border-blue-300 focus:bg-white"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 py-2.5 pl-10 pr-3 text-sm font-medium text-slate-600 dark:text-slate-400 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50 focus:bg-white dark:focus:bg-slate-800"
               />
             </div>
           </label>
 
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
             Ngày kết thúc
             <div className="relative mt-1">
-              <CalendarTodayOutlinedIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fontSize="small" />
+              <CalendarTodayOutlinedIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" fontSize="small" />
               <input
                 type="date"
                 value={historyFilters.endDate}
                 onChange={(event) => handleHistoryFilterChange("endDate", event.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-3 text-sm font-medium text-slate-600 outline-none transition focus:border-blue-300 focus:bg-white"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 py-2.5 pl-10 pr-3 text-sm font-medium text-slate-600 dark:text-slate-400 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50 focus:bg-white dark:focus:bg-slate-800"
               />
             </div>
           </label>
 
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
             Loại đầu vào
             <select
               value={historyFilters.inputType}
               onChange={(event) => handleHistoryFilterChange("inputType", event.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+              className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50"
             >
               <option value="ALL">Tất cả</option>
               <option value="FILE">File</option>
@@ -739,12 +739,12 @@ const AdminSummaryHistory = ({ onNotify }) => {
             </select>
           </label>
 
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
             Trạng thái
             <select
               value={historyFilters.status}
               onChange={(event) => handleHistoryFilterChange("status", event.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 outline-none transition focus:border-blue-300"
+              className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50"
             >
               <option value="ALL">Tất cả</option>
               <option value="COMPLETED">Hoàn thành</option>
@@ -755,10 +755,10 @@ const AdminSummaryHistory = ({ onNotify }) => {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
         <div className="overflow-auto">
           <table className="min-w-[980px] w-full text-left">
-            <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wide text-slate-500">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 dark:text-slate-500">
               <tr>
                 <th className="px-4 py-3">Nội dung</th>
                 <th className="px-4 py-3">Người dùng</th>
@@ -771,18 +771,18 @@ const AdminSummaryHistory = ({ onNotify }) => {
             <tbody>
               {isHistoryLoading ? (
                 Array.from({ length: historyFilters.size }).map((_, index) => (
-                  <tr key={index} className="border-t border-slate-100 text-sm text-slate-700">
+                  <tr key={index} className="border-t border-slate-100 text-sm text-slate-700 dark:text-slate-200">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 animate-pulse rounded-xl bg-slate-100" />
-                        <div className="h-4 w-48 animate-pulse rounded bg-slate-100" />
+                        <div className="h-10 w-10 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-700" />
+                        <div className="h-4 w-48 animate-pulse rounded bg-slate-100 dark:bg-slate-700" />
                       </div>
                     </td>
-                    <td className="px-4 py-3"><div className="h-4 w-24 animate-pulse rounded bg-slate-100" /></td>
-                    <td className="px-4 py-3"><div className="h-4 w-32 animate-pulse rounded bg-slate-100" /></td>
-                    <td className="px-4 py-3"><div className="h-4 w-20 animate-pulse rounded bg-slate-100" /></td>
-                    <td className="px-4 py-3"><div className="h-6 w-24 animate-pulse rounded-full bg-slate-100" /></td>
-                    <td className="px-4 py-3"><div className="ml-auto h-9 w-28 animate-pulse rounded-lg bg-slate-100" /></td>
+                    <td className="px-4 py-3"><div className="h-4 w-24 animate-pulse rounded bg-slate-100 dark:bg-slate-700" /></td>
+                    <td className="px-4 py-3"><div className="h-4 w-32 animate-pulse rounded bg-slate-100 dark:bg-slate-700" /></td>
+                    <td className="px-4 py-3"><div className="h-4 w-20 animate-pulse rounded bg-slate-100 dark:bg-slate-700" /></td>
+                    <td className="px-4 py-3"><div className="h-6 w-24 animate-pulse rounded-full bg-slate-100 dark:bg-slate-700" /></td>
+                    <td className="px-4 py-3"><div className="ml-auto h-9 w-28 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-700" /></td>
                   </tr>
                 ))
               ) : historyError ? (
@@ -793,7 +793,7 @@ const AdminSummaryHistory = ({ onNotify }) => {
                 </tr>
               ) : historyItems.length === 0 ? (
                 <tr className="border-t border-slate-100">
-                  <td colSpan={6} className="px-4 py-10 text-center text-sm font-semibold text-slate-500">
+                  <td colSpan={6} className="px-4 py-10 text-center text-sm font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">
                     Không có lịch sử tóm tắt
                   </td>
                 </tr>
@@ -804,20 +804,20 @@ const AdminSummaryHistory = ({ onNotify }) => {
                   const statusText = getStatusLabel(item?.status, item?.errorMessage);
 
                   return (
-                    <tr key={item?.id} className="border-t border-slate-100 text-sm text-slate-700 transition hover:bg-blue-50/40">
+                    <tr key={item?.id} className="border-t border-slate-100 text-sm text-slate-700 dark:text-slate-200 transition hover:bg-blue-50/40">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600 dark:text-blue-400">
                             <ContentIcon fontSize="small" />
                           </div>
-                          <span className="font-semibold text-slate-800">{title}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-100">{title}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
                         <UserCell username={item?.username} thumbnailUrl={item?.thumbnailUrl} />
                       </td>
-                      <td className="px-4 py-3 text-slate-600">{formatHistoryTime(item?.createdAt)}</td>
-                      <td className="px-4 py-3 text-slate-600">{item?.fileSize ?? "-"}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400 dark:text-slate-500">{formatHistoryTime(item?.createdAt)}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400 dark:text-slate-500">{item?.fileSize ?? "-"}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${getStatusClass(item?.status)}`}>
                           {statusText}
@@ -828,7 +828,7 @@ const AdminSummaryHistory = ({ onNotify }) => {
                           <button
                             type="button"
                             onClick={() => handleOpenDetail(item)}
-                            className="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
+                            className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-slate-600 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700/50 dark:bg-slate-700"
                             title="Xem chi tiết"
                             aria-label="Xem chi tiết"
                           >
@@ -853,12 +853,12 @@ const AdminSummaryHistory = ({ onNotify }) => {
           </table>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-2 border-t border-slate-100 px-4 py-3 text-sm font-semibold text-slate-600">
+        <div className="flex flex-wrap items-center justify-center gap-2 border-t border-slate-100 dark:border-slate-700/50 px-4 py-3 text-sm font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">
           <button
             type="button"
             disabled={!historyPagination.hasPrevious || isHistoryLoading}
             onClick={() => handleHistoryPageChange(Math.max(1, historyPagination.page - 1))}
-            className="rounded-lg border border-transparent px-3 py-1.5 transition hover:border-slate-200 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-transparent disabled:hover:bg-transparent"
+            className="rounded-lg border border-transparent px-3 py-1.5 transition hover:border-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-transparent disabled:hover:bg-transparent"
           >
             Prev
           </button>
@@ -870,8 +870,8 @@ const AdminSummaryHistory = ({ onNotify }) => {
               onClick={() => handleHistoryPageChange(page)}
               className={`rounded-lg border px-3 py-1.5 transition ${
                 page === historyPagination.page
-                  ? "border-blue-200 bg-blue-50 text-blue-700"
-                  : "border-transparent hover:border-slate-200 hover:bg-slate-50"
+                  ? "border-blue-200 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
+                  : "border-transparent hover:border-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
               } disabled:cursor-not-allowed disabled:opacity-60`}
             >
               {page}
@@ -881,7 +881,7 @@ const AdminSummaryHistory = ({ onNotify }) => {
             type="button"
             disabled={!historyPagination.hasNext || isHistoryLoading}
             onClick={() => handleHistoryPageChange(historyPagination.page + 1)}
-            className="rounded-lg border border-transparent px-3 py-1.5 transition hover:border-slate-200 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-transparent disabled:hover:bg-transparent"
+            className="rounded-lg border border-transparent px-3 py-1.5 transition hover:border-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-transparent disabled:hover:bg-transparent"
           >
             Next
           </button>

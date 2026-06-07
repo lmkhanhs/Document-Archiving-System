@@ -38,13 +38,13 @@ const DocumentFileTypeChart = ({ data, isLoading }) => {
 
           <div className="space-y-2">
             {data.map((item) => (
-              <div key={item.name} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2 text-sm">
+              <div key={item.name} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-sm">
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span className="font-bold text-slate-700">{item.name}</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-200">{item.name}</span>
                 </div>
-                <div className="text-right font-semibold text-slate-500">
-                  <span className="text-base font-black text-blue-700">{item.percent}%</span> ({item.value})
+                <div className="text-right font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">
+                  <span className="text-base font-black text-blue-700 dark:text-blue-400">{item.percent}%</span> ({item.value})
                 </div>
               </div>
             ))}

@@ -300,59 +300,59 @@ const AdminCountryManagement = () => {
 
       {/* Thống kê */}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200">
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:text-blue-400">
             <PublicOutlinedIcon fontSize="small" />
           </div>
-          <div className="mt-3 text-sm font-semibold text-slate-600">Tổng số quốc gia được hỗ trợ</div>
+          <div className="mt-3 text-sm font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">Tổng số quốc gia được hỗ trợ</div>
           <div className="mt-1 text-2xl font-bold text-slate-900">{statistics.totalSupportedCountries}</div>
-          <div className="mt-2 text-xs text-slate-500">Toàn bộ quốc gia trên hệ thống</div>
+          <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Toàn bộ quốc gia trên hệ thống</div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200">
           <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
             <CheckCircleOutlineOutlinedIcon fontSize="small" />
           </div>
-          <div className="mt-3 text-sm font-semibold text-slate-600">Quốc gia đang hoạt động</div>
+          <div className="mt-3 text-sm font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">Quốc gia đang hoạt động</div>
           <div className="mt-1 text-2xl font-bold text-slate-900">{statistics.activeCountries}</div>
-          <div className="mt-2 text-xs text-slate-500">Các quốc gia khả dụng</div>
+          <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Các quốc gia khả dụng</div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200">
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 dark:text-slate-500">
             <TrendingUpOutlinedIcon fontSize="small" />
           </div>
-          <div className="mt-3 text-sm font-semibold text-slate-600">Tỷ lệ phủ người dùng</div>
+          <div className="mt-3 text-sm font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">Tỷ lệ phủ người dùng</div>
           <div className="mt-1 text-2xl font-bold text-slate-900">{statistics.userCoverageRate}%</div>
-          <div className="mt-2 text-xs text-slate-500">Dựa trên quốc gia đã chọn</div>
+          <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Dựa trên quốc gia đã chọn</div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200">
           <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
             <AccessTimeOutlinedIcon fontSize="small" />
           </div>
-          <div className="mt-3 text-sm font-semibold text-slate-600">Quốc gia mới đăng ký</div>
+          <div className="mt-3 text-sm font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">Quốc gia mới đăng ký</div>
           <div className="mt-1 text-2xl font-bold text-slate-900">
             {statistics.latestRegisteredCountry ? statistics.latestRegisteredCountry.name : "N/A"}
           </div>
-          <div className="mt-2 text-xs text-slate-500">Cập nhật gần nhất</div>
+          <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Cập nhật gần nhất</div>
         </div>
       </div>
 
       {/* Bảng dữ liệu */}
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 p-5">
-          <div className="text-base font-bold text-slate-800">
+          <div className="text-base font-bold text-slate-800 dark:text-slate-100">
             {isTrashView ? "Thùng rác: Quốc gia đã xóa" : "Danh sách Quốc gia (Quản trị hệ thống)"}
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative">
-              <SearchOutlinedIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fontSize="small" />
+              <SearchOutlinedIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" fontSize="small" />
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Tìm kiếm tên hoặc mã quốc gia..."
-                className="w-[260px] rounded-xl border border-slate-200 bg-slate-50 py-2 pl-10 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-300 focus:bg-white"
+                className="w-[260px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 py-2 pl-10 pr-4 text-sm text-slate-700 dark:text-slate-200 outline-none transition focus:border-blue-300 dark:focus:border-blue-500/50 focus:bg-white dark:focus:bg-slate-800"
               />
             </div>
             {!isTrashView ? (
@@ -363,7 +363,7 @@ const AdminCountryManagement = () => {
                     setIsTrashView(true);
                     setPage(0);
                   }}
-                  className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                  className="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
                   title="Thùng rác"
                 >
                   <DeleteOutlineOutlinedIcon fontSize="small" className="mr-1" />
@@ -384,7 +384,7 @@ const AdminCountryManagement = () => {
                   setIsTrashView(false);
                   setPage(0);
                 }}
-                className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                className="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
               >
                 Quay lại danh sách chính
               </button>
@@ -395,7 +395,7 @@ const AdminCountryManagement = () => {
         <div className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] text-left">
-              <thead className="bg-slate-50 text-xs font-semibold text-slate-600">
+              <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">
                 <tr>
                   <th className="px-5 py-4 w-[10%]">ID</th>
                   <th className="px-5 py-4 w-[15%]">Cờ</th>
@@ -429,7 +429,7 @@ const AdminCountryManagement = () => {
                     const isoCode = item.isoCode || extractCountryCodeFromFlag(item.flag);
                     return (
                       <tr key={item.id} className="transition hover:bg-slate-50/70">
-                        <td className="px-5 py-4 text-slate-600">{item.id}</td>
+                        <td className="px-5 py-4 text-slate-600 dark:text-slate-400 dark:text-slate-500">{item.id}</td>
                         <td className="px-5 py-4 leading-none">
                           {item.flag ? (
                             <>
@@ -442,16 +442,16 @@ const AdminCountryManagement = () => {
                                   if (e.target.nextSibling) e.target.nextSibling.style.display = 'inline'; 
                                 }} 
                               />
-                              <span style={{ display: 'none' }} className="font-semibold text-slate-700">{extractCountryCodeFromFlag(item.flag)}</span>
+                              <span style={{ display: 'none' }} className="font-semibold text-slate-700 dark:text-slate-200">{extractCountryCodeFromFlag(item.flag)}</span>
                             </>
                           ) : (
-                            <span className="font-semibold text-slate-700">{extractCountryCodeFromFlag(item.flag)}</span>
+                            <span className="font-semibold text-slate-700 dark:text-slate-200">{extractCountryCodeFromFlag(item.flag)}</span>
                           )}
                         </td>
-                        <td className="px-5 py-4 font-semibold text-slate-800">{isoCode}</td>
-                        <td className="px-5 py-4 text-slate-700">{item.name}</td>
-                        <td className="px-5 py-4 text-slate-600">{item.userCount}</td>
-                        <td className="px-5 py-4 text-slate-600">
+                        <td className="px-5 py-4 font-semibold text-slate-800 dark:text-slate-100">{isoCode}</td>
+                        <td className="px-5 py-4 text-slate-700 dark:text-slate-200">{item.name}</td>
+                        <td className="px-5 py-4 text-slate-600 dark:text-slate-400 dark:text-slate-500">{item.userCount}</td>
+                        <td className="px-5 py-4 text-slate-600 dark:text-slate-400 dark:text-slate-500">
                           {item.createdAt ? new Intl.DateTimeFormat('vi-VN', { 
                             day: '2-digit', 
                             month: '2-digit', 
@@ -477,7 +477,7 @@ const AdminCountryManagement = () => {
                               <button
                                 type="button"
                                 onClick={() => handleOpenRestore(item)}
-                                className="rounded-lg px-4 py-2 text-blue-600 transition hover:bg-blue-50 text-sm font-semibold border border-blue-200 whitespace-nowrap"
+                                className="rounded-lg px-4 py-2 text-blue-600 dark:text-blue-400 transition hover:bg-blue-50 text-sm font-semibold border border-blue-200 whitespace-nowrap"
                                 title="Khôi phục"
                               >
                                 Khôi phục
@@ -487,7 +487,7 @@ const AdminCountryManagement = () => {
                                 <button
                                   type="button"
                                   onClick={() => handleOpenForm(item)}
-                                  className="rounded-lg p-1.5 text-blue-600 transition hover:bg-blue-50"
+                                  className="rounded-lg p-1.5 text-blue-600 dark:text-blue-400 transition hover:bg-blue-50"
                                   title="Chỉnh sửa"
                                 >
                                   <EditOutlinedIcon fontSize="small" />
@@ -509,7 +509,7 @@ const AdminCountryManagement = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={isTrashView ? 7 : 8} className="px-5 py-8 text-center text-slate-500">
+                    <td colSpan={isTrashView ? 7 : 8} className="px-5 py-8 text-center text-slate-500 dark:text-slate-400 dark:text-slate-500">
                       Không có quốc gia nào
                     </td>
                   </tr>
@@ -520,7 +520,7 @@ const AdminCountryManagement = () => {
         </div>
 
         {/* Phân trang */}
-        <div className="flex items-center justify-between border-t border-slate-100 p-5 text-sm text-slate-600">
+        <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-700/50 p-5 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-500">
           <div>
             Hiển thị {pagination.numberOfElements > 0 ? pagination.number * pagination.size + 1 : 0} đến {pagination.number * pagination.size + pagination.numberOfElements} trong {pagination.totalElements} quốc gia
           </div>
@@ -528,13 +528,13 @@ const AdminCountryManagement = () => {
             <button 
               disabled={pagination.first}
               onClick={() => handlePageChange(0)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 disabled:opacity-50 disabled:cursor-not-allowed">
               {"<<"}
             </button>
             <button 
               disabled={pagination.first}
               onClick={() => handlePageChange(pagination.number - 1)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 disabled:opacity-50 disabled:cursor-not-allowed">
               {"<"}
             </button>
             
@@ -551,7 +551,7 @@ const AdminCountryManagement = () => {
                     className={`flex h-8 w-8 items-center justify-center rounded-lg ${
                       pageNumber === pagination.number
                         ? "bg-blue-700 font-semibold text-white"
-                        : "text-slate-600 hover:bg-slate-50"
+                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
                     }`}
                   >
                     {pageNumber + 1}
@@ -561,7 +561,7 @@ const AdminCountryManagement = () => {
                 pageNumber === 1 && pagination.number > 2 ||
                 pageNumber === pagination.totalPages - 2 && pagination.number < pagination.totalPages - 3
               ) {
-                return <span key={pageNumber} className="px-1 text-slate-400">...</span>;
+                return <span key={pageNumber} className="px-1 text-slate-400 dark:text-slate-500">...</span>;
               }
               return null;
             })}
@@ -569,13 +569,13 @@ const AdminCountryManagement = () => {
             <button 
               disabled={pagination.last}
               onClick={() => handlePageChange(pagination.number + 1)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 disabled:opacity-50 disabled:cursor-not-allowed">
               {">"}
             </button>
             <button 
               disabled={pagination.last}
               onClick={() => handlePageChange(pagination.totalPages - 1)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 disabled:opacity-50 disabled:cursor-not-allowed">
               {">>"}
             </button>
           </div>
@@ -584,15 +584,15 @@ const AdminCountryManagement = () => {
 
       {/* Popup Thêm Quốc Gia */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden animate-fade-in-up">
-            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-              <h2 className="text-lg font-bold text-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 dark:bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 shadow-xl overflow-hidden animate-fade-in-up">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/50 px-6 py-4">
+              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">
                 {selectedCountry ? "Chỉnh sửa quốc gia" : "Thêm quốc gia mới"}
               </h2>
               <button 
                 onClick={() => !isSubmitting && setIsFormOpen(false)}
-                className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-600 dark:text-slate-400 dark:text-slate-500"
                 disabled={isSubmitting}
               >
                 <CloseOutlinedIcon fontSize="small" />
@@ -607,7 +607,7 @@ const AdminCountryManagement = () => {
               )}
               
               <div>
-                <label className="mb-1.5 block font-semibold text-slate-700">
+                <label className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-200">
                   Tên quốc gia <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -615,14 +615,14 @@ const AdminCountryManagement = () => {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="VD: Germany"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:bg-white"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800"
                   disabled={isSubmitting}
                   required
                 />
               </div>
 
               <div>
-                <label className="mb-1.5 block font-semibold text-slate-700">
+                <label className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-200">
                   Mã ISO <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -630,7 +630,7 @@ const AdminCountryManagement = () => {
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                   placeholder="VD: DE"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:bg-white"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 outline-none transition focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800"
                   disabled={isSubmitting}
                   maxLength={2}
                   required
@@ -638,14 +638,14 @@ const AdminCountryManagement = () => {
               </div>
 
               <div>
-                <label className="mb-1.5 block font-semibold text-slate-700">
+                <label className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-200">
                   Ảnh cờ quốc gia <span className="text-rose-500">*</span>
                 </label>
                 {!flagPreview ? (
                   <div 
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}
-                    className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 py-8 px-4 text-center transition hover:border-blue-400 hover:bg-blue-50 relative cursor-pointer"
+                    className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 py-8 px-4 text-center transition hover:border-blue-400 hover:bg-blue-50 relative cursor-pointer"
                   >
                     <input 
                       type="file" 
@@ -654,20 +654,20 @@ const AdminCountryManagement = () => {
                       onChange={handleFileChange}
                       disabled={isSubmitting}
                     />
-                    <div className="mb-2 h-10 w-10 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                    <div className="mb-2 h-10 w-10 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:text-blue-400">
                       <CloudUploadOutlinedIcon />
                     </div>
-                    <span className="font-semibold text-slate-700">Kéo thả ảnh vào đây</span>
-                    <span className="mt-1 text-xs text-slate-500">Hoặc click để chọn file (JPG, PNG, WEBP - Max 50MB)</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-200">Kéo thả ảnh vào đây</span>
+                    <span className="mt-1 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">Hoặc click để chọn file (JPG, PNG, WEBP - Max 50MB)</span>
                   </div>
                 ) : (
-                  <div className="relative rounded-xl border border-slate-200 bg-slate-50 p-2 overflow-hidden flex justify-center group">
+                  <div className="relative rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-2 overflow-hidden flex justify-center group">
                     <img src={flagPreview} alt="Preview" className="h-24 object-contain rounded" />
                     {!isSubmitting && (
                       <button
                         type="button"
                         onClick={removeSelectedFile}
-                        className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-slate-900/50 text-white opacity-0 transition group-hover:opacity-100 hover:bg-rose-500"
+                        className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-slate-900/50 dark:bg-black/70 text-white opacity-0 transition group-hover:opacity-100 hover:bg-rose-500"
                         title="Xóa ảnh"
                       >
                         <CloseOutlinedIcon fontSize="small" />
@@ -678,7 +678,7 @@ const AdminCountryManagement = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <label className="font-semibold text-slate-700">
+                <label className="font-semibold text-slate-700 dark:text-slate-200">
                   Trạng thái hoạt động
                 </label>
                 <label className="relative inline-flex cursor-pointer items-center">
@@ -689,15 +689,15 @@ const AdminCountryManagement = () => {
                     onChange={(e) => setFormData({...formData, active: e.target.checked})} 
                     disabled={isSubmitting}
                   />
-                  <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none"></div>
+                  <div className="peer h-6 w-11 rounded-full bg-slate-200 dark:bg-slate-600 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none"></div>
                 </label>
               </div>
               
-              <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-5">
+              <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-700/50 pt-5">
                 <button
                   type="button"
                   onClick={() => setIsFormOpen(false)}
-                  className="rounded-xl border border-slate-200 px-5 py-2.5 font-semibold text-slate-600 transition hover:bg-slate-50"
+                  className="rounded-xl border border-slate-200 dark:border-slate-700 px-5 py-2.5 font-semibold text-slate-600 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
                   disabled={isSubmitting}
                 >
                   Hủy
@@ -726,10 +726,10 @@ const AdminCountryManagement = () => {
 
       {/* Popup Xóa */}
       {isDeleteOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl animate-fade-in-up">
-            <h2 className="text-lg font-bold text-slate-800">Xác nhận xóa</h2>
-            <p className="mt-2 text-sm text-slate-600">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 dark:bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl dark:shadow-none animate-fade-in-up">
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Xác nhận xóa</h2>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-500">
               Bạn có chắc chắn muốn xóa quốc gia này không?<br/>
               Quốc gia sẽ bị xóa mềm và không còn hiển thị trong danh sách quản lý.
             </p>
@@ -740,7 +740,7 @@ const AdminCountryManagement = () => {
                   setIsDeleteOpen(false);
                   setCountryToDelete(null);
                 }}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
                 disabled={isSubmitting}
               >
                 Hủy
@@ -760,10 +760,10 @@ const AdminCountryManagement = () => {
 
       {/* Popup Khôi phục */}
       {isRestoreOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl animate-fade-in-up">
-            <h2 className="text-lg font-bold text-slate-800">Xác nhận khôi phục</h2>
-            <p className="mt-2 text-sm text-slate-600">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 dark:bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl dark:shadow-none animate-fade-in-up">
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Xác nhận khôi phục</h2>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-500">
               Bạn có chắc chắn muốn khôi phục quốc gia này không?<br/>
               Quốc gia sẽ được hiển thị lại trong danh sách quản lý.
             </p>
@@ -774,7 +774,7 @@ const AdminCountryManagement = () => {
                   setIsRestoreOpen(false);
                   setCountryToRestore(null);
                 }}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50"
                 disabled={isSubmitting}
               >
                 Hủy

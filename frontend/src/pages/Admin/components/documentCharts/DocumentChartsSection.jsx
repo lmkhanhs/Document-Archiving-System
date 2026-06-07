@@ -13,17 +13,17 @@ import {
 } from "./chartUtils";
 
 const DocumentStatCard = ({ label, value, description, tone = "from-blue-600 to-sky-500", isLoading }) => (
-  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md">
+  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md">
     <div className={`inline-flex items-center rounded-2xl bg-gradient-to-r px-3 py-1 text-xs font-semibold text-white ${tone}`}>
       Báo cáo
     </div>
-    <div className="mt-3 text-sm font-semibold text-slate-600">{label}</div>
+    <div className="mt-3 text-sm font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-500">{label}</div>
     {isLoading ? (
       <div className="mt-2 h-9 w-20 animate-pulse rounded-lg bg-slate-200" />
     ) : (
       <div className="mt-1 text-3xl font-black text-slate-900">{Number(value || 0).toLocaleString("vi-VN")}</div>
     )}
-    <div className="mt-2 text-xs text-slate-500">{description}</div>
+    <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">{description}</div>
   </div>
 );
 

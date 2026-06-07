@@ -19,7 +19,7 @@ const statusLabelMap = {
 
 const statusClassMap = {
   COMPLETED: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  PROCESSING: "border-amber-200 bg-amber-50 text-amber-700",
+  PROCESSING: "border-amber-200 bg-amber-50 dark:bg-amber-900/20 text-amber-700",
   FAILED: "border-rose-200 bg-rose-50 text-rose-700",
 };
 
@@ -45,7 +45,7 @@ const formatDetailDate = (dateValue) => {
 };
 
 const getStatusLabel = (status) => statusLabelMap[status] || status || "-";
-const getStatusClass = (status) => statusClassMap[status] || "border-slate-200 bg-slate-50 text-slate-600";
+const getStatusClass = (status) => statusClassMap[status] || "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 dark:text-slate-500";
 
 const getSummaryContent = (detail) => (
   detail?.summaryContent
@@ -63,12 +63,12 @@ const inputTypeLabelMap = {
 const getInputTypeLabel = (inputType) => inputTypeLabelMap[inputType] || inputType || "-";
 
 const InfoCard = ({ icon: Icon, label, value, children }) => (
-  <div className="flex min-h-[76px] gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+  <div className="flex min-h-[76px] gap-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm">
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:text-blue-400">
       <Icon fontSize="small" />
     </div>
     <div className="min-w-0">
-      <div className="text-[11px] font-semibold text-slate-500">{label}</div>
+      <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">{label}</div>
       {children || <div className="mt-1 break-words text-sm font-bold text-slate-900">{value}</div>}
     </div>
   </div>
@@ -114,8 +114,8 @@ const formatCompressionRate = (compressionRate) => {
 };
 
 const MetricCard = ({ label, value }) => (
-  <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-    <div className="text-xs font-semibold text-slate-500">{label}</div>
+  <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm">
+    <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">{label}</div>
     <div className="mt-2 whitespace-pre-line text-sm font-bold leading-snug text-slate-950">{value || "-"}</div>
   </div>
 );
@@ -124,15 +124,15 @@ const ModalSkeleton = () => (
   <div className="space-y-4 p-4">
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }).map((_, index) => (
-        <div key={index} className="h-[76px] animate-pulse rounded-xl bg-slate-100" />
+        <div key={index} className="h-[76px] animate-pulse rounded-xl bg-slate-100 dark:bg-slate-700" />
       ))}
     </div>
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {Array.from({ length: 4 }).map((_, index) => (
-        <div key={index} className="h-[78px] animate-pulse rounded-xl bg-slate-100" />
+        <div key={index} className="h-[78px] animate-pulse rounded-xl bg-slate-100 dark:bg-slate-700" />
       ))}
     </div>
-    <div className="h-56 animate-pulse rounded-xl bg-slate-100" />
+    <div className="h-56 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-700" />
   </div>
 );
 
@@ -234,12 +234,12 @@ const SummaryDetailModal = ({ open, summaryId, initialData, onClose, onNotify })
       onMouseDown={onClose}
     >
       <div
-        className="w-[95vw] max-w-[700px] overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-900/10"
+        className="w-[95vw] max-w-[700px] overflow-hidden rounded-2xl bg-white dark:bg-slate-800 shadow-2xl ring-1 ring-slate-900/10"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-white px-4 py-3">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-700/50 bg-white px-4 py-3">
           <div className="flex min-w-0 items-center gap-2">
-            <DescriptionOutlinedIcon className="shrink-0 text-slate-600" fontSize="small" />
+            <DescriptionOutlinedIcon className="shrink-0 text-slate-600 dark:text-slate-400 dark:text-slate-500" fontSize="small" />
             <div className="truncate text-base font-black uppercase text-slate-900">
               CHI TIẾT TÓM TẮT TÀI LIỆU #{summaryId}
             </div>
@@ -247,7 +247,7 @@ const SummaryDetailModal = ({ open, summaryId, initialData, onClose, onNotify })
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+            className="rounded-lg p-1.5 text-slate-500 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-100"
             title="Đóng"
             aria-label="Đóng"
           >
@@ -255,11 +255,11 @@ const SummaryDetailModal = ({ open, summaryId, initialData, onClose, onNotify })
           </button>
         </div>
 
-        <div className="max-h-[90vh] overflow-y-auto bg-white">
+        <div className="max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-800">
           {isLoading ? (
             <ModalSkeleton />
           ) : (
-            <div className="space-y-4 bg-white p-4">
+            <div className="space-y-4 bg-white dark:bg-slate-800 p-4">
               {error && (
                 <div className="rounded-xl border border-rose-100 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
                   Không thể tải chi tiết tóm tắt
@@ -294,7 +294,7 @@ const SummaryDetailModal = ({ open, summaryId, initialData, onClose, onNotify })
 
               <div>
                 <div className="mb-2 text-sm font-black text-slate-900">Văn bản tóm tắt chi tiết</div>
-                <div className="max-h-60 min-h-[180px] overflow-y-auto whitespace-pre-wrap rounded-xl border border-slate-300 bg-slate-50 p-3 text-sm leading-6 text-slate-800">
+                <div className="max-h-60 min-h-[180px] overflow-y-auto whitespace-pre-wrap rounded-xl border border-slate-300 bg-slate-50 dark:bg-slate-800/50 p-3 text-sm leading-6 text-slate-800 dark:text-slate-100">
                   {visibleContent}
                 </div>
               </div>
@@ -302,12 +302,12 @@ const SummaryDetailModal = ({ open, summaryId, initialData, onClose, onNotify })
           )}
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 bg-white px-4 py-3">
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3">
           <button
             type="button"
             onClick={handleCopy}
             disabled={isLoading || !hasSummaryContent}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ContentCopyOutlinedIcon fontSize="small" />
             Copy nội dung
@@ -316,7 +316,7 @@ const SummaryDetailModal = ({ open, summaryId, initialData, onClose, onNotify })
             type="button"
             onClick={handleDownload}
             disabled={isLoading || !hasSummaryContent}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <DownloadOutlinedIcon fontSize="small" />
             Tải xuống kết quả

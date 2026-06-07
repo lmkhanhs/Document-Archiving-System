@@ -18,6 +18,12 @@ body {
   line-height: 1.5;
 }
 
+.dark body,
+html.dark body {
+  color: #e2e8f0;
+  background: #0f172a;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Space Grotesk', 'Manrope', sans-serif;
   margin-bottom: 0.5rem;
