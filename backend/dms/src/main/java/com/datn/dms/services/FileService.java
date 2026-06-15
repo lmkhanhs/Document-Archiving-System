@@ -429,7 +429,7 @@ public class FileService {
                 .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
 
         fileEntity.setDeleted(true);
-        fileEntity.setDeletedAt(java.time.LocalDateTime.now());
+        fileEntity.setDeletedAt(com.datn.dms.utils.DateTimeUtils.now());
         fileRepository.save(fileEntity);
     }
 
@@ -537,7 +537,7 @@ public class FileService {
                 .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
 
         fileEntity.setDeleted(true);
-        fileEntity.setDeletedAt(java.time.LocalDateTime.now());
+        fileEntity.setDeletedAt(com.datn.dms.utils.DateTimeUtils.now());
         fileRepository.save(fileEntity);
     }
 
@@ -638,7 +638,7 @@ public class FileService {
         }
 
         LocalDateTime updatedAt = getEffectiveDate(file.getUpdatedAt(), file.getCreatedAt());
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = com.datn.dms.utils.DateTimeUtils.now();
 
         return switch (time.toLowerCase()) {
             case "today" -> updatedAt.toLocalDate().isEqual(now.toLocalDate());

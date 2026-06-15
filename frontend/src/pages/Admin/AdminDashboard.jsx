@@ -161,7 +161,14 @@ const formatDate = (value) => {
     return "—";
   }
 
-  return date.toLocaleDateString("vi-VN");
+  return date.toLocaleDateString("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+  });
+};
+
+const formatGrowthLabel = (value) => {
+  const [, , month = "", day = ""] = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/) || [];
+  return day && month ? `${day}/${month}` : "";
 };
 
 const formatDateTime = (value) => {
@@ -175,11 +182,13 @@ const formatDateTime = (value) => {
   }
 
   return date.toLocaleString("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
 };
 
@@ -384,10 +393,15 @@ const sidebarItems = [
 ];
 
 const toDateInputValue = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  const parts = new Intl.DateTimeFormat("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+
+  return `${values.year}-${values.month}-${values.day}`;
 };
 
 const addDays = (date, amount) => {
@@ -662,7 +676,7 @@ const AdminDashboard = () => {
           setGrowthData(
             growthResult.registrations.map((item) => ({
               key: item.date,
-              label: `${String(new Date(item.date).getDate()).padStart(2, "0")}/${String(new Date(item.date).getMonth() + 1).padStart(2, "0")}`,
+              label: formatGrowthLabel(item.date),
               value: item.count,
             }))
           );
@@ -702,7 +716,7 @@ const AdminDashboard = () => {
           setGrowthData(
             result.registrations.map((item) => ({
               key: item.date,
-              label: `${String(new Date(item.date).getDate()).padStart(2, "0")}/${String(new Date(item.date).getMonth() + 1).padStart(2, "0")}`,
+              label: formatGrowthLabel(item.date),
               value: item.count,
             }))
           );

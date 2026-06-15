@@ -122,7 +122,7 @@ public class AdminDocumentService {
         if (days < 1) days = 7;
         if (days > 30) days = 30;
 
-        LocalDate endDate = LocalDate.now();
+        LocalDate endDate = com.datn.dms.utils.DateTimeUtils.today();
         LocalDate startDate = endDate.minusDays(days - 1);
         LocalDateTime startDateTime = startDate.atStartOfDay();
 

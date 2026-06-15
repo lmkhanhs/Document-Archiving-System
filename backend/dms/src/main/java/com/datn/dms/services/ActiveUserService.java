@@ -29,7 +29,7 @@ public class ActiveUserService {
     public void ping(String username) {
         // Cập nhật lastLogin
         userRepository.findByUsername(username).ifPresent(user -> {
-            user.setLastLogin(LocalDateTime.now());
+            user.setLastLogin(com.datn.dms.utils.DateTimeUtils.now());
             userRepository.save(user);
         });
 

@@ -89,7 +89,7 @@ public class AuthService {
             throw new AppException(ErrorCode.USER_IS_LOCKED);
         }
 
-        user.setLastLogin(LocalDateTime.now());
+        user.setLastLogin(com.datn.dms.utils.DateTimeUtils.now());
         userRepository.save(user);
 
         String accessToken = generateToken(user, false);
@@ -130,12 +130,12 @@ public class AuthService {
                             .isActive(true)
                             .fullName(fullName)
                             .roles(roles)
-                            .lastLogin(LocalDateTime.now())
+                            .lastLogin(com.datn.dms.utils.DateTimeUtils.now())
                             .build();
 
                     user = userRepository.save(user);
                 } else {
-                    user.setLastLogin(LocalDateTime.now());
+                    user.setLastLogin(com.datn.dms.utils.DateTimeUtils.now());
                     user = userRepository.save(user);
                 }
 

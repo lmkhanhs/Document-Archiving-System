@@ -188,7 +188,7 @@ public class SummaryService {
         }
         
         List<SummaryTrendItemResponse> result = new ArrayList<>();
-        LocalDate endDate = LocalDate.now();
+        LocalDate endDate = com.datn.dms.utils.DateTimeUtils.today();
         LocalDate startDate = endDate.minusDays(Math.max(0, days - 1));
         
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");

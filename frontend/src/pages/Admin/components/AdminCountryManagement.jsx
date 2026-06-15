@@ -453,12 +453,14 @@ const AdminCountryManagement = () => {
                         <td className="px-5 py-4 text-slate-700 dark:text-slate-200">{item.name}</td>
                         <td className="px-5 py-4 text-slate-600 dark:text-slate-400 dark:text-slate-500">{item.userCount}</td>
                         <td className="px-5 py-4 text-slate-600 dark:text-slate-400 dark:text-slate-500">
-                          {item.createdAt ? new Intl.DateTimeFormat('vi-VN', { 
-                            day: '2-digit', 
-                            month: '2-digit', 
+                          {item.createdAt ? new Intl.DateTimeFormat('vi-VN', {
+                            timeZone: 'Asia/Ho_Chi_Minh',
+                            day: '2-digit',
+                            month: '2-digit',
                             year: 'numeric',
                             hour: '2-digit',
-                            minute: '2-digit'
+                            minute: '2-digit',
+                            hour12: false,
                           }).format(new Date(item.createdAt)) : '--'}
                         </td>
                         {!isTrashView && (

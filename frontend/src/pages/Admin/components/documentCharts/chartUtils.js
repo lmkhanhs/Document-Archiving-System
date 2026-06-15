@@ -88,14 +88,26 @@ const normalizeType = (file) => {
   return "Khác";
 };
 
+const getVietnamDateParts = (date) => {
+  const parts = new Intl.DateTimeFormat("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).formatToParts(date);
+
+  return Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+};
+
 const toDateKey = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+  const { year, month, day } = getVietnamDateParts(date);
   return `${year}-${month}-${day}`;
 };
 
-const toShortDateLabel = (date) => `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`;
+const toShortDateLabel = (date) => {
+  const { month, day } = getVietnamDateParts(date);
+  return `${day}/${month}`;
+};
 
 export const getAvatarLabel = (value) => {
   const text = String(value || "").trim();
@@ -146,7 +158,9 @@ export const buildRecentUploadData = (documents = [], days = 7) => {
     return {
       key: toDateKey(date),
       label: toShortDateLabel(date),
-      fullDate: date.toLocaleDateString("vi-VN"),
+      fullDate: date.toLocaleDateString("vi-VN", {
+        timeZone: "Asia/Ho_Chi_Minh",
+      }),
       count: 0,
     };
   });

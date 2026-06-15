@@ -197,7 +197,7 @@ public class CountryService {
                 .orElseThrow(() -> new AppException(ErrorCode.COUNTRY_NOT_FOUND));
 
         country.setIsDeleted(true);
-        country.setDeletedAt(java.time.LocalDateTime.now());
+        country.setDeletedAt(com.datn.dms.utils.DateTimeUtils.now());
 
         countryRepository.save(country);
     }

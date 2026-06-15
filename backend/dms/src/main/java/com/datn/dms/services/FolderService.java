@@ -171,7 +171,7 @@ public class FolderService {
                 .orElseThrow(() -> new AppException(ErrorCode.FOLDER_NOT_FOUND));
 
         folderEntity.setDeleted(true);
-        folderEntity.setDeletedAt(java.time.LocalDateTime.now());
+        folderEntity.setDeletedAt(com.datn.dms.utils.DateTimeUtils.now());
         folderRepository.save(folderEntity);
     }
 
