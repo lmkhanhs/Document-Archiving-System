@@ -7,7 +7,6 @@ import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
@@ -388,7 +387,6 @@ const sidebarItems = [
   { key: "documents", label: "Quản lý tài liệu", icon: FolderOpenOutlinedIcon },
   { key: "countries", label: "Quản lý quốc gia", icon: PublicOutlinedIcon },
   { key: "summary_history", label: "Lịch sử tóm tắt", icon: HistoryOutlinedIcon },
-  { key: "settings", label: "Cài đặt", icon: SettingsOutlinedIcon },
   { key: "logout", label: "Đăng xuất", icon: LogoutOutlinedIcon },
 ];
 
