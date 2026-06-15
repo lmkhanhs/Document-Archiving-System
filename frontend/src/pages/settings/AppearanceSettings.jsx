@@ -8,7 +8,7 @@ const AppearanceSettings = () => {
     if (typeof localStorage !== "undefined" && localStorage.getItem("theme")) {
       return localStorage.getItem("theme");
     }
-    return "system";
+    return "light";
   });
 
   useEffect(() => {

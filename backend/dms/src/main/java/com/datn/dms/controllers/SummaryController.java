@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 import com.datn.dms.dtos.ApiResponse;
 import com.datn.dms.dtos.summary.response.AdminSummaryStatisticsResponse;
@@ -95,6 +96,18 @@ public class SummaryController {
                 .code(200)
                 .message("Get summary detail successfully")
                 .data(response)
+                .build());
+    }
+
+    @GetMapping("/ping-ai")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> pingAi() {
+        Map<String, Object> result = summaryService.pingAiServer();
+        int code = "success".equals(result.get("status")) ? 200 : 500;
+        
+        return ResponseEntity.ok(ApiResponse.<Map<String, Object>>builder()
+                .code(code)
+                .message("Ping AI server finished")
+                .data(result)
                 .build());
     }
 }

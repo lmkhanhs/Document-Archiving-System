@@ -29,11 +29,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import lombok.experimental.NonFinal;
+import org.springframework.beans.factory.annotation.Value;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +46,10 @@ public class SummaryService {
 
     SummaryRepository summaryRepository;
     SummaryMapper summaryMapper;
+
+    @NonFinal
+    @Value("${app.ai.base-url}")
+    String aiBaseUrl;
 
     public SummaryStatisticsResponse getStatistics() {
         // 1. Total summaries
@@ -292,5 +300,30 @@ public class SummaryService {
         SummaryEntity summaryEntity = summaryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.SUMMARY_NOT_FOUND));
         return summaryMapper.toSummaryHistoryDetailResponse(summaryEntity);
+    }
+
+    public Map<String, Object> pingAiServer() {
+        try {
+            String url = aiBaseUrl + "/api/ping";
+            WebClient webClient = WebClient.create();
+            
+            String response = webClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block(java.time.Duration.ofSeconds(5));
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("status", "success");
+            result.put("url", url);
+            result.put("response", response);
+            return result;
+        } catch (Exception e) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("status", "failed");
+            result.put("url", aiBaseUrl + "/api/ping");
+            result.put("error", e.getMessage());
+            return result;
+        }
     }
 }

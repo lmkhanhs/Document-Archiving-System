@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import countryService from "../../../services/countryService";
+import { API_ORIGIN } from "../../../services/api";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
@@ -178,7 +179,7 @@ const AdminCountryManagement = () => {
         code: country.isoCode || extractCountryCodeFromFlag(country.flag), 
         active: country.active 
       });
-      setFlagPreview(country.flag ? `http://localhost:8080${country.flag}` : null);
+      setFlagPreview(country.flag ? `${API_ORIGIN}${country.flag}` : null);
     } else {
       setSelectedCountry(null);
       setFormData({ name: "", code: "", active: true });
@@ -434,7 +435,7 @@ const AdminCountryManagement = () => {
                           {item.flag ? (
                             <>
                               <img 
-                                src={`http://localhost:8080${item.flag}`} 
+                                src={`${API_ORIGIN}${item.flag}`} 
                                 alt={item.name} 
                                 className="h-6 w-8 object-cover rounded shadow-sm border border-slate-200" 
                                 onError={(e) => { 

@@ -2,9 +2,9 @@ spring:
   application:
     name: dms
   datasource:
-    url: jdbc:mysql://127.0.0.1/datn
-    username: root
-    password: 123456
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://127.0.0.1/datn}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -15,8 +15,8 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
   data:
     redis:
-      host: 127.0.0.1
-      port: 6379
+      host: ${SPRING_DATA_REDIS_HOST:127.0.0.1}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
   servlet:
     multipart:
       max-file-size: 20MB
@@ -25,14 +25,14 @@ spring:
 app:
   prefix: /api/v1
   ai:
-    base-url: http://localhost:8000
+    base-url: ${APP_AI_BASE_URL:http://localhost:8000}
   storage:
-    upload-dir: uploads
+    upload-dir: ${APP_STORAGE_UPLOAD_DIR:uploads}
   google:
-    client-id: 408723178594-hi6n2hdorucbce2rh0houv07kq7p77b6.apps.googleusercontent.com
+    client-id: 876249634423-2gt9o8issf4osnn537tm56dr8lfht4t3.apps.googleusercontent.com
   security:
     expiresIn: 30000
     expiresRefresh: 36000
     secret: fEJ6qu3MQ1pwdpRYxhiXNpor7jNV6tCdhw73m9rR5TfH5rS6Zq1tVDsUooXljGi3
   convertapi:
-    secret: WVg7IRvcCVT4AT8a5vKQj84NQc4U4kMu
+    secret: ${APP_CONVERTAPI_SECRET:WVg7IRvcCVT4AT8a5vKQj84NQc4U4kMu}
