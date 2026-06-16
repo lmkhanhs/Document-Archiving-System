@@ -48,6 +48,15 @@ public interface FileRepository extends JpaRepository<FileEntity, Long> {
 	@Query("SELECT f.name FROM FileEntity f")
 	List<String> findAllFileNames();
 
+	@Query("SELECT f.name FROM FileEntity f WHERE f.isDeleted = false " +
+		   "AND f.owner.id = :ownerId " +
+		   "AND ((:folderId IS NULL AND f.folder IS NULL) OR (:folderId IS NOT NULL AND f.folder.id = :folderId)) " +
+		   "AND LOWER(f.name) LIKE LOWER(CONCAT('%', :extension))")
+	List<String> findActiveFileNamesByOwnerAndFolderAndExtension(
+			@Param("ownerId") Long ownerId,
+			@Param("folderId") Long folderId,
+			@Param("extension") String extension);
+
 	long countByIsDeletedTrue();
 
 	@Query("SELECT f.type, COUNT(f) FROM FileEntity f WHERE f.isDeleted = false GROUP BY f.type")

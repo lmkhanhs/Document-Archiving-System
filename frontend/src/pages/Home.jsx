@@ -481,8 +481,8 @@ const Home = () => {
 
     setIsUploading(true);
     try {
-      await uploadDocument({ file });
-      setToast("Tải file thành công");
+      const uploadedFile = await uploadDocument({ file });
+      setToast(`Tải file thành công: ${uploadedFile?.name || file.name}`);
       await loadHome();
     } catch (error) {
       setToast(error.message || "Tải file thất bại");

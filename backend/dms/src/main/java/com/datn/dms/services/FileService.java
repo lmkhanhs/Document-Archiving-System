@@ -89,6 +89,7 @@ public class FileService {
         }
 
         String extension = getFileExtension(originalName);
+        String displayName = resolveUniqueDisplayName(originalName, extension, owner.getId(), folder != null ? folder.getId() : null);
         String storedName = UUID.randomUUID() + extension;
 
         String folderSegment = folder != null ? "folder-" + folder.getId() : "root";
@@ -103,7 +104,7 @@ public class FileService {
         }
 
         FileEntity fileEntity = new FileEntity();
-        fileEntity.setName(originalName);
+        fileEntity.setName(displayName);
         fileEntity.setType(Objects.requireNonNullElse(multipartFile.getContentType(), "application/octet-stream"));
         fileEntity.setSize(multipartFile.getSize());
         fileEntity.setUrl("/uploads/" + relativePath.toString().replace('\\', '/'));
@@ -683,6 +684,41 @@ public class FileService {
         }
 
         return "FILE";
+    }
+
+    private String resolveUniqueDisplayName(String originalName, String extension, Long ownerId, Long folderId) {
+        String baseName = getFileBaseName(originalName);
+        String normalizedExtension = extension != null ? extension : "";
+        String candidateName = baseName + normalizedExtension;
+
+        List<String> existingNames = fileRepository.findActiveFileNamesByOwnerAndFolderAndExtension(
+                ownerId,
+                folderId,
+                normalizedExtension);
+        Set<String> usedNames = existingNames.stream()
+                .filter(Objects::nonNull)
+                .map(name -> name.toLowerCase())
+                .collect(java.util.stream.Collectors.toSet());
+
+        if (!usedNames.contains(candidateName.toLowerCase())) {
+            return candidateName;
+        }
+
+        int version = 1;
+        do {
+            candidateName = baseName + "_v" + version + normalizedExtension;
+            version++;
+        } while (usedNames.contains(candidateName.toLowerCase()));
+
+        return candidateName;
+    }
+
+    private String getFileBaseName(String fileName) {
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex <= 0) {
+            return fileName;
+        }
+        return fileName.substring(0, dotIndex);
     }
 
     private String getFileExtension(String fileName) {

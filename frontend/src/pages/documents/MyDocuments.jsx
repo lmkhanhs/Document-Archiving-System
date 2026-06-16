@@ -576,8 +576,8 @@ const MyDocuments = () => {
 
     setIsUploading(true);
     try {
-      await uploadDocument({ file, folderId: currentFolderId });
-      setToast("Tải file thành công");
+      const uploadedFile = await uploadDocument({ file, folderId: currentFolderId });
+      setToast(`Tải file thành công: ${uploadedFile?.name || file.name}`);
       await loadDocuments({ folderId: currentFolderId, fallbackPath: breadcrumbs });
     } catch (uploadError) {
       setToast(uploadError.message || "Tải file thất bại");
