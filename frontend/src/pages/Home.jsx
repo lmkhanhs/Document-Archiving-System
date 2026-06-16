@@ -18,12 +18,17 @@ import CreateNewFolderOutlinedIcon from "@mui/icons-material/CreateNewFolderOutl
 import SortOutlinedIcon from "@mui/icons-material/SortOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
-import { API_ORIGIN } from "../services/api";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import RemoveOutlinedIcon from "@mui/icons-material/RemoveOutlined";
+import CropSquareOutlinedIcon from "@mui/icons-material/CropSquareOutlined";
+import FilterNoneOutlinedIcon from "@mui/icons-material/FilterNoneOutlined";
+import { API_ORIGIN, WS_BASE_URL } from "../services/api";
 import { getInfoUser, getRoles, logout } from "../services/authService";
 import {
   createMyFolder,
   downloadDocument,
   getHomeDashboard,
+  previewDocument,
   uploadDocument,
 } from "../services/documentService";
 import { deleteDocument, renameDocument } from "../services/fileActionService";
@@ -59,6 +64,27 @@ const defaultHomeData = {
 };
 
 const USER_CACHE_KEY = "currentUser";
+
+const PREVIEW_KIND = { PDF: "pdf", IMAGE: "image", TEXT: "text", OFFICE: "office", UNSUPPORTED: "unsupported" };
+const TEXT_EXTENSIONS = new Set(["txt", "md", "json", "js", "jsx", "ts", "tsx", "html", "css", "scss", "less", "xml", "yml", "yaml", "java", "py", "go", "c", "cpp", "h", "hpp", "sql", "log", "csv"]);
+const OFFICE_EXTENSIONS = new Set(["doc", "docx", "xls", "xlsx", "ppt", "pptx"]);
+const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"]);
+
+const getItemFileId = (item = {}) => item.id || item.fileId || item.fileID || item.documentId || null;
+const getFileExtension = (fileName = "") => {
+  const normalized = String(fileName).trim();
+  const index = normalized.lastIndexOf(".");
+  return index < 0 || index === normalized.length - 1 ? "" : normalized.slice(index + 1).toLowerCase();
+};
+const detectPreviewKind = ({ name = "", mimeType = "" }) => {
+  const extension = getFileExtension(name);
+  const mime = String(mimeType).toLowerCase();
+  if (mime.includes("pdf") || extension === "pdf") return PREVIEW_KIND.PDF;
+  if (mime.startsWith("image/") || IMAGE_EXTENSIONS.has(extension)) return PREVIEW_KIND.IMAGE;
+  if (mime.startsWith("text/") || mime.includes("json") || TEXT_EXTENSIONS.has(extension)) return PREVIEW_KIND.TEXT;
+  if (mime.includes("word") || mime.includes("excel") || mime.includes("spreadsheet") || mime.includes("powerpoint") || mime.includes("presentation") || OFFICE_EXTENSIONS.has(extension)) return PREVIEW_KIND.OFFICE;
+  return PREVIEW_KIND.UNSUPPORTED;
+};
 
 const resolveThumbnailUrl = (thumbnailUrl) => {
   if (!thumbnailUrl) {
@@ -198,6 +224,11 @@ const Home = () => {
   const menuRef = useRef(null);
   const userMenuRef = useRef(null);
   const userTriggerRef = useRef(null);
+  const summarySocketRef = useRef(null);
+  const summaryStatusRef = useRef("idle");
+  const summaryReceivedDoneRef = useRef(false);
+  const summaryEndRef = useRef(null);
+  const summaryCacheRef = useRef(new Map());
 
   const [activeMenu, setActiveMenu] = useState("home");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -220,6 +251,10 @@ const Home = () => {
   const [toast, setToast] = useState("");
 
   const [menuState, setMenuState] = useState(null);
+  const [previewState, setPreviewState] = useState({ open: false, loading: false, error: "", fileId: null, name: "", kind: PREVIEW_KIND.UNSUPPORTED, objectUrl: "", textContent: "" });
+  const [previewWindowState, setPreviewWindowState] = useState({ hovered: false, minimized: false, maximized: false });
+  const [summaryState, setSummaryState] = useState({ open: false, status: "idle", errorMessage: "", summaries: [], progress: { current: 0, total: 0 }, mode: "medium" });
+  const [summaryPanelState, setSummaryPanelState] = useState({ maximized: false });
 
   useEffect(() => {
     let isMounted = true;
@@ -338,6 +373,34 @@ const Home = () => {
     return () => clearTimeout(timer);
   }, [toast]);
 
+
+  useEffect(() => {
+    summaryStatusRef.current = summaryState.status;
+  }, [summaryState.status]);
+
+  useEffect(() => {
+    if (!summaryState.open) {
+      return;
+    }
+    summaryEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [summaryState.open, summaryState.summaries]);
+
+  useEffect(() => () => {
+    if (previewState.objectUrl) {
+      URL.revokeObjectURL(previewState.objectUrl);
+    }
+  }, [previewState.objectUrl]);
+
+  useEffect(() => {
+    if (previewState.open && !previewState.loading) {
+      const timer = setTimeout(() => {
+        window.dispatchEvent(new Event("resize"));
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [summaryState.open, previewState.open, previewState.loading]);
+
   const handleLogout = async () => {
     if (isLoggingOut) {
       return;
@@ -453,26 +516,51 @@ const Home = () => {
     setToast("Đã tạo tài liệu mẫu mới");
   };
 
-  const openFileUrl = (url) => {
-    if (!url) {
-      setToast("Tệp này chưa có URL để mở");
-      return;
+  const closePreview = () => {
+    setPreviewWindowState({ hovered: false, minimized: false, maximized: false });
+    if (summarySocketRef.current) {
+      summarySocketRef.current.close();
+      summarySocketRef.current = null;
     }
-
-    const targetUrl = url.startsWith("http")
-      ? url
-      : `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
-    window.open(targetUrl, "_blank", "noopener,noreferrer");
+    setSummaryState({ open: false, status: "idle", errorMessage: "", summaries: [], progress: { current: 0, total: 0 }, mode: "medium" });
+    setPreviewState((prev) => {
+      if (prev.objectUrl) URL.revokeObjectURL(prev.objectUrl);
+      return { open: false, loading: false, error: "", fileId: null, name: "", kind: PREVIEW_KIND.UNSUPPORTED, objectUrl: "", textContent: "" };
+    });
   };
 
-  const onOpenItem = (item) => {
+  const openFilePreview = async (item) => {
     if (item.itemType === "FOLDER") {
       setToast(`Mở thư mục: ${item.name}`);
       return;
     }
-
-    openFileUrl(item.url);
+    const fileId = getItemFileId(item);
+    if (!fileId) {
+      setToast("Không thể xem trước file này");
+      return;
+    }
+    setPreviewState({ open: true, loading: true, error: "", fileId, name: item.name || item.fileName || "File", kind: PREVIEW_KIND.UNSUPPORTED, objectUrl: "", textContent: "" });
+    setPreviewWindowState({ hovered: false, minimized: false, maximized: false });
+    try {
+      const { blob, contentType } = await previewDocument(fileId);
+      const kind = detectPreviewKind({ name: item.name || item.fileName, mimeType: contentType || item.mimeType || item.type || item.fileType });
+      if (kind === PREVIEW_KIND.UNSUPPORTED) {
+        setPreviewState((prev) => ({ ...prev, loading: false, error: "Không hỗ trợ xem trước file này", kind }));
+        return;
+      }
+      if (kind === PREVIEW_KIND.TEXT) {
+        const textContent = await blob.text();
+        setPreviewState((prev) => ({ ...prev, loading: false, kind, textContent }));
+        return;
+      }
+      const objectUrl = URL.createObjectURL(blob);
+      setPreviewState((prev) => ({ ...prev, loading: false, kind, objectUrl }));
+    } catch (previewError) {
+      setPreviewState((prev) => ({ ...prev, loading: false, error: previewError.message || "Không thể xem trước file" }));
+    }
   };
+
+  const onOpenItem = openFilePreview;
 
   const onDownloadItem = async (item) => {
     if (item.itemType === "FOLDER") {
@@ -480,13 +568,13 @@ const Home = () => {
       return;
     }
 
-    if (!item.id) {
+    if (!getItemFileId(item)) {
       setToast("Không thể tải tệp này");
       return;
     }
 
     try {
-      const blob = await downloadDocument(item.id);
+      const blob = await downloadDocument(getItemFileId(item));
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
@@ -498,11 +586,219 @@ const Home = () => {
     }
   };
 
+  const startSummary = async ({ force = false } = {}) => {
+    if (!previewState.fileId) {
+      setToast("Khong the tom tat file nay");
+      return;
+    }
+
+    if (!force) {
+      const cached = summaryCacheRef.current.get(previewState.fileId);
+      if (cached) {
+        setSummaryState((prev) => ({
+          ...prev,
+          open: true,
+          status: "done",
+          errorMessage: "",
+          summaries: cached.summaries,
+          progress: cached.progress || { current: cached.summaries.length, total: cached.summaries.length },
+        }));
+        return;
+      }
+    }
+
+    if (summarySocketRef.current) {
+      summarySocketRef.current.close();
+      summarySocketRef.current = null;
+    }
+
+    summaryReceivedDoneRef.current = false;
+    setSummaryState((prev) => ({
+      ...prev,
+      open: true,
+      status: "connecting",
+      errorMessage: "",
+      summaries: [],
+      progress: { current: 0, total: 0 },
+    }));
+
+    try {
+      const blob = await downloadDocument(previewState.fileId);
+      const base64Content = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("Khong the doc file"));
+        reader.readAsDataURL(blob);
+      });
+
+      const wsUrl = import.meta.env.VITE_SUMMARY_WS_URL || `${WS_BASE_URL}/ws/summarize`;
+      const wsToken = localStorage.getItem("accessToken") || "";
+      const ws = new WebSocket(`${wsUrl}?token=${wsToken}`);
+      summarySocketRef.current = ws;
+
+      ws.onopen = () => {
+        setSummaryState((prev) => ({
+          ...prev,
+          status: "processing",
+        }));
+        ws.send(JSON.stringify({
+          filename: previewState.name || "file",
+          content: base64Content,
+          fileId: previewState.fileId,
+        }));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+
+          if (data.type === "start") {
+            setSummaryState((prev) => ({
+              ...prev,
+              progress: { current: 0, total: data.total_chunks || 0 },
+            }));
+          } else if (data.type === "progress") {
+            setSummaryState((prev) => ({
+              ...prev,
+              progress: {
+                current: data.chunk_index || prev.progress.current,
+                total: data.total_chunks || prev.progress.total,
+              },
+            }));
+          } else if (data.type === "chunk") {
+            if (data.summary) {
+              setSummaryState((prev) => ({
+                ...prev,
+                summaries: [...prev.summaries, data.summary],
+              }));
+            }
+          } else if (data.type === "done") {
+            summaryReceivedDoneRef.current = true;
+            setSummaryState((prev) => {
+              const nextState = { ...prev, status: "done" };
+              summaryCacheRef.current.set(previewState.fileId, {
+                summaries: nextState.summaries,
+                progress: nextState.progress,
+              });
+              return nextState;
+            });
+            ws.close();
+          } else if (data.type === "error") {
+            setSummaryState((prev) => ({
+              ...prev,
+              status: "error",
+              errorMessage: data.message || "Da xay ra loi",
+            }));
+            ws.close();
+          }
+        } catch {
+          setSummaryState((prev) => ({
+            ...prev,
+            status: "error",
+            errorMessage: "Khong the doc du lieu tu server",
+          }));
+        }
+      };
+
+      ws.onerror = () => {
+        setSummaryState((prev) => ({
+          ...prev,
+          status: "error",
+          errorMessage: "Loi ket noi WebSocket",
+        }));
+      };
+
+      ws.onclose = (event) => {
+        if (summaryStatusRef.current === "done" || summaryStatusRef.current === "error") {
+          return;
+        }
+
+        if (summaryStatusRef.current !== "idle" && !summaryReceivedDoneRef.current) {
+          setSummaryState((prev) => ({
+            ...prev,
+            status: "error",
+            errorMessage: "Ket noi bi dong truoc khi hoan tat",
+          }));
+          return;
+        }
+
+        if (!event.wasClean && summaryStatusRef.current !== "idle") {
+          setSummaryState((prev) => ({
+            ...prev,
+            status: "error",
+            errorMessage: "Mat ket noi khi dang xu ly",
+          }));
+        }
+      };
+    } catch (error) {
+      setSummaryState((prev) => ({
+        ...prev,
+        status: "error",
+        errorMessage: error.message || "Khong the tai file de tom tat",
+      }));
+    }
+  };
+
+  const openSummaryPanel = () => {
+    setSummaryState((prev) => ({ ...prev, open: true }));
+    setSummaryPanelState((prev) => ({ ...prev, maximized: false }));
+    if (summaryState.status === "processing" || summaryState.status === "connecting") {
+      return;
+    }
+    startSummary();
+  };
+
+  const closeSummaryPanel = () => {
+    setSummaryState((prev) => ({ ...prev, open: false }));
+  };
+
+  const handleSummaryMinimize = () => {
+    setSummaryState((prev) => ({ ...prev, open: false }));
+  };
+
+  const handleSummaryToggleMaximize = () => {
+    setSummaryPanelState((prev) => ({ ...prev, maximized: !prev.maximized }));
+  };
+
+  const handleSummaryCopy = async () => {
+    if (!summaryState.summaries.length) {
+      setToast("Chua co ket qua tom tat");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(summaryState.summaries.join("\n\n"));
+      setToast("Da sao chep tom tat");
+    } catch {
+      setToast("Khong the sao chep tom tat");
+    }
+  };
+
+  const handleSummaryDownload = () => {
+    if (!summaryState.summaries.length) {
+      setToast("Chua co ket qua tom tat");
+      return;
+    }
+
+    const content = summaryState.summaries.join("\n\n");
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const fileName = previewState.name || "summary";
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${fileName}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+
   const onAction = async (action, item) => {
     setMenuState(null);
 
     if (action === "view") {
-      onOpenItem(item);
+      await openFilePreview(item);
       return;
     }
 
@@ -514,9 +810,9 @@ const Home = () => {
     if (action === "rename") {
       const nextName = window.prompt("Nhập tên mới", item.name || "");
       if (nextName && nextName.trim()) {
-        if (item.itemType !== "FOLDER" && item.id) {
+        if (item.itemType !== "FOLDER" && getItemFileId(item)) {
           try {
-            await renameDocument(item.id, nextName.trim());
+            await renameDocument(getItemFileId(item), nextName.trim());
             setToast(`Đã đổi tên thành: ${nextName.trim()}`);
             await loadHome();
           } catch (error) {
@@ -536,9 +832,9 @@ const Home = () => {
     }
 
     if (action === "delete") {
-      if (item.itemType !== "FOLDER" && item.id) {
+      if (item.itemType !== "FOLDER" && getItemFileId(item)) {
         try {
-          await deleteDocument(item.id);
+          await deleteDocument(getItemFileId(item));
           setToast("Đã xóa file thành công");
           await loadHome();
         } catch (error) {
@@ -900,7 +1196,7 @@ const Home = () => {
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                     {homeData.recent.map((item) => {
-                      const normalized = { ...item, itemType: "FILE" };
+                      const normalized = { ...item, id: getItemFileId(item), itemType: "FILE" };
 
                       return (
                         <tr
@@ -908,7 +1204,7 @@ const Home = () => {
                           onContextMenu={(event) => showActionMenu(event, normalized, "context")}
                           className="group transition hover:bg-slate-50 dark:hover:bg-slate-700/50"
                         >
-                          <td className="px-4 py-3 text-sm font-semibold text-slate-800 dark:text-slate-200">{item.name}</td>
+                          <td className="px-4 py-3 text-sm font-semibold text-slate-800 dark:text-slate-200"><button type="button" onClick={() => openFilePreview(normalized)} className="max-w-xs truncate text-left hover:text-blue-700 dark:hover:text-blue-400">{item.name}</button></td>
                           <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">{item.editedBy}</td>
                           <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{formatDateTime(item.updatedAt)}</td>
                           <td className="px-4 py-3 text-right">
@@ -940,7 +1236,7 @@ const Home = () => {
                   {homeData.suggested.map((item) => {
                     const iconMeta = getFileIcon(item.fileType);
                     const Icon = iconMeta.icon;
-                    const normalized = { ...item, itemType: "FILE" };
+                    const normalized = { ...item, id: getItemFileId(item), itemType: "FILE" };
 
                     return (
                       <div
@@ -1011,6 +1307,288 @@ const Home = () => {
           ))}
         </div>
       )}
+
+      {previewState.open && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-2 sm:p-3 backdrop-blur-sm transition-opacity">
+          <div
+            className={`relative flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl transition-all duration-300 ${
+              previewWindowState.minimized
+                ? "h-16 max-w-xl self-end"
+                : previewWindowState.maximized
+                  ? "h-[98vh] w-[98vw] max-w-none"
+                  : "h-[92vh] max-w-7xl"
+            }`}
+          >
+            {/* ── Fixed Header ── always visible ── */}
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 dark:border-slate-700 px-4 py-3">
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  {previewWindowState.minimized ? previewState.name : "Xem trước file"}
+                </div>
+                {!previewWindowState.minimized && (
+                  <div className="truncate text-xs text-slate-500 dark:text-slate-400">{previewState.name}</div>
+                )}
+              </div>
+              <div className="flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1">
+                {/* Tóm tắt AI */}
+                {!previewWindowState.minimized && (
+                  <button
+                    type="button"
+                    onClick={summaryState.open ? closeSummaryPanel : openSummaryPanel}
+                    className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold transition ${
+                      summaryState.open
+                        ? "bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-400 dark:hover:bg-blue-900/60"
+                        : "text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-slate-700"
+                    }`}
+                    title={summaryState.open ? "Đóng tóm tắt AI" : "Tóm tắt AI"}
+                  >
+                    <AutoAwesomeOutlinedIcon fontSize="small" />
+                    <span className="hidden sm:inline">Tóm tắt AI</span>
+                  </button>
+                )}
+                {/* Minimize */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    previewWindowState.minimized
+                      ? setPreviewWindowState((prev) => ({ ...prev, minimized: false }))
+                      : setPreviewWindowState((prev) => ({ ...prev, minimized: true }))
+                  }
+                  className="rounded-md p-1 text-slate-600 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-200"
+                  aria-label={previewWindowState.minimized ? "Restore preview" : "Minimize preview"}
+                  title={previewWindowState.minimized ? "Mở lại" : "Thu nhỏ"}
+                >
+                  {previewWindowState.minimized ? (
+                    <CropSquareOutlinedIcon fontSize="small" />
+                  ) : (
+                    <RemoveOutlinedIcon fontSize="small" />
+                  )}
+                </button>
+                {/* Maximize / Restore */}
+                {!previewWindowState.minimized && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPreviewWindowState((prev) => ({
+                        ...prev,
+                        maximized: !prev.maximized,
+                      }))
+                    }
+                    className="rounded-md p-1 text-slate-600 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-200"
+                    aria-label="Toggle maximize preview"
+                    title={previewWindowState.maximized ? "Khôi phục" : "Phóng to"}
+                  >
+                    {previewWindowState.maximized ? (
+                      <FilterNoneOutlinedIcon fontSize="small" />
+                    ) : (
+                      <CropSquareOutlinedIcon fontSize="small" />
+                    )}
+                  </button>
+                )}
+                {/* Close */}
+                <button
+                  type="button"
+                  onClick={closePreview}
+                  className="rounded-md p-1 text-slate-600 dark:text-slate-400 transition hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400"
+                  aria-label="Close preview"
+                  title="Đóng"
+                >
+                  <CloseOutlinedIcon fontSize="small" />
+                </button>
+              </div>
+            </div>
+
+            {/* ── Content Area ── viewer + optional summary panel ── */}
+            {!previewWindowState.minimized && (
+              <div className="relative min-h-0 flex-1 bg-slate-50 dark:bg-slate-900/50 p-2 sm:p-3">
+                <div className="relative flex h-full gap-3">
+                  {/* PDF / Image / Text / Office Viewer */}
+                  <div
+                    className={`min-w-0 h-full rounded-xl transition-all duration-300 ${
+                      summaryState.open
+                        ? summaryPanelState.maximized
+                          ? "lg:w-[58%]"
+                          : "lg:w-[68%]"
+                        : "w-full"
+                    } ${summaryState.open ? "flex-shrink-0" : "flex-1"}`}
+                  >
+                    {previewState.loading && (
+                      <div className="grid h-full place-items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold text-slate-600 dark:text-slate-400">
+                        Đang tải nội dung file...
+                      </div>
+                    )}
+
+                    {!previewState.loading && previewState.error && (
+                      <div className="grid h-full place-items-center rounded-xl border border-amber-100 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/20 text-sm font-semibold text-amber-800 dark:text-amber-500">
+                        {previewState.error}
+                      </div>
+                    )}
+
+                    {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.PDF && previewState.objectUrl && (
+                      <object
+                        data={`${previewState.objectUrl}#navpanes=0&view=FitH`}
+                        type="application/pdf"
+                        className="h-full w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                        style={{ minHeight: 0 }}
+                      >
+                        <div className="grid h-full place-items-center text-sm text-slate-500 dark:text-slate-400">
+                          Trình duyệt không hỗ trợ xem PDF.
+                          <a href={previewState.objectUrl} download className="mt-2 text-blue-600 underline">Tải xuống file</a>
+                        </div>
+                      </object>
+                    )}
+
+                    {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.IMAGE && previewState.objectUrl && (
+                      <div className="grid h-full place-items-center overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+                        <img
+                          src={previewState.objectUrl}
+                          alt={previewState.name}
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                    )}
+
+                    {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.TEXT && (
+                      <pre className="h-full overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+                        {previewState.textContent}
+                      </pre>
+                    )}
+
+                    {!previewState.loading && !previewState.error && previewState.kind === PREVIEW_KIND.OFFICE && previewState.objectUrl && (
+                      <object
+                        data={`${previewState.objectUrl}#navpanes=0&view=FitH`}
+                        type="application/pdf"
+                        className="h-full w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                        style={{ minHeight: 0 }}
+                      >
+                        <div className="grid h-full place-items-center text-sm text-slate-500 dark:text-slate-400">
+                          Trình duyệt không hỗ trợ xem file.
+                          <a href={previewState.objectUrl} download className="mt-2 text-blue-600 underline">Tải xuống file</a>
+                        </div>
+                      </object>
+                    )}
+                  </div>
+
+                  {/* Summary Panel (content only — no separate header) */}
+                  <aside
+                    className={`overflow-hidden rounded-2xl border shadow-xl transition-all duration-300 ${
+                      summaryState.open
+                        ? `translate-x-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 opacity-100 absolute right-0 top-0 z-10 h-full w-[88%] max-w-sm lg:static lg:h-auto lg:max-w-none ${
+                            summaryPanelState.maximized ? "lg:w-[42%]" : "lg:w-[32%]"
+                          }`
+                        : "pointer-events-none w-0 translate-x-4 border-transparent opacity-0 absolute right-0 top-0 z-10 h-full"
+                    }`}
+                  >
+                    {/* Summary panel sub-header (lightweight — file context only) */}
+                    <div className="flex shrink-0 items-center justify-between border-b border-slate-200 dark:border-slate-700 px-4 py-3">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">Kết quả tóm tắt AI</div>
+                        <div className="truncate text-xs text-slate-500 dark:text-slate-400">{previewState.name}</div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={handleSummaryToggleMaximize}
+                          className="rounded-md p-1 text-slate-500 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-200"
+                          title={summaryPanelState.maximized ? "Thu nhỏ panel" : "Mở rộng panel"}
+                        >
+                          {summaryPanelState.maximized ? (
+                            <FilterNoneOutlinedIcon fontSize="small" />
+                          ) : (
+                            <CropSquareOutlinedIcon fontSize="small" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={closeSummaryPanel}
+                          className="rounded-md p-1 text-slate-500 dark:text-slate-400 transition hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400"
+                          title="Đóng panel"
+                        >
+                          <CloseOutlinedIcon fontSize="small" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Summary content */}
+                    <div className="flex h-[calc(100%-3.25rem)] flex-col gap-3 overflow-hidden p-4">
+                      {(summaryState.status === "connecting" || summaryState.status === "processing") && (
+                        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                          {summaryState.status === "connecting"
+                            ? "AI đang kết nối..."
+                            : "AI đang phân tích tài liệu..."}
+                          {summaryState.status === "processing" && summaryState.progress.total > 0 && (
+                            <div className="mt-3">
+                              <div className="mb-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                                <span>Tiến trình</span>
+                                <span>{Math.round((summaryState.progress.current / summaryState.progress.total) * 100)}%</span>
+                              </div>
+                              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                                <div
+                                  className="h-full bg-gradient-to-r from-blue-500 to-sky-500 transition-all"
+                                  style={{ width: `${(summaryState.progress.current / summaryState.progress.total) * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {summaryState.status === "error" && (
+                        <div className="rounded-2xl border border-amber-100 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/20 p-4 text-sm font-semibold text-amber-800 dark:text-amber-500">
+                          Không thể tạo tóm tắt. Vui lòng thử lại.
+                        </div>
+                      )}
+
+                      <div className="flex-1 overflow-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-4 text-sm text-slate-700 dark:text-slate-300">
+                        {summaryState.summaries.length > 0 ? (
+                          summaryState.summaries.map((text, idx) => (
+                            <div
+                              key={`${text.slice(0, 12)}-${idx}`}
+                              className="relative mb-3 pl-5 leading-relaxed before:absolute before:left-0 before:top-2 before:h-2 before:w-2 before:rounded-full before:bg-blue-500"
+                            >
+                              {text}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm text-slate-500 dark:text-slate-400">Chưa có kết quả tóm tắt.</div>
+                        )}
+                        <div ref={summaryEndRef} />
+                      </div>
+
+                      <div className="shrink-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleSummaryCopy}
+                            className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700"
+                          >
+                            Copy
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSummaryDownload}
+                            className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700"
+                          >
+                            Tải xuống
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => startSummary({ force: true })}
+                          className="mt-3 w-full rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
+                        >
+                          Tóm tắt lại
+                        </button>
+                      </div>
+                    </div>
+                  </aside>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
 
       {toast && (
         <div className="fixed bottom-4 right-4 z-50 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-lg">
