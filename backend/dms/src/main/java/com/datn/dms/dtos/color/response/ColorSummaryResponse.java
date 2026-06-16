@@ -8,10 +8,10 @@ import lombok.experimental.FieldDefaults;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ColorResponse {
+public class ColorSummaryResponse {
     Long id;
     String name;
     String hexCode;
     Integer position;
-    Boolean isDeleted;
+    Long fileCount;
 }

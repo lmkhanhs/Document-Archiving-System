@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
@@ -18,6 +18,7 @@ import CreateNewFolderOutlinedIcon from "@mui/icons-material/CreateNewFolderOutl
 import SortOutlinedIcon from "@mui/icons-material/SortOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
+import PaletteOutlinedIcon from "@mui/icons-material/PaletteOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import RemoveOutlinedIcon from "@mui/icons-material/RemoveOutlined";
 import CropSquareOutlinedIcon from "@mui/icons-material/CropSquareOutlined";
@@ -38,6 +39,7 @@ const sidebarItems = [
   { key: "documents", label: "Tài liệu của tôi", icon: FolderOpenOutlinedIcon },
   { key: "upload", label: "Tải lên tài liệu", icon: UploadFileOutlinedIcon },
   { key: "summarize", label: "Tóm tắt AI", icon: AutoAwesomeOutlinedIcon },
+  { key: "color-board", label: "Bảng màu", icon: PaletteOutlinedIcon },
   { key: "trash", label: "Thùng rác", icon: DeleteOutlineOutlinedIcon },
   { key: "settings", label: "Cài đặt", icon: SettingsOutlinedIcon },
 ];
@@ -880,11 +882,6 @@ const Home = () => {
     });
   };
 
-  const storagePercent = useMemo(() => {
-    const value = homeData?.storage?.usagePercent ?? 0;
-    return Math.min(100, Math.max(0, value));
-  }, [homeData?.storage?.usagePercent]);
-
   const renderSkeletonCards = (count) => (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {Array.from({ length: count }).map((_, index) => (
@@ -950,6 +947,9 @@ const Home = () => {
                     }
                     if (item.key === "summarize") {
                       navigate("/summarize");
+                    }
+                    if (item.key === "color-board") {
+                      navigate("/color-board");
                     }
                     if (item.key === "trash") {
                       navigate("/trash");
@@ -1248,8 +1248,8 @@ const Home = () => {
             )}
           </section>
 
-          <section className="mt-8 grid gap-5 lg:grid-cols-3">
-            <div className="lg:col-span-2">
+          <section className="mt-8">
+            <div>
               <h2 className="mb-3 text-xl font-bold text-slate-800 dark:text-slate-100">Đề xuất</h2>
 
               {isLoading ? (
@@ -1288,23 +1288,6 @@ const Home = () => {
                   })}
                 </div>
               )}
-            </div>
-
-            <div>
-              <h2 className="mb-3 text-xl font-bold text-slate-800 dark:text-slate-100">Trạng thái hệ thống</h2>
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
-                <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">Dung lượng đã sử dụng</div>
-                <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                  {homeData.storage.usedText} / {homeData.storage.totalText}
-                </div>
-                <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-sky-400 transition-all"
-                    style={{ width: `${storagePercent}%` }}
-                  />
-                </div>
-                <div className="mt-2 text-xs font-semibold text-blue-700 dark:text-blue-400">{storagePercent}% đã sử dụng</div>
-              </div>
             </div>
           </section>
         </main>

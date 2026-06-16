@@ -19,6 +19,7 @@ import com.datn.dms.dtos.ApiResponse;
 import com.datn.dms.dtos.color.request.CreateColorRequest;
 import com.datn.dms.dtos.color.request.UpdateColorRequest;
 import com.datn.dms.dtos.color.response.ColorResponse;
+import com.datn.dms.dtos.color.response.ColorSummaryResponse;
 import com.datn.dms.services.ColorService;
 
 import lombok.AccessLevel;
@@ -66,6 +67,14 @@ public class ColorController {
         return ApiResponse.<List<ColorResponse>>builder()
                 .message("Get all colors by pageable successfully")
                 .data(colorService.getAllColors(pageable))
+                .build();
+    }
+
+    @GetMapping("/summary")
+    public ApiResponse<List<ColorSummaryResponse>> getColorSummary() {
+        return ApiResponse.<List<ColorSummaryResponse>>builder()
+                .message("Get color summary successfully")
+                .data(colorService.getColorSummary())
                 .build();
     }
 

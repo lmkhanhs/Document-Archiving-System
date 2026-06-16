@@ -7,6 +7,7 @@ import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
+import PaletteOutlinedIcon from "@mui/icons-material/PaletteOutlined";
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import ErrorOutlineOutlinedIcon from "@mui/icons-material/ErrorOutlineOutlined";
 import { WS_BASE_URL } from "../../services/api";
@@ -20,6 +21,7 @@ const sidebarItems = [
   { key: "documents", label: "Tài liệu của tôi", icon: FolderOpenOutlinedIcon },
   { key: "upload", label: "Tải lên tài liệu", icon: UploadFileOutlinedIcon },
   { key: "summarize", label: "Tóm tắt AI", icon: AutoAwesomeOutlinedIcon },
+  { key: "color-board", label: "Bảng màu", icon: PaletteOutlinedIcon },
   { key: "trash", label: "Thùng rác", icon: DeleteOutlineOutlinedIcon },
   { key: "settings", label: "Cài đặt", icon: SettingsOutlinedIcon },
 ];
@@ -141,6 +143,11 @@ const Summarize = () => {
 
     if (menuKey === "summarize") {
       navigate("/summarize");
+      return;
+    }
+
+    if (menuKey === "color-board") {
+      navigate("/color-board");
       return;
     }
 

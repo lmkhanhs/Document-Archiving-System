@@ -7,6 +7,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,6 +24,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.datn.dms.dtos.ApiResponse;
 import com.datn.dms.dtos.files.request.CreateFileRequest;
+import com.datn.dms.dtos.files.request.UpdateFileColorRequest;
 import com.datn.dms.dtos.files.request.UpdateFileRequest;
 import com.datn.dms.dtos.files.response.CreateFileResponse;
 import com.datn.dms.dtos.files.response.FileResponse;
@@ -88,6 +90,17 @@ public class FileController {
                 .build();
     }
 
+    @PatchMapping("/{fileId}/color")
+    public ApiResponse<FileResponse> updateFileColor(
+            @PathVariable Long fileId,
+            @RequestBody UpdateFileColorRequest request) {
+        return ApiResponse.<FileResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("Update file color successfully")
+                .data(fileService.updateFileColor(fileId, request != null ? request.getColorId() : null))
+                .build();
+    }
+
     @DeleteMapping("/{fileId}")
     public ApiResponse<Void> deleteFile(@PathVariable Long fileId) {
         fileService.deleteFile(fileId);
@@ -130,6 +143,17 @@ public class FileController {
                 .code(HttpStatus.OK.value())
                 .message("Get files by folder id successfully")
                 .data(fileService.getFilesByFolderId(folderId))
+                .build();
+    }
+
+    @GetMapping("/by-color")
+    public ApiResponse<List<FileResponse>> getFilesByColor(
+            @RequestParam(required = false) Long colorId,
+            @RequestParam(required = false, defaultValue = "colored") String type) {
+        return ApiResponse.<List<FileResponse>>builder()
+                .code(HttpStatus.OK.value())
+                .message("Get files by color successfully")
+                .data(fileService.getFilesByColor(colorId, type))
                 .build();
     }
 

@@ -137,6 +137,20 @@ export const getTrashFiles = async () => {
   }
 };
 
+export const getFilesByColor = async ({ colorId = null, type = "colored" } = {}) => {
+  try {
+    const response = await api.get("/files/by-color", {
+      params: {
+        colorId: colorId ?? undefined,
+        type,
+      },
+    });
+    return parseApiResponse(response, "Không thể tải file theo màu");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể tải file theo màu");
+  }
+};
+
 export const restoreFolder = async (folderId) => {
   try {
     const response = await api.put(`/folders/restore/${folderId}`);

@@ -31,3 +31,12 @@ export const deleteDocument = async (fileId) => {
     throw new Error(error.response?.data?.message || "Không thể xóa file");
   }
 };
+
+export const updateDocumentColor = async (fileId, colorId) => {
+  try {
+    const response = await api.patch(`/files/${fileId}/color`, { colorId });
+    return parseApiResponse(response, "Không thể cập nhật màu file");
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Không thể cập nhật màu file");
+  }
+};

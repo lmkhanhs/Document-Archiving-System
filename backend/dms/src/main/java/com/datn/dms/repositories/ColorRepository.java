@@ -1,5 +1,6 @@
 package com.datn.dms.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -13,4 +14,6 @@ import com.datn.dms.entities.ColorEntity;
 public interface ColorRepository extends JpaRepository<ColorEntity, Long> {
     Optional<ColorEntity> findByHexCode(String hexCode);
     Page<ColorEntity> findAllByIsDeletedFalse(Pageable pageable);
+    List<ColorEntity> findAllByIsDeletedFalseOrderByPositionAsc();
+    Optional<ColorEntity> findByIdAndIsDeletedFalse(Long id);
 }

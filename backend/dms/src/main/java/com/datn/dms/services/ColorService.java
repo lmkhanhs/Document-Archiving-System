@@ -10,11 +10,15 @@ import org.springframework.stereotype.Service;
 import com.datn.dms.dtos.color.request.CreateColorRequest;
 import com.datn.dms.dtos.color.request.UpdateColorRequest;
 import com.datn.dms.dtos.color.response.ColorResponse;
+import com.datn.dms.dtos.color.response.ColorSummaryResponse;
 import com.datn.dms.entities.ColorEntity;
 import com.datn.dms.exception.AppException;
 import com.datn.dms.exception.ErrorCode;
 import com.datn.dms.mapper.ColorMapper;
 import com.datn.dms.repositories.ColorRepository;
+import com.datn.dms.repositories.FileRepository;
+import com.datn.dms.repositories.UserRepository;
+import com.datn.dms.utils.AuthenticationUtills;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +29,9 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ColorService {
     ColorRepository colorRepository;
+    FileRepository fileRepository;
+    UserRepository userRepository;
+    AuthenticationUtills authenticationUtills;
     ColorMapper colorMapper;
 
     public ColorResponse createColor(CreateColorRequest request) {
@@ -61,13 +68,29 @@ public class ColorService {
     }
 
     public List<ColorResponse> getAllColors(Pageable pageable) {
-        List<ColorEntity> colors = colorRepository.findAllByIsDeletedFalse(pageable).getContent();
+        List<ColorEntity> colors = colorRepository.findAllByIsDeletedFalseOrderByPositionAsc();
         return colors.stream()
                 .map(colorMapper::toColorResponse)
                 .collect(Collectors.toList());
     }
 
-    // restone 
+    public List<ColorSummaryResponse> getColorSummary() {
+        Long ownerId = userRepository.findByUsername(authenticationUtills.getUserName())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND))
+                .getId();
+
+        return colorRepository.findAllByIsDeletedFalseOrderByPositionAsc().stream()
+                .map(color -> ColorSummaryResponse.builder()
+                        .id(color.getId())
+                        .name(color.getName())
+                        .hexCode(color.getHexCode())
+                        .position(color.getPosition())
+                        .fileCount(fileRepository.countByOwner_IdAndColor_IdAndIsDeletedFalse(ownerId, color.getId()))
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    // restone
     public void restoreColor(Long id) {
         ColorEntity colorEntity = colorRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.COLOR_NOT_FOUND));

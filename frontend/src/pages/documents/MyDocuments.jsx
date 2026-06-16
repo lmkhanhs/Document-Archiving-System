@@ -19,6 +19,7 @@ import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
 import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
+import PaletteOutlinedIcon from "@mui/icons-material/PaletteOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import RemoveOutlinedIcon from "@mui/icons-material/RemoveOutlined";
@@ -36,14 +37,16 @@ import {
   getRootFolders,
   uploadDocument,
 } from "../../services/documentService";
-import { deleteDocument, renameDocument } from "../../services/fileActionService";
+import { deleteDocument, renameDocument, updateDocumentColor } from "../../services/fileActionService";
 import { WS_BASE_URL } from "../../services/api";
+import { getColors } from "../../services/colorService";
 
 const sidebarItems = [
   { key: "home", label: "Trang chủ", icon: HomeOutlinedIcon },
   { key: "documents", label: "Tài liệu của tôi", icon: FolderOpenOutlinedIcon },
   { key: "upload", label: "Tải lên tài liệu", icon: UploadFileOutlinedIcon },
   { key: "summarize", label: "Tóm tắt AI", icon: AutoAwesomeOutlinedIcon },
+  { key: "color-board", label: "Bảng màu", icon: PaletteOutlinedIcon },
   { key: "trash", label: "Thùng rác", icon: DeleteOutlineOutlinedIcon },
   { key: "settings", label: "Cài đặt", icon: SettingsOutlinedIcon },
 ];
@@ -171,6 +174,8 @@ const normalizeFile = (file) => ({
   fileSize: getFileSizeValue(file),
   mimeType: file.type || file.fileType || "",
   fileUrl: file.url || "",
+  color: file.color || null,
+  colorCode: file.color?.hexCode || file.colorCode || "",
 });
 
 const getFileExtension = (fileName = "") => {
@@ -382,6 +387,8 @@ const MyDocuments = () => {
     item: null,
     submitting: false,
   });
+  const [colors, setColors] = useState([]);
+  const [colorMenuOpen, setColorMenuOpen] = useState(false);
 
   const loadDocuments = useCallback(async ({ folderId = null, fallbackPath = [ROOT_CRUMB] } = {}) => {
     setIsLoading(true);
@@ -447,6 +454,29 @@ const MyDocuments = () => {
     const timer = setTimeout(() => setToast(""), 2500);
     return () => clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadColors = async () => {
+      try {
+        const payload = await getColors();
+        if (isMounted) {
+          setColors(Array.isArray(payload) ? payload : []);
+        }
+      } catch (colorError) {
+        if (isMounted) {
+          setToast(colorError.message || "Không thể tải danh sách màu");
+        }
+      }
+    };
+
+    loadColors();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     summaryStatusRef.current = summaryState.status;
@@ -1115,6 +1145,26 @@ const MyDocuments = () => {
     }
   };
 
+  const refreshCurrentFolder = () => loadDocuments({ folderId: currentFolderId, fallbackPath: breadcrumbs });
+
+  const handleColorSelect = async (colorId) => {
+    const target = menuState?.item;
+    if (!target || target.type === "folder") {
+      return;
+    }
+
+    try {
+      const updatedFile = await updateDocumentColor(target.id, colorId);
+      const normalized = normalizeFile(updatedFile);
+      setFiles((prev) => prev.map((file) => (file.id === normalized.id ? { ...file, ...normalized } : file)));
+      setToast(colorId ? "Đã gắn màu cho file" : "Đã bỏ màu file");
+      setMenuState(null);
+      setColorMenuOpen(false);
+    } catch (colorError) {
+      setToast(colorError.message || "Không thể cập nhật màu file");
+    }
+  };
+
   const onClickCrumb = (crumb, index) => {
     if (index === 0 || crumb.id === null || crumb.id === undefined) {
       loadDocuments({ folderId: null, fallbackPath: [ROOT_CRUMB] });
@@ -1151,6 +1201,11 @@ const MyDocuments = () => {
 
     if (menuKey === "summarize") {
       navigate("/summarize");
+      return;
+    }
+
+    if (menuKey === "color-board") {
+      navigate("/color-board");
       return;
     }
 
@@ -1350,6 +1405,7 @@ const MyDocuments = () => {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
                             <iconMeta.Icon className={iconMeta.className} fontSize="small" />
+                            {item.type !== "folder" && item.colorCode && (<span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.colorCode }} />)}
                             <span className="truncate">{item.name}</span>
                           </div>
                         </td>
@@ -1381,6 +1437,7 @@ const MyDocuments = () => {
                       <div className={`rounded-xl p-2 ${iconMeta.className} dark:bg-opacity-20`}>
                         <iconMeta.Icon fontSize="small" />
                       </div>
+                      {item.type !== "folder" && item.colorCode && (<span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.colorCode }} />)}
                       <span className="truncate">{item.name}</span>
                     </div>
 
@@ -1451,6 +1508,46 @@ const MyDocuments = () => {
               {action.label}
             </button>
           ))}
+          {menuState.item?.type !== "folder" && (
+            <div
+              className="relative -mr-2 pr-2"
+              onMouseEnter={() => setColorMenuOpen(true)}
+              onMouseLeave={() => setColorMenuOpen(false)}
+            >
+              <button
+                type="button"
+                className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 transition hover:bg-slate-100 dark:hover:bg-slate-700"
+              >
+                <span>Gắn màu</span>
+                <span>›</span>
+              </button>
+              {colorMenuOpen && (
+                <div className="absolute left-full top-0 z-[60] w-52 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1.5 shadow-xl before:absolute before:-left-2 before:top-0 before:h-full before:w-2 before:content-['']">
+                  <button
+                    type="button"
+                    onClick={() => handleColorSelect(null)}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 transition hover:bg-slate-100 dark:hover:bg-slate-700"
+                  >
+                    <span className="h-3 w-3 rounded-full border border-slate-300" />
+                    <span className="flex-1">Bỏ màu</span>
+                    {!menuState.item?.colorCode && <span>✓</span>}
+                  </button>
+                  {colors.map((color) => (
+                    <button
+                      key={color.id}
+                      type="button"
+                      onClick={() => handleColorSelect(color.id)}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 transition hover:bg-slate-100 dark:hover:bg-slate-700"
+                    >
+                      <span className="h-3 w-3 rounded-full" style={{ backgroundColor: color.hexCode }} />
+                      <span className="flex-1 truncate">{color.name}</span>
+                      {menuState.item?.color?.id === color.id && <span>✓</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

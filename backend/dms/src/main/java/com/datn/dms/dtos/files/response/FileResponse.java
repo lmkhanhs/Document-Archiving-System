@@ -2,6 +2,8 @@ package com.datn.dms.dtos.files.response;
 
 import java.time.LocalDateTime;
 
+import com.datn.dms.dtos.color.response.ColorResponse;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +20,7 @@ public class FileResponse {
     String url;
     Long folderId;
     String colorCode;
+    ColorResponse color;
     LocalDateTime createdAt;
     LocalDateTime deletedAt;
     String ownerName;

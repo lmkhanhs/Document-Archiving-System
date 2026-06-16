@@ -23,6 +23,7 @@ const sidebarItems = [
   { key: "documents", label: "Tài liệu của tôi", icon: FolderOpenOutlinedIcon },
   { key: "upload", label: "Tải lên tài liệu", icon: UploadFileOutlinedIcon },
   { key: "summarize", label: "Tóm tắt AI", icon: AutoAwesomeOutlinedIcon },
+  { key: "color-board", label: "Bảng màu", icon: PaletteOutlinedIcon },
   { key: "trash", label: "Thùng rác", icon: DeleteOutlineOutlinedIcon },
   { key: "settings", label: "Cài đặt", icon: SettingsOutlinedIcon },
 ];

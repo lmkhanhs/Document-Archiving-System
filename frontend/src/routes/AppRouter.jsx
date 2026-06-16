@@ -9,6 +9,7 @@ import Trash from "../pages/documents/Trash";
 import Summarize from "../pages/documents/Summarize";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
 import Settings from "../pages/Settings";
+import ColorBoard from "../pages/ColorBoard";
 import { getRoles } from "../services/authService";
 
 const isAuthenticated = () => Boolean(localStorage.getItem("accessToken"));
@@ -115,6 +116,15 @@ const AppRouter = () => {
         element={(
           <ProtectedRoute>
             <Settings />
+          </ProtectedRoute>
+        )}
+      />
+
+      <Route
+        path="/color-board"
+        element={(
+          <ProtectedRoute>
+            <ColorBoard />
           </ProtectedRoute>
         )}
       />

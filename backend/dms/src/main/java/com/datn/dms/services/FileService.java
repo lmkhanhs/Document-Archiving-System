@@ -36,12 +36,14 @@ import com.datn.dms.dtos.files.response.HomeQuickAccessItemResponse;
 import com.datn.dms.dtos.files.response.HomeRecentItemResponse;
 import com.datn.dms.dtos.files.response.HomeStorageStatusResponse;
 import com.datn.dms.dtos.files.response.HomeSuggestedItemResponse;
+import com.datn.dms.entities.ColorEntity;
 import com.datn.dms.entities.FileEntity;
 import com.datn.dms.entities.FolderEntity;
 import com.datn.dms.entities.UserEntity;
 import com.datn.dms.exception.AppException;
 import com.datn.dms.exception.ErrorCode;
 import com.datn.dms.mapper.FileMapper;
+import com.datn.dms.repositories.ColorRepository;
 import com.datn.dms.repositories.FileRepository;
 import com.datn.dms.repositories.FolderRepository;
 import com.datn.dms.repositories.UserRepository;
@@ -60,6 +62,7 @@ public class FileService {
 
     final FileRepository fileRepository;
     final FolderRepository folderRepository;
+    final ColorRepository colorRepository;
     final UserRepository userRepository;
     final AuthenticationUtills authenticationUtills;
     final FileMapper fileMapper;
@@ -406,6 +409,27 @@ public class FileService {
                 .body(resource);
     }
 
+    public FileResponse updateFileColor(Long fileId, Long colorId) {
+        UserEntity currentUser = getCurrentUser();
+        boolean isAdmin = currentUser.getRoles() != null
+                && currentUser.getRoles().stream().anyMatch(role -> "ADMIN".equals(role.getName()));
+
+        FileEntity fileEntity = (isAdmin
+                ? fileRepository.findByIdAndIsDeletedFalse(fileId)
+                : fileRepository.findByIdAndOwner_IdAndIsDeletedFalse(fileId, currentUser.getId()))
+                .orElseThrow(() -> new AppException(isAdmin ? ErrorCode.FILE_NOT_FOUND : ErrorCode.UNAUTHORIZED_EXCEPTION));
+
+        ColorEntity color = null;
+        if (colorId != null) {
+            color = colorRepository.findByIdAndIsDeletedFalse(colorId)
+                    .orElseThrow(() -> new AppException(ErrorCode.COLOR_NOT_FOUND));
+        }
+
+        fileEntity.setColor(color);
+        fileEntity = fileRepository.save(fileEntity);
+        return fileMapper.toFileResponse(fileEntity);
+    }
+
     public HomeRecentItemResponse renameFile(Long fileId, UpdateFileRequest request) {
         UserEntity owner = getCurrentUser();
 
@@ -479,7 +503,7 @@ public class FileService {
 
     public List<FileResponse> getFilesByFolderId(Long folderId) {
         UserEntity currentUser = getCurrentUser();
-        
+
         folderRepository.findByIdAndOwner_IdAndIsDeletedFalse(folderId, currentUser.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.FOLDER_NOT_FOUND));
 
@@ -487,6 +511,25 @@ public class FileService {
                 .stream()
                 .map(fileMapper::toFileResponse)
                 .toList();
+    }
+
+    public List<FileResponse> getFilesByColor(Long colorId, String type) {
+        UserEntity currentUser = getCurrentUser();
+        List<FileEntity> files;
+
+        if (colorId != null) {
+            colorRepository.findByIdAndIsDeletedFalse(colorId)
+                    .orElseThrow(() -> new AppException(ErrorCode.COLOR_NOT_FOUND));
+            files = fileRepository.findAllByOwner_IdAndColor_IdAndIsDeletedFalseOrderByUpdatedAtDesc(currentUser.getId(), colorId);
+        } else if ("uncolored".equalsIgnoreCase(type)) {
+            files = fileRepository.findAllByOwner_IdAndColorIsNullAndIsDeletedFalseOrderByUpdatedAtDesc(currentUser.getId());
+        } else if ("colored".equalsIgnoreCase(type) || "all".equalsIgnoreCase(type)) {
+            files = fileRepository.findAllByOwner_IdAndColorIsNotNullAndIsDeletedFalseOrderByUpdatedAtDesc(currentUser.getId());
+        } else {
+            files = fileRepository.findAllByOwner_IdAndColorIsNotNullAndIsDeletedFalseOrderByUpdatedAtDesc(currentUser.getId());
+        }
+
+        return files.stream().map(fileMapper::toFileResponse).toList();
     }
 
     public List<FileResponse> getTrashFiles() {
