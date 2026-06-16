@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
@@ -313,6 +313,7 @@ const buildBreadcrumbs = (payload, fallback = [ROOT_CRUMB]) => {
 
 const MyDocuments = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const uploadInputRef = useRef(null);
   const folderUploadInputRef = useRef(null);
   const menuRef = useRef(null);
@@ -424,8 +425,19 @@ const MyDocuments = () => {
   }, []);
 
   useEffect(() => {
+    const targetFolder = location.state?.openFolder;
+
+    if (targetFolder?.id) {
+      loadDocuments({
+        folderId: targetFolder.id,
+        fallbackPath: [ROOT_CRUMB, { id: targetFolder.id, name: targetFolder.name || "Folder" }],
+      });
+      navigate(location.pathname, { replace: true, state: null });
+      return;
+    }
+
     loadDocuments();
-  }, [loadDocuments]);
+  }, [loadDocuments, location.pathname, location.state, navigate]);
 
   useEffect(() => {
     if (!toast) {

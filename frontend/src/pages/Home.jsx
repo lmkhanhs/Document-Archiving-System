@@ -71,6 +71,9 @@ const OFFICE_EXTENSIONS = new Set(["doc", "docx", "xls", "xlsx", "ppt", "pptx"])
 const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"]);
 
 const getItemFileId = (item = {}) => item.id || item.fileId || item.fileID || item.documentId || null;
+const getItemFolderId = (item = {}) => item.id || item.folderId || item.folderID || null;
+const isFolderItem = (item = {}) => String(item.itemType || item.type || "").toUpperCase() === "FOLDER";
+const getItemName = (item = {}) => item.name || item.fileName || item.folderName || "";
 const getFileExtension = (fileName = "") => {
   const normalized = String(fileName).trim();
   const index = normalized.lastIndexOf(".");
@@ -529,11 +532,24 @@ const Home = () => {
     });
   };
 
-  const openFilePreview = async (item) => {
-    if (item.itemType === "FOLDER") {
-      setToast(`Mở thư mục: ${item.name}`);
+  const openFolderInDocuments = (item) => {
+    const folderId = getItemFolderId(item);
+    if (!folderId) {
+      setToast("Không thể mở thư mục này");
       return;
     }
+
+    navigate("/documents", {
+      state: {
+        openFolder: {
+          id: folderId,
+          name: getItemName(item) || "Folder",
+        },
+      },
+    });
+  };
+
+  const openFilePreview = async (item) => {
     const fileId = getItemFileId(item);
     if (!fileId) {
       setToast("Không thể xem trước file này");
@@ -560,7 +576,14 @@ const Home = () => {
     }
   };
 
-  const onOpenItem = openFilePreview;
+  const onOpenItem = (item) => {
+    if (isFolderItem(item)) {
+      openFolderInDocuments(item);
+      return;
+    }
+
+    openFilePreview(item);
+  };
 
   const onDownloadItem = async (item) => {
     if (item.itemType === "FOLDER") {
@@ -798,7 +821,7 @@ const Home = () => {
     setMenuState(null);
 
     if (action === "view") {
-      await openFilePreview(item);
+      onOpenItem(item);
       return;
     }
 
