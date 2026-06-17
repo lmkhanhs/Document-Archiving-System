@@ -27,6 +27,8 @@ public abstract class SummaryMapper {
     @Mappings({
         @Mapping(target = "title", source = ".", qualifiedByName = "mapTitle"),
         @Mapping(target = "inputType", source = "summaryType"),
+        @Mapping(target = "fileId", source = "file.id"),
+        @Mapping(target = "fileName", source = "file.name"),
         @Mapping(target = "username", source = ".", qualifiedByName = "mapUsername"),
         @Mapping(target = "thumbnailUrl", source = "user.thumbnailUrl"),
         @Mapping(target = "aiModel", source = "model"),
@@ -60,11 +62,15 @@ public abstract class SummaryMapper {
             return entity.getOriginalContent() != null ? entity.getOriginalContent() : "";
         }
 
+        if (entity.getOriginalContent() != null && !entity.getOriginalContent().isBlank()) {
+            return entity.getOriginalContent();
+        }
+
         if ("FILE".equalsIgnoreCase(entity.getSummaryType()) && entity.getFile() != null) {
             return "File: " + entity.getFile().getName();
         }
 
-        return entity.getOriginalContent() != null ? entity.getOriginalContent() : "";
+        return "";
     }
 
     @Named("mapUsername")

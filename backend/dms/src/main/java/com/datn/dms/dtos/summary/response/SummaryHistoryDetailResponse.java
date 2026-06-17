@@ -18,6 +18,8 @@ public class SummaryHistoryDetailResponse {
     Long id;
     String title;
     String inputType;
+    Long fileId;
+    String fileName;
     String username;
     String thumbnailUrl;
     

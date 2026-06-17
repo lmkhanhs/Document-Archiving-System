@@ -5,6 +5,7 @@ import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import TextFieldsOutlinedIcon from "@mui/icons-material/TextFieldsOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import { previewDocument } from "../../services/documentService";
 import { getMySummaryHistories, getSummaryHistoryDetail } from "../../services/summaryHistoryService";
 
 const TYPE_OPTIONS = [
@@ -52,7 +53,21 @@ const getTitle = (item) => {
   if (item?.inputType === "TEXT") {
     return "Văn bản nhập trực tiếp";
   }
-  return item?.title || "File";
+  return item?.fileName || item?.title || "File";
+};
+
+const getFileExtension = (fileName = "") => {
+  const index = String(fileName).lastIndexOf(".");
+  return index >= 0 ? String(fileName).slice(index + 1).toLowerCase() : "";
+};
+
+const detectPreviewKind = ({ name = "", mimeType = "" }) => {
+  const extension = getFileExtension(name);
+  const mime = String(mimeType).toLowerCase();
+  if (mime.includes("pdf") || extension === "pdf") return "pdf";
+  if (mime.startsWith("image/")) return "image";
+  if (mime.startsWith("text/") || ["txt", "md", "json", "csv", "log", "xml", "html", "css", "js", "ts"].includes(extension)) return "text";
+  return "pdf";
 };
 
 const SummaryHistorySettings = ({ showToast }) => {
@@ -64,6 +79,7 @@ const SummaryHistorySettings = ({ showToast }) => {
   const [error, setError] = useState("");
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [filePreview, setFilePreview] = useState({ loading: false, error: "", kind: "", objectUrl: "", textContent: "" });
 
   const filters = useMemo(() => ({ search, type, time }), [search, type, time]);
 
@@ -94,11 +110,54 @@ const SummaryHistorySettings = ({ showToast }) => {
     };
   }, [filters]);
 
+  useEffect(() => () => {
+    if (filePreview.objectUrl) {
+      URL.revokeObjectURL(filePreview.objectUrl);
+    }
+  }, [filePreview.objectUrl]);
+
+  const loadFilePreview = async (historyDetail) => {
+    if (filePreview.objectUrl) {
+      URL.revokeObjectURL(filePreview.objectUrl);
+    }
+
+    if (historyDetail?.inputType !== "FILE" || !historyDetail?.fileId) {
+      setFilePreview({ loading: false, error: "", kind: "", objectUrl: "", textContent: "" });
+      return;
+    }
+
+    setFilePreview({ loading: true, error: "", kind: "", objectUrl: "", textContent: "" });
+    try {
+      const { blob, contentType } = await previewDocument(historyDetail.fileId);
+      const kind = detectPreviewKind({ name: historyDetail.fileName || historyDetail.title, mimeType: contentType });
+
+      if (kind === "text") {
+        const textContent = await blob.text();
+        setFilePreview({ loading: false, error: "", kind, objectUrl: "", textContent });
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(blob);
+      setFilePreview({ loading: false, error: "", kind, objectUrl, textContent: "" });
+    } catch {
+      setFilePreview({
+        loading: false,
+        error: "File gốc không còn tồn tại hoặc đã bị xóa",
+        kind: "",
+        objectUrl: "",
+        textContent: "",
+      });
+    }
+  };
+
   const openDetail = async (item) => {
     setDetailLoading(true);
+    setDetail(null);
+    setFilePreview({ loading: false, error: "", kind: "", objectUrl: "", textContent: "" });
     try {
       const payload = await getSummaryHistoryDetail(item.id);
       setDetail(payload);
+      await loadFilePreview(payload);
     } catch (requestError) {
       showToast?.("error", requestError.message || "Không thể tải chi tiết lịch sử tóm tắt");
     } finally {
@@ -220,7 +279,23 @@ const SummaryHistorySettings = ({ showToast }) => {
               <div className="grid min-h-0 flex-1 gap-4 overflow-auto p-5 lg:grid-cols-2">
                 <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-4">
                   <h4 className="mb-3 text-sm font-bold text-slate-700 dark:text-slate-200">Nội dung gốc</h4>
-                  <pre className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-300">{detail?.originalContent || "-"}</pre>
+                  {detail?.inputType === "FILE" ? (
+                    <div className="h-[60vh] overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+                      {filePreview.loading && <div className="grid h-full place-items-center text-sm font-semibold text-slate-500">Đang tải file gốc...</div>}
+                      {!filePreview.loading && filePreview.error && <div className="grid h-full place-items-center p-4 text-center text-sm font-semibold text-amber-700">{filePreview.error}</div>}
+                      {!filePreview.loading && !filePreview.error && filePreview.kind === "text" && (
+                        <pre className="h-full overflow-auto p-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{filePreview.textContent}</pre>
+                      )}
+                      {!filePreview.loading && !filePreview.error && filePreview.kind === "image" && filePreview.objectUrl && (
+                        <div className="grid h-full place-items-center overflow-auto p-3"><img src={filePreview.objectUrl} alt={detail.fileName || detail.title} className="max-h-full max-w-full object-contain" /></div>
+                      )}
+                      {!filePreview.loading && !filePreview.error && filePreview.kind === "pdf" && filePreview.objectUrl && (
+                        <object data={`${filePreview.objectUrl}#navpanes=0&view=FitH`} type="application/pdf" className="h-full w-full" />
+                      )}
+                    </div>
+                  ) : (
+                    <pre className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-300">{detail?.originalContent || "-"}</pre>
+                  )}
                 </section>
                 <section className="rounded-2xl border border-blue-100 dark:border-blue-900/40 bg-blue-50/60 dark:bg-blue-900/20 p-4">
                   <div className="mb-3 flex items-center justify-between gap-3">
