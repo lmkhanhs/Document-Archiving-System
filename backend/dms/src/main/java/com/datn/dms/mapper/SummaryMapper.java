@@ -18,7 +18,9 @@ public abstract class SummaryMapper {
         @Mapping(target = "username", source = ".", qualifiedByName = "mapUsername"),
         @Mapping(target = "thumbnailUrl", source = "user.thumbnailUrl"),
         @Mapping(target = "fileSize", source = ".", qualifiedByName = "mapFileSize"),
-        @Mapping(target = "status", source = ".", qualifiedByName = "mapStatus")
+        @Mapping(target = "status", source = ".", qualifiedByName = "mapStatus"),
+        @Mapping(target = "originalPreview", source = ".", qualifiedByName = "mapOriginalContent"),
+        @Mapping(target = "summaryPreview", source = "summaryContent")
     })
     public abstract SummaryHistoryItemResponse toSummaryHistoryItemResponse(SummaryEntity entity);
 
@@ -32,7 +34,8 @@ public abstract class SummaryMapper {
         @Mapping(target = "fileSize", source = ".", qualifiedByName = "mapFileSize"),
         @Mapping(target = "status", source = ".", qualifiedByName = "mapStatus"),
         @Mapping(target = "processingTimeSeconds", source = "duration"),
-        @Mapping(target = "compressionRate", source = ".", qualifiedByName = "mapCompressionRate")
+        @Mapping(target = "compressionRate", source = ".", qualifiedByName = "mapCompressionRate"),
+        @Mapping(target = "originalContent", source = ".", qualifiedByName = "mapOriginalContent")
     })
     public abstract SummaryHistoryDetailResponse toSummaryHistoryDetailResponse(SummaryEntity entity);
 
@@ -45,6 +48,23 @@ public abstract class SummaryMapper {
             return content.length() > 30 ? content.substring(0, 30) + "..." : content;
         }
         return "Không có tiêu đề";
+    }
+
+    @Named("mapOriginalContent")
+    protected String mapOriginalContent(SummaryEntity entity) {
+        if (entity == null) {
+            return "";
+        }
+
+        if ("TEXT".equalsIgnoreCase(entity.getSummaryType())) {
+            return entity.getOriginalContent() != null ? entity.getOriginalContent() : "";
+        }
+
+        if ("FILE".equalsIgnoreCase(entity.getSummaryType()) && entity.getFile() != null) {
+            return "File: " + entity.getFile().getName();
+        }
+
+        return entity.getOriginalContent() != null ? entity.getOriginalContent() : "";
     }
 
     @Named("mapUsername")

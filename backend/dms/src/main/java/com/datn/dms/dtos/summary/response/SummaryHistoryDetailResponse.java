@@ -38,5 +38,6 @@ public class SummaryHistoryDetailResponse {
     Integer originalLength;
     Integer summaryLength;
     Double compressionRate;
+    String originalContent;
     String summaryContent;
 }

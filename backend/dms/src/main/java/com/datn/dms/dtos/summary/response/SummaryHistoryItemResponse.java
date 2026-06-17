@@ -16,4 +16,6 @@ public class SummaryHistoryItemResponse {
     private String fileSize;
     private String status;
     private String errorMessage;
+    private String originalPreview;
+    private String summaryPreview;
 }

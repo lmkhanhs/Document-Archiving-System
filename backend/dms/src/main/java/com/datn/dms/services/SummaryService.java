@@ -12,6 +12,8 @@ import com.datn.dms.exception.AppException;
 import com.datn.dms.exception.ErrorCode;
 import com.datn.dms.mapper.SummaryMapper;
 import com.datn.dms.repositories.SummaryRepository;
+import com.datn.dms.repositories.UserRepository;
+import com.datn.dms.utils.AuthenticationUtills;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -45,11 +47,67 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class SummaryService {
 
     SummaryRepository summaryRepository;
+    UserRepository userRepository;
+    AuthenticationUtills authenticationUtills;
     SummaryMapper summaryMapper;
 
     @NonFinal
     @Value("${app.ai.base-url}")
     String aiBaseUrl;
+
+    public List<SummaryHistoryItemResponse> getMySummaryHistories(String search, String type, String time) {
+        Long userId = getCurrentUserId();
+        Specification<SummaryEntity> spec = buildMySummarySpec(userId, search, type, time);
+        return summaryRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "createdAt"))
+                .stream()
+                .map(summaryMapper::toSummaryHistoryItemResponse)
+                .collect(Collectors.toList());
+    }
+
+    public SummaryHistoryDetailResponse getMySummaryHistoryDetail(Long id) {
+        Long userId = getCurrentUserId();
+        SummaryEntity summaryEntity = summaryRepository.findOne((root, query, cb) -> cb.and(
+                        cb.equal(root.get("id"), id),
+                        cb.equal(root.get("user").get("id"), userId)))
+                .orElseThrow(() -> new AppException(ErrorCode.SUMMARY_NOT_FOUND));
+        return summaryMapper.toSummaryHistoryDetailResponse(summaryEntity);
+    }
+
+    private Long getCurrentUserId() {
+        return userRepository.findByUsername(authenticationUtills.getUserName())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND))
+                .getId();
+    }
+
+    private Specification<SummaryEntity> buildMySummarySpec(Long userId, String search, String type, String time) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("user").get("id"), userId));
+
+            if (type != null && !type.isBlank() && !"ALL".equalsIgnoreCase(type)) {
+                predicates.add(cb.equal(root.get("summaryType"), type.trim().toUpperCase()));
+            }
+
+            if (search != null && !search.isBlank()) {
+                String keyword = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("originalContent")), keyword),
+                        cb.like(cb.lower(root.get("summaryContent")), keyword),
+                        cb.like(cb.lower(root.join("file", jakarta.persistence.criteria.JoinType.LEFT).get("name")), keyword)));
+            }
+
+            LocalDate now = com.datn.dms.utils.DateTimeUtils.today();
+            if ("today".equalsIgnoreCase(time)) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), now.atStartOfDay()));
+            } else if ("7d".equalsIgnoreCase(time)) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), now.minusDays(7).atStartOfDay()));
+            } else if ("30d".equalsIgnoreCase(time)) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), now.minusDays(30).atStartOfDay()));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
 
     public SummaryStatisticsResponse getStatistics() {
         // 1. Total summaries

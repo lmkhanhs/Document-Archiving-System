@@ -12,11 +12,13 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import PaletteOutlinedIcon from "@mui/icons-material/PaletteOutlined";
+import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
 
 import { logout } from "../services/authService";
 import ProfileSettings from "./settings/ProfileSettings";
 import ChangePasswordSettings from "./settings/ChangePasswordSettings";
 import AppearanceSettings from "./settings/AppearanceSettings";
+import SummaryHistorySettings from "./settings/SummaryHistorySettings";
 
 const sidebarItems = [
   { key: "home", label: "Trang chủ", icon: HomeOutlinedIcon },
@@ -32,6 +34,7 @@ const settingTabs = [
   { key: "profile", label: "Hồ sơ cá nhân", icon: PersonOutlineOutlinedIcon },
   { key: "security", label: "Đổi mật khẩu", icon: LockOutlinedIcon },
   { key: "appearance", label: "Giao diện", icon: PaletteOutlinedIcon },
+  { key: "summary-history", label: "Lịch sử tóm tắt", icon: HistoryOutlinedIcon },
 ];
 
 const USER_CACHE_KEY = "currentUser";
@@ -82,6 +85,8 @@ const Settings = () => {
         return <ChangePasswordSettings showToast={showToast} />;
       case "appearance":
         return <AppearanceSettings />;
+      case "summary-history":
+        return <SummaryHistorySettings showToast={showToast} />;
       default:
         return <ProfileSettings showToast={showToast} />;
     }
