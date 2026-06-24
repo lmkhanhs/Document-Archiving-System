@@ -1,10 +1,10 @@
 const ChartCard = ({ title, children, action, className = "" }) => (
-  <div className={`flex h-full flex-col rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md ${className}`}>
+  <div className={`flex h-full min-w-0 flex-col rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md ${className}`}>
     <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
       <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">{title}</h3>
       {action}
     </div>
-    <div className="min-h-0 flex-1">{children}</div>
+    <div className="min-h-0 min-w-0 flex-1">{children}</div>
   </div>
 );
 

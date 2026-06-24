@@ -50,7 +50,7 @@ const RecentUploadsChart = ({
       ) : total === 0 ? (
         <EmptyChartState message={`Chưa có tài liệu tải lên trong ${selectedDays} ngày gần đây`} />
       ) : (
-        <div className="h-[300px] min-h-[280px] w-full">
+        <div className="h-[300px] min-h-[280px] min-w-0 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} margin={{ top: 22, right: 12, left: -12, bottom: 8 }}>
               <CartesianGrid stroke={gridColor} strokeDasharray="3 3" vertical={false} />

@@ -1050,6 +1050,7 @@ const Home = () => {
                   <span className="max-w-28 truncate text-sm font-semibold text-slate-700 dark:text-slate-200">{userName || avatarLabel}</span>
                 </button>
                 <button
+                  data-testid="logout-btn"
                   type="button"
                   onClick={handleLogout}
                   disabled={isLoggingOut}

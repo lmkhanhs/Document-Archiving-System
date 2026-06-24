@@ -1706,12 +1706,12 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-3 md:p-5">
       <style>{"@keyframes fadeUp{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}"}</style>
       <div className="mx-auto flex min-h-[calc(100vh-24px)] max-w-[1500px] overflow-hidden rounded-3xl border border-blue-100 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-[0_20px_65px_rgba(27,78,163,0.12)] dark:shadow-none md:flex-row">
-        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50/70 dark:bg-slate-800/40 p-4 md:w-20 md:border-b-0 md:border-r lg:w-64">
+        <aside className="flex w-full flex-col gap-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50/70 dark:bg-slate-800/40 p-4 md:w-[280px] md:shrink-0 md:border-b-0 md:border-r">
           <div className="flex items-center gap-3 px-1">
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-tr from-blue-700 to-sky-500 text-lg font-extrabold text-white">
               A
             </div>
-            <div className="hidden lg:block">
+            <div className="hidden md:block">
               <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700 dark:text-blue-400">
                 Admin Suite
               </div>
@@ -1736,7 +1736,7 @@ const AdminDashboard = () => {
                   }`}
                 >
                   <ItemIcon fontSize="small" />
-                  <span className="truncate md:hidden lg:inline">{item.label}</span>
+                  <span className="truncate md:inline">{item.label}</span>
                 </button>
               );
             })}
@@ -1755,14 +1755,20 @@ const AdminDashboard = () => {
           </div>
         </aside>
 
-        <main className="flex-1 p-4 md:p-6">
+        <main className="min-w-0 flex-1 p-4 md:p-6">
           <header className="flex flex-col gap-4 border-b border-slate-100 dark:border-slate-700/50 pb-4 lg:flex-row lg:items-center">
             <div>
               <div className="text-xs font-bold uppercase tracking-[0.2em] text-blue-700 dark:text-blue-400">
-                ADMIN DASHBOARD
+                {activeMenu === "documents" ? "ADMIN DOCUMENTS"
+                  : activeMenu === "countries" ? "ADMIN COUNTRIES"
+                  : activeMenu === "summary_history" ? "ADMIN SUMMARY"
+                  : "ADMIN DASHBOARD"}
               </div>
               <div className="text-xl font-bold text-slate-800 dark:text-slate-100">
-                {activeMenu === "countries" ? "Quản lý quốc gia" : "Hệ thống lưu trữ tài liệu"}
+                {activeMenu === "documents" ? "Quản lý tài liệu"
+                  : activeMenu === "countries" ? "Quản lý quốc gia"
+                  : activeMenu === "summary_history" ? "Lịch sử tóm tắt"
+                  : "Hệ thống lưu trữ tài liệu"}
               </div>
             </div>
 

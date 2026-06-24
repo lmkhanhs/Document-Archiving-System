@@ -147,7 +147,7 @@ const ManagerDocument = ({
   onPageChange,
   onPageSizeChange,
 }) => (
-  <section className="mt-6 space-y-4">
+  <section className="mt-6 min-w-0 space-y-4">
     <DocumentChartsSection
       documents={normalizedDocuments}
       isLoading={isDocLoading}
@@ -163,14 +163,14 @@ const ManagerDocument = ({
       topUploaders={topUploaders}
     />
 
-    <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
       <div>
-        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-          Quan ly tai lieu
+        <div className="text-xs font-bold uppercase tracking-[0.2em] text-blue-700 dark:text-blue-400">
+          ADMIN DOCUMENTS
         </div>
-        <div className="text-lg font-bold text-slate-900">Danh sach tai lieu</div>
+        <div className="text-xl font-bold text-slate-800 dark:text-slate-100">Quản lý tài liệu</div>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
         <div className="inline-flex rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1">
           <button
             type="button"
@@ -226,7 +226,7 @@ const ManagerDocument = ({
       </div>
     </div>
 
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+    <div className="min-w-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-500">
           {totalElements} {documentsView === "trash" ? "tài liệu trong thùng rác" : "tài liệu"}
@@ -336,8 +336,8 @@ const ManagerDocument = ({
                                   type="button"
                                   onClick={() => onRestore(file)}
                                   className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-emerald-600 transition hover:bg-emerald-50"
-                                  title="Khoi phuc"
-                                  aria-label="Khoi phuc"
+                                  title="Khôi phục"
+                                  aria-label="Khôi phục"
                                 >
                                   <RestoreFromTrashOutlinedIcon fontSize="small" />
                                 </button>
@@ -345,8 +345,8 @@ const ManagerDocument = ({
                                   type="button"
                                   onClick={() => onOpenDeleteDialog(file, "hard")}
                                   className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-rose-700 transition hover:bg-rose-50"
-                                  title="Xoa vinh vien"
-                                  aria-label="Xoa vinh vien"
+                                  title="Xóa vĩnh viễn"
+                                  aria-label="Xóa vĩnh viễn"
                                 >
                                   <DeleteForeverOutlinedIcon fontSize="small" />
                                 </button>
@@ -357,8 +357,8 @@ const ManagerDocument = ({
                                   type="button"
                                   onClick={() => onShowDetail(file)}
                                   className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-slate-600 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700/50 dark:bg-slate-700"
-                                  title="Xem chi tiet"
-                                  aria-label="Xem chi tiet"
+                                  title="Xem chi tiết"
+                                  aria-label="Xem chi tiết"
                                 >
                                   <VisibilityOutlinedIcon fontSize="small" />
                                 </button>
@@ -366,8 +366,8 @@ const ManagerDocument = ({
                                   type="button"
                                   onClick={() => onPreview(file)}
                                   className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-blue-600 dark:text-blue-400 transition hover:bg-blue-50"
-                                  title="Xem noi dung"
-                                  aria-label="Xem noi dung"
+                                  title="Xem nội dung"
+                                  aria-label="Xem nội dung"
                                 >
                                   <DescriptionOutlinedIcon fontSize="small" />
                                 </button>
@@ -375,8 +375,8 @@ const ManagerDocument = ({
                                   type="button"
                                   onClick={() => onSummary(file)}
                                   className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-amber-600 transition hover:bg-amber-50"
-                                  title="Xem tom tat"
-                                  aria-label="Xem tom tat"
+                                  title="Xem tóm tắt"
+                                  aria-label="Xem tóm tắt"
                                 >
                                   <AutoAwesomeOutlinedIcon fontSize="small" />
                                 </button>
@@ -384,8 +384,8 @@ const ManagerDocument = ({
                                   type="button"
                                   onClick={() => onDownload(file)}
                                   className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-emerald-600 transition hover:bg-emerald-50"
-                                  title="Tai file goc"
-                                  aria-label="Tai file goc"
+                                  title="Tải file gốc"
+                                  aria-label="Tải file gốc"
                                 >
                                   <DownloadOutlinedIcon fontSize="small" />
                                 </button>
@@ -393,8 +393,8 @@ const ManagerDocument = ({
                                   type="button"
                                   onClick={() => onOpenDeleteDialog(file, "soft")}
                                   className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-amber-600 transition hover:bg-amber-50"
-                                  title="Xoa mem"
-                                  aria-label="Xoa mem"
+                                  title="Xóa mềm"
+                                  aria-label="Xóa mềm"
                                 >
                                   <DeleteOutlineOutlinedIcon fontSize="small" />
                                 </button>
@@ -457,7 +457,7 @@ const ManagerDocument = ({
                   <div className="mt-3 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
                     {formatFileSize(file.size)} • {formatDateTime(file.createdAt)}
                     {documentsView === "trash" && (
-                      <span> • Xoa luc {formatDateTime(file.deletedAt)}</span>
+                      <span> • Xóa lúc {formatDateTime(file.deletedAt)}</span>
                     )}
                   </div>
 
@@ -468,8 +468,8 @@ const ManagerDocument = ({
                           type="button"
                           onClick={() => onRestore(file)}
                           className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-emerald-600 transition hover:bg-emerald-50"
-                          title="Khoi phuc"
-                          aria-label="Khoi phuc"
+                          title="Khôi phục"
+                          aria-label="Khôi phục"
                         >
                           <RestoreFromTrashOutlinedIcon fontSize="small" />
                         </button>
@@ -477,8 +477,8 @@ const ManagerDocument = ({
                           type="button"
                           onClick={() => onOpenDeleteDialog(file, "hard")}
                           className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-rose-700 transition hover:bg-rose-50"
-                          title="Xoa vinh vien"
-                          aria-label="Xoa vinh vien"
+                          title="Xóa vĩnh viễn"
+                          aria-label="Xóa vĩnh viễn"
                         >
                           <DeleteForeverOutlinedIcon fontSize="small" />
                         </button>
@@ -489,8 +489,8 @@ const ManagerDocument = ({
                           type="button"
                           onClick={() => onShowDetail(file)}
                           className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-slate-600 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-700/50 dark:bg-slate-700"
-                          title="Xem chi tiet"
-                          aria-label="Xem chi tiet"
+                          title="Xem chi tiết"
+                          aria-label="Xem chi tiết"
                         >
                           <VisibilityOutlinedIcon fontSize="small" />
                         </button>
@@ -498,8 +498,8 @@ const ManagerDocument = ({
                           type="button"
                           onClick={() => onPreview(file)}
                           className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-blue-600 dark:text-blue-400 transition hover:bg-blue-50"
-                          title="Xem noi dung"
-                          aria-label="Xem noi dung"
+                          title="Xem nội dung"
+                          aria-label="Xem nội dung"
                         >
                           <DescriptionOutlinedIcon fontSize="small" />
                         </button>
@@ -507,8 +507,8 @@ const ManagerDocument = ({
                           type="button"
                           onClick={() => onSummary(file)}
                           className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-amber-600 transition hover:bg-amber-50"
-                          title="Xem tom tat"
-                          aria-label="Xem tom tat"
+                          title="Xem tóm tắt"
+                          aria-label="Xem tóm tắt"
                         >
                           <AutoAwesomeOutlinedIcon fontSize="small" />
                         </button>
@@ -516,8 +516,8 @@ const ManagerDocument = ({
                           type="button"
                           onClick={() => onDownload(file)}
                           className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-emerald-600 transition hover:bg-emerald-50"
-                          title="Tai file goc"
-                          aria-label="Tai file goc"
+                          title="Tải file gốc"
+                          aria-label="Tải file gốc"
                         >
                           <DownloadOutlinedIcon fontSize="small" />
                         </button>
@@ -525,8 +525,8 @@ const ManagerDocument = ({
                           type="button"
                           onClick={() => onOpenDeleteDialog(file, "soft")}
                           className="rounded-lg border border-slate-200 dark:border-slate-700 p-2 text-amber-600 transition hover:bg-amber-50"
-                          title="Xoa mem"
-                          aria-label="Xoa mem"
+                          title="Xóa mềm"
+                          aria-label="Xóa mềm"
                         >
                           <DeleteOutlineOutlinedIcon fontSize="small" />
                         </button>

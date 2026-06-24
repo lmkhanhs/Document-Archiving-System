@@ -24,8 +24,8 @@ const TopUploadersChart = ({ data, isLoading }) => {
       ) : !hasData ? (
         <EmptyChartState />
       ) : (
-        <div className="grid h-full min-h-[300px] gap-4">
-          <div className="h-[210px] w-full">
+        <div className="grid h-full min-h-[300px] min-w-0 gap-4">
+          <div className="h-[210px] min-w-0 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} layout="vertical" margin={{ top: 8, right: 18, left: 8, bottom: 4 }}>
                 <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} tick={{ fill: tickColor, fontSize: 11 }} />
@@ -36,7 +36,7 @@ const TopUploadersChart = ({ data, isLoading }) => {
             </ResponsiveContainer>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid min-w-0 gap-2 sm:grid-cols-2">
             {data.map((user) => (
               <div key={user.name} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 px-3 py-2">
                 <div className="flex min-w-0 items-center gap-2">

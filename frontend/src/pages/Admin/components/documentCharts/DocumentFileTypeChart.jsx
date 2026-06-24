@@ -12,7 +12,7 @@ const DocumentFileTypeChart = ({ data, isLoading }) => {
       ) : total === 0 ? (
         <EmptyChartState />
       ) : (
-        <div className="grid h-full min-h-[280px] grid-cols-1 items-center gap-4 sm:grid-cols-[1.1fr_0.9fr]">
+        <div className="grid h-full min-h-[280px] min-w-0 grid-cols-1 items-center gap-4 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
           <div className="h-[230px] min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -36,7 +36,7 @@ const DocumentFileTypeChart = ({ data, isLoading }) => {
             </ResponsiveContainer>
           </div>
 
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             {data.map((item) => (
               <div key={item.name} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-sm">
                 <div className="flex min-w-0 items-center gap-2">

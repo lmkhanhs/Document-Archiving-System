@@ -13,7 +13,7 @@ import {
 } from "./chartUtils";
 
 const DocumentStatCard = ({ label, value, description, tone = "from-blue-600 to-sky-500", isLoading }) => (
-  <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md">
+  <div className="min-w-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md">
     <div className={`inline-flex items-center rounded-2xl bg-gradient-to-r px-3 py-1 text-xs font-semibold text-white ${tone}`}>
       Báo cáo
     </div>
@@ -58,8 +58,8 @@ const DocumentChartsSection = ({
   const resolvedStats = documentStats || fallbackStats;
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2">
+    <div className="min-w-0 space-y-6">
+      <div className="grid min-w-0 gap-4 md:grid-cols-2">
         <DocumentStatCard
           label="Tổng số tài liệu"
           value={resolvedStats.totalDocuments}
@@ -75,7 +75,7 @@ const DocumentChartsSection = ({
         />
       </div>
 
-      <div className="grid items-stretch gap-6 md:grid-cols-2">
+      <div className="grid min-w-0 items-stretch gap-6 md:grid-cols-2">
         <DocumentFileTypeChart data={fileTypeData} isLoading={isDocumentStatsLoading} />
         <RecentUploadsChart
           data={recentUploadData}
@@ -84,7 +84,7 @@ const DocumentChartsSection = ({
           selectedDays={selectedRecentUploadDays}
           onDaysChange={onRecentUploadDaysChange}
         />
-        <div className="md:col-span-2">
+        <div className="min-w-0 md:col-span-2">
           <TopUploadersChart data={topUploadersData} isLoading={isTopUploadersLoading} />
         </div>
       </div>
