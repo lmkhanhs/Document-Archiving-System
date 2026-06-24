@@ -46,16 +46,19 @@ import com.datn.dms.mapper.FileMapper;
 import com.datn.dms.repositories.ColorRepository;
 import com.datn.dms.repositories.FileRepository;
 import com.datn.dms.repositories.FolderRepository;
+import com.datn.dms.repositories.SummaryRepository;
 import com.datn.dms.repositories.UserRepository;
 import com.datn.dms.utils.AuthenticationUtills;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class FileService {
 
     static final long DEFAULT_TOTAL_STORAGE_BYTES = 15L * 1024 * 1024 * 1024;
@@ -66,6 +69,7 @@ public class FileService {
     final UserRepository userRepository;
     final AuthenticationUtills authenticationUtills;
     final FileMapper fileMapper;
+    final SummaryRepository summaryRepository;
 
     @Value("${app.storage.upload-dir:uploads}")
     String uploadDir;
@@ -238,7 +242,7 @@ public class FileService {
             throw new AppException(ErrorCode.FILE_PATH_INVALID);
         }
 
-        String relativeFilePath = fileUrl.substring(uploadPrefix.length());
+        String relativeFilePath = fileUrl.substring(uploadPrefix.length()).replace('\\', '/');
         Path baseDir = Paths.get(uploadDir).toAbsolutePath().normalize();
         Path targetPath = baseDir.resolve(relativeFilePath).normalize();
 
@@ -298,7 +302,7 @@ public class FileService {
             throw new AppException(ErrorCode.FILE_PATH_INVALID);
         }
 
-        String relativeFilePath = fileUrl.substring(uploadPrefix.length());
+        String relativeFilePath = fileUrl.substring(uploadPrefix.length()).replace('\\', '/');
         Path baseDir = Paths.get(uploadDir).toAbsolutePath().normalize();
         Path originalPath = baseDir.resolve(relativeFilePath).normalize();
 
@@ -458,22 +462,25 @@ public class FileService {
         fileRepository.save(fileEntity);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void forceDeleteFile(Long fileId) {
         UserEntity owner = getCurrentUser();
 
         FileEntity fileEntity = fileRepository.findByIdAndOwner_IdAndIsDeletedTrue(fileId, owner.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
 
+        summaryRepository.disassociateFile(fileId);
+
         String fileUrl = fileEntity.getUrl();
         String uploadPrefix = "/uploads/";
         if (fileUrl != null && fileUrl.startsWith(uploadPrefix)) {
-            String relativeFilePath = fileUrl.substring(uploadPrefix.length());
+            String relativeFilePath = fileUrl.substring(uploadPrefix.length()).replace('\\', '/');
             Path baseDir = Paths.get(uploadDir).toAbsolutePath().normalize();
             Path targetPath = baseDir.resolve(relativeFilePath).normalize();
             try {
                 Files.deleteIfExists(targetPath);
             } catch (IOException e) {
-                // Ignore if file is already deleted or cannot be deleted
+                log.error("Failed to delete physical file: {}", targetPath, e);
             }
         }
 
@@ -585,20 +592,23 @@ public class FileService {
         fileRepository.save(fileEntity);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void forceDeleteFileAdmin(Long fileId) {
         FileEntity fileEntity = fileRepository.findByIdAndIsDeletedTrue(fileId)
                 .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
 
+        summaryRepository.disassociateFile(fileId);
+
         String fileUrl = fileEntity.getUrl();
         String uploadPrefix = "/uploads/";
         if (fileUrl != null && fileUrl.startsWith(uploadPrefix)) {
-            String relativeFilePath = fileUrl.substring(uploadPrefix.length());
+            String relativeFilePath = fileUrl.substring(uploadPrefix.length()).replace('\\', '/');
             Path baseDir = Paths.get(uploadDir).toAbsolutePath().normalize();
             Path targetPath = baseDir.resolve(relativeFilePath).normalize();
             try {
                 Files.deleteIfExists(targetPath);
             } catch (IOException e) {
-                // Ignore if file is already deleted or cannot be deleted
+                log.error("Failed to delete physical file: {}", targetPath, e);
             }
         }
 

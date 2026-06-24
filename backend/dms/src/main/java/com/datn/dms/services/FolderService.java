@@ -8,27 +8,32 @@ import com.datn.dms.dtos.folder.request.CreateFolderRequest;
 import com.datn.dms.dtos.folder.request.UpdateFolderRequest;
 import com.datn.dms.dtos.folder.response.CreateFolderResponse;
 import com.datn.dms.dtos.folder.response.FolderResponse;
+import com.datn.dms.entities.FileEntity;
 import com.datn.dms.entities.FolderEntity;
 import com.datn.dms.entities.UserEntity;
 import com.datn.dms.exception.AppException;
 import com.datn.dms.exception.ErrorCode;
 import com.datn.dms.mapper.FolderMapper;
 import com.datn.dms.repositories.FolderRepository;
+import com.datn.dms.repositories.SummaryRepository;
 import com.datn.dms.repositories.UserRepository;
 import com.datn.dms.utils.AuthenticationUtills;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class FolderService {
     FolderRepository folderRepository;
     UserRepository userRepository;
     AuthenticationUtills authenticationUtills;
     FolderMapper folderMapper;
+    SummaryRepository summaryRepository;
 
     @lombok.experimental.NonFinal
     @org.springframework.beans.factory.annotation.Value("${app.storage.upload-dir:uploads}")
@@ -186,6 +191,7 @@ public class FolderService {
                 .toList();
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void forceDeleteFolder(Long folderId) {
         String username = authenticationUtills.getUserName();
         UserEntity owner = userRepository.findByUsername(username)
@@ -194,9 +200,24 @@ public class FolderService {
         FolderEntity folderEntity = folderRepository.findByIdAndOwner_IdAndIsDeletedTrue(folderId, owner.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.FOLDER_NOT_FOUND));
 
+        disassociateSummariesRecursively(folderEntity);
+
         deletePhysicalFolderRecursively(folderEntity, owner.getId());
 
         folderRepository.delete(folderEntity);
+    }
+
+    private void disassociateSummariesRecursively(FolderEntity folder) {
+        if (folder.getFiles() != null) {
+            for (FileEntity file : folder.getFiles()) {
+                summaryRepository.disassociateFile(file.getId());
+            }
+        }
+        if (folder.getSubFolders() != null) {
+            for (FolderEntity sub : folder.getSubFolders()) {
+                disassociateSummariesRecursively(sub);
+            }
+        }
     }
 
     private void deletePhysicalFolderRecursively(FolderEntity folder, Long ownerId) {
@@ -204,7 +225,7 @@ public class FolderService {
         try {
             org.springframework.util.FileSystemUtils.deleteRecursively(targetPath);
         } catch (java.io.IOException e) {
-            // Ignore if directory doesn't exist or cannot be deleted
+            log.error("Failed to delete physical folder recursively: {}", targetPath, e);
         }
 
         if (folder.getSubFolders() != null) {

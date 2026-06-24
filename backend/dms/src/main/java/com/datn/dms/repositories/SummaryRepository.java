@@ -79,4 +79,9 @@ public interface SummaryRepository extends JpaRepository<SummaryEntity, Long>, J
     // Thống kê loại đầu vào (chỉ tính SUCCESS)
     @Query("SELECT s.summaryType, COUNT(s) FROM SummaryEntity s WHERE s.status = 'SUCCESS' GROUP BY s.summaryType")
     List<Object[]> countInputTypesGrouped();
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @Query("UPDATE SummaryEntity s SET s.file = null WHERE s.file.id = :fileId")
+    void disassociateFile(@Param("fileId") Long fileId);
 }
